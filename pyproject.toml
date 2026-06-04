@@ -35,6 +35,7 @@ dev = [
 
 [tool.uv]
 default-groups = ["dev"]
+exclude-newer = "7 days"
 
 [project.scripts]
 ghwm = "ghwm.cli:main"
