@@ -1,0 +1,71 @@
+---
+repos:
+  - repo: https://github.com/rhysd/actionlint
+    rev: v1.7.12
+    hooks:
+      - id: actionlint
+        name: Lint GitHub Actions Workflow Files
+        description: Runs actionlint to lint GitHub Actions workflow files
+        language: golang
+        types: ["yaml"]
+        files: ^\.github/workflows/
+        exclude: ^\.github/workflows/.*\.lock\.yml$
+        entry: actionlint -config-file .github/linters/actionlint.yml
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.38.0
+    hooks:
+      - id: yamllint
+        name: yamllint
+        description: This hook runs yamllint.
+        entry: yamllint
+        args: [--strict, -c=.github/linters/.yaml-lint.yml]
+        language: python
+        types: [file, yaml]
+  - repo: https://github.com/PyCQA/autoflake
+    rev: v2.3.3
+    hooks:
+      - id: autoflake
+        args: [--remove-all-unused-imports, --remove-unused-variables, --in-place]
+  - repo: https://github.com/pycqa/isort
+    rev: 9.0.0a3
+    hooks:
+      - id: isort
+        name: isort (python)
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    # Ruff version.
+    rev: v0.15.15
+    hooks:
+      # Run the linter.
+      - id: ruff-check
+        args: [--fix]
+        files: ^(app|postman)/
+      # Run the formatter.
+      - id: ruff-format
+        files: ^(app|postman)/
+  - repo: local
+    hooks:
+      - id: mypy
+        name: mypy
+        language: system
+        entry: uv run mypy
+        pass_filenames: false
+        args: [
+          '.', '--config', 'pyproject.toml'
+        ]
+  - repo: https://github.com/jendrikseipp/vulture
+    rev: v2.16
+    hooks:
+      - id: vulture
+        files: ^(app|postman)/
+  - repo: local
+    hooks:
+      - id: super-linter
+        name: super-linter
+        language: system
+        entry: make super-linter-fix
+        pass_filenames: false
