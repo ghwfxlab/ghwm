@@ -1,0 +1,6 @@
+---
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation
+    url: https://github.com/pljanicki/ghwm#readme
+    about: Check the docs before opening an issue.
