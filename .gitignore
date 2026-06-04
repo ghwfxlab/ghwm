@@ -16,3 +16,4 @@ node_modules/
 .coverage
 pytest-coverage.txt
 htmlcov/
+.rtk/filters.toml
