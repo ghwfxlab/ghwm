@@ -1,0 +1,14 @@
+---
+extends: default
+
+ignore:
+  - '**/templates/*.yaml'
+  - '**/*.lock.yml'
+
+rules:
+  line-length:
+    max: 120
+  comments:
+    min-spaces-from-content: 1
+  truthy:
+    ignore: .github/workflows/

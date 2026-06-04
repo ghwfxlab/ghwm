@@ -1,0 +1,7 @@
+---
+# Markdownlint configuration — mirrors .github/linters/.markdown-lint.yml
+# Used by IDEs and local checks; super-linter uses the .github/linters/ version.
+MD013:
+  line_length: 600
+MD024:
+  allow_different_nesting: true
