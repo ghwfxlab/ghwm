@@ -101,6 +101,7 @@ super-linter:
 	@echo "[super-linter] Running super-linter via Docker..."
 	@GIT_DIR=$$(git rev-parse --path-format=absolute --git-common-dir) && \
 	docker run \
+		--platform linux/amd64 \
 		-e RUN_LOCAL=true \
 		-e DEFAULT_BRANCH=main \
 		--env-file .github/super-linter.env \
@@ -113,6 +114,7 @@ super-linter-fix:
 	@echo "[super-linter-fix] Running super-linter with auto-fix via Docker..."
 	@GIT_DIR=$$(git rev-parse --path-format=absolute --git-common-dir) && \
 	docker run \
+		--platform linux/amd64 \
 		-e RUN_LOCAL=true \
 		-e DEFAULT_BRANCH=main \
 		--env-file .github/super-linter.env \
