@@ -54,7 +54,7 @@ jobs:
 
       - name: Upload coverage reports to Codecov
         if: github.ref == 'refs/heads/main'
-        uses: codecov/codecov-action@0cfaf1cf091a9bb168cad7f9b5d5d37332ec5870 # v5.1.2
+        uses: codecov/codecov-action@e79a6962e0d4c0c17b229090214935d2e33f8354 # v6.0.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
 
