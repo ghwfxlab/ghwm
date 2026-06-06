@@ -17,3 +17,4 @@ node_modules/
 pytest-coverage.txt
 htmlcov/
 .rtk/filters.toml
+.DS_Store
