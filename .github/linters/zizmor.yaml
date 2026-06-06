@@ -5,10 +5,14 @@ rules:
   dangerous-triggers:
     ignore:
       - ".github/workflows/pr-title-check.yaml"
+      - "/tmp/lint/.github/workflows/pr-title-check.yaml"
   secrets-outside-env:
     ignore:
       - ".github/workflows/tag.yaml"
+      - "/tmp/lint/.github/workflows/tag.yaml"
       - ".github/workflows/tests.yaml"
+      - "/tmp/lint/.github/workflows/tests.yaml"
   artipacked:
     ignore:
       - ".github/workflows/tag.yaml"
+      - "/tmp/lint/.github/workflows/tag.yaml"
