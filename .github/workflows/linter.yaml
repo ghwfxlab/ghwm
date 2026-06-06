@@ -26,13 +26,14 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Load Super-Linter Environment
         run: |
           grep -v '^#' .github/super-linter.env >> "$GITHUB_ENV"
 
       - name: Run Super-Linter
-        uses: super-linter/super-linter/slim@v8.6.0
+        uses: super-linter/super-linter/slim@6a65d3adebc1c43ee69e73ef89afc43dcd00a1f4 # v8.6.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -44,6 +45,8 @@ jobs:
     steps:
       - name: Checkout The Source Code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
 
       - name: Set up Python
         uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0

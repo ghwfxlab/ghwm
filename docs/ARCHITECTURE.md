@@ -28,13 +28,13 @@ ghwm.yml          GitHub Packages npm registry
 
 | Module             | Responsibility                                                              |
 | ------------------ | --------------------------------------------------------------------------- |
-| `cli.py`           | Argument parsing; entry point for `ghwm`                            |
-| `manifest.py`      | Parse `ghwm.yml` into `Manifest` / `WorkflowEntry` objects          |
+| `cli.py`           | Argument parsing; entry point for `ghwm`                                    |
+| `manifest.py`      | Parse `ghwm.yml` into `Manifest` / `WorkflowEntry` objects                  |
 | `download.py`      | Download orchestration; local checkout reads; auth token resolution         |
 | `download_npm.py`  | GitHub Packages tarball download, package manifest parsing, file extraction |
 | `managed_files.py` | Low-level workflow/config file sync, trigger merge, prune checks            |
 | `install.py`       | Orchestrate install/update/prune; delegate file ops to `managed_files`      |
-| `lock.py`          | Read and write `ghwm.lock` (JSON); in-memory lockfile operations    |
+| `lock.py`          | Read and write `ghwm.lock` (JSON); in-memory lockfile operations            |
 | `package_names.py` | Helpers to compute scoped npm package names from org and workflow name      |
 
 ## Workflow lifecycle
@@ -166,12 +166,12 @@ unless `--force`.
 
 Package-level fields:
 
-| Field     | Description                                          |
-| --------- | ---------------------------------------------------- |
-| `name`    | Workflow identifier (matches manifest entry)         |
-| `version` | Pinned version                                       |
-| `source`  | Scoped npm package name (`@org/ghwm-<name>`) |
-| `files`   | Array of file entries tracked for this package       |
+| Field     | Description                                    |
+| --------- | ---------------------------------------------- |
+| `name`    | Workflow identifier (matches manifest entry)   |
+| `version` | Pinned version                                 |
+| `source`  | Scoped npm package name (`@org/ghwm-<name>`)   |
+| `files`   | Array of file entries tracked for this package |
 
 Per-file fields:
 

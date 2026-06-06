@@ -1,6 +1,7 @@
 ---
 name: Validate PR Title
 
+# zizmor: ignore[dangerous-triggers]
 on: # yamllint disable-line rule:truthy
   pull_request_target:
     types:
