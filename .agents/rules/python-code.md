@@ -1,1 +1,0 @@
-../../.github/agents/python-code.agent.md
