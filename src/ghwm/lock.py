@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any
 
 DEFAULT_LOCKFILE = "ghwm.lock"
-LOCKFILE_VERSION = 2
+LOCKFILE_VERSION = 1
 
 
 @dataclass

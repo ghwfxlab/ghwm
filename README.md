@@ -100,7 +100,7 @@ Use `ghwm update --prune` when you want one command to refresh workflows that ar
 
 ```json
 {
-  "lockfileVersion": 2,
+  "lockfileVersion": 1,
   "packages": [
     {
       "name": "auto-assign-pr",

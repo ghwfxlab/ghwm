@@ -110,7 +110,7 @@ When changing code, preserve these unless the task explicitly changes them:
 
 - Lockfile filename is `ghwm.lock`.
 - The schema uses `lockfileVersion` plus a `packages` array.
-- Lockfile v2 entries store `name`, `version`, `source`, and `files`.
+- Lockfile v1 entries store `name`, `version`, `source`, and `files`.
 - Each tracked file stores `target`, `source_hash`, and optional `overwrite`.
 - Older lockfiles are rejected with a regenerate message; do not preserve legacy tarball compatibility.
 - Delete the lockfile when no packages remain.

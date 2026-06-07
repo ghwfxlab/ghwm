@@ -84,7 +84,7 @@ class TestReadLockfile:
 
     def test_read_lockfile_should_load_packages_when_lockfile_exists(self, tmp_path: Path) -> None:
         data = {
-            "lockfileVersion": 2,
+            "lockfileVersion": 1,
             "packages": [
                 {
                     "name": "auto-assign-pr",
@@ -113,7 +113,7 @@ class TestReadLockfile:
         assert lockfile.packages[0].files[1].overwrite is False
 
     def test_read_lockfile_should_raise_when_lockfile_version_is_not_supported(self, tmp_path: Path) -> None:
-        (tmp_path / "ghwm.lock").write_text(json.dumps({"lockfileVersion": 1, "packages": []}))
+        (tmp_path / "ghwm.lock").write_text(json.dumps({"lockfileVersion": 2, "packages": []}))
 
         with pytest.raises(ValueError) as exc_info:
             read_lockfile(tmp_path)
@@ -124,7 +124,7 @@ class TestReadLockfile:
         (tmp_path / "ghwm.lock").write_text(
             json.dumps(
                 {
-                    "lockfileVersion": 2,
+                    "lockfileVersion": 1,
                     "packages": [{"name": "a", "source": "@owner/ghwm-a"}],
                 }
             )
@@ -159,7 +159,7 @@ class TestWriteLockfile:
         write_lockfile(tmp_path, lockfile)
         content = json.loads((tmp_path / "ghwm.lock").read_text())
 
-        assert content["lockfileVersion"] == 2
+        assert content["lockfileVersion"] == 1
         assert content["packages"][0]["source"] == "@owner/ghwm-auto-assign-pr"
         assert "overwrite" not in content["packages"][0]["files"][0]
         assert content["packages"][0]["files"][1]["overwrite"] is False

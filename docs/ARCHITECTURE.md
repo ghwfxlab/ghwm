@@ -138,11 +138,11 @@ unless `--force`.
 
 ### 5 — Lockfile (`lock.py`)
 
-`ghwm.lock` (version 2) is committed alongside `ghwm.yml`:
+`ghwm.lock` (version 1) is committed alongside `ghwm.yml`:
 
 ```json
 {
-  "lockfileVersion": 2,
+  "lockfileVersion": 1,
   "packages": [
     {
       "name": "auto-assign-pr",
@@ -181,7 +181,7 @@ Per-file fields:
 | `source_hash` | `sha256:<hex>` of the normalised body written to disk             |
 | `overwrite`   | `false` for config files that should not be overwritten on update |
 
-Old lockfiles (version ≠ 2) are rejected; delete and re-run `ghwm install`.
+Old lockfiles (version ≠ 1) are rejected; delete and re-run `ghwm install`.
 
 The lockfile is deleted automatically when all packages are removed.
 
