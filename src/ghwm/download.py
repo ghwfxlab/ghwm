@@ -41,16 +41,18 @@ def github_token() -> str | None:
         return token
 
     if gh_cli_available():
-        result = subprocess.run(
-            ["gh", "auth", "token"],
-            check=False,
-            capture_output=True,
-            text=True,
-        )
-        if result.returncode == 0:
-            token = result.stdout.strip()
-            if token:
-                return token
+        gh_bin = shutil.which("gh")
+        if gh_bin:
+            result = subprocess.run(  # noqa: S603
+                [gh_bin, "auth", "token"],
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+            if result.returncode == 0:
+                token = result.stdout.strip()
+                if token:
+                    return token
 
     return None
 
@@ -111,10 +113,11 @@ def read_from_tree(repo_root: Path, source: str, workflow_names: list[str]) -> l
             raise FileNotFoundError(f"Workflow package manifest not found: workflows/{name}/workflow.yml")
 
         manifest_data = parse_workflow_manifest_data(yaml.safe_load(manifest_path.read_text(encoding="utf-8")))
-        files = build_installed_files(
-            manifest_data,
-            lambda file_source: _read_local_package_file(workflow_dir, name, file_source),
-        )
+
+        def read_file(file_source: str, workflow_dir: Path = workflow_dir, name: str = name) -> bytes:
+            return _read_local_package_file(workflow_dir, name, file_source)
+
+        files = build_installed_files(manifest_data, read_file)
 
         results.append(
             WorkflowSource(

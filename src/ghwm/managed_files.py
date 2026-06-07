@@ -87,7 +87,7 @@ def _extract_body(content: str) -> str:
 
 
 def _load_workflow_yaml(content: str) -> object:
-    return yaml.load(content, Loader=_GitHubActionsLoader)
+    return yaml.load(content, Loader=_GitHubActionsLoader)  # noqa: S506
 
 
 def _preserve_existing_triggers(existing_content: str, new_content: str) -> str:

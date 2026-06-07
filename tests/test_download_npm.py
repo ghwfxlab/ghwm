@@ -54,7 +54,7 @@ def _make_tarball_bytes(files: dict[str, str]) -> bytes:
 
 
 class _FakeResponse(io.BytesIO):
-    def __enter__(self) -> "_FakeResponse":
+    def __enter__(self) -> _FakeResponse:
         return self
 
     def __exit__(self, *args: object) -> None:
@@ -130,7 +130,7 @@ class TestNpmTarballUrl:
         metadata_bytes = _metadata_bytes({"versions": {VERSION: {"dist": {}}}})
 
         with patch("ghwm.download_npm.urlopen", return_value=_FakeResponse(metadata_bytes)):
-            with pytest.raises(RuntimeError, match="missing dist.tarball"):
+            with pytest.raises(RuntimeError, match=r"missing dist\.tarball"):
                 npm_tarball_url(ORG, LINTER, VERSION, TOKEN)
 
     def test_npm_tarball_url_should_reraise_unexpected_http_error_when_registry_returns_server_error(
@@ -306,13 +306,13 @@ class TestWorkflowManifest:
     ) -> None:
         files = build_installed_files(
             {"files": [{"source": f"{LINTER}.yml", "target": LINTER_TARGET_PATH}]},
-            lambda source: f"content:{source}".encode("utf-8"),
+            lambda source: f"content:{source}".encode(),
         )
 
         assert files == [
             InstalledFile(
                 source=f"{LINTER}.yml",
-                content=f"content:{LINTER}.yml".encode("utf-8"),
+                content=f"content:{LINTER}.yml".encode(),
                 target=LINTER_TARGET_PATH,
             )
         ]
@@ -346,7 +346,7 @@ class TestExtractNpmPackage:
         assert files == [
             InstalledFile(
                 source=f"{AUTO_ASSIGN_PR}.yaml",
-                content=f"name: {AUTO_ASSIGN_PR}\n".encode("utf-8"),
+                content=f"name: {AUTO_ASSIGN_PR}\n".encode(),
                 target=AUTO_ASSIGN_PR_TARGET_PATH,
             ),
             InstalledFile(
@@ -367,7 +367,7 @@ class TestExtractNpmPackage:
         )
         manifest_data = read_workflow_manifest(tarball_path)
 
-        with pytest.raises(FileNotFoundError, match="package/missing.yml"):
+        with pytest.raises(FileNotFoundError, match=r"package/missing\.yml"):
             extract_npm_package(tarball_path, manifest_data)
 
     def test_extract_npm_package_should_raise_when_tar_member_cannot_be_extracted(self, tmp_path: Path) -> None:

@@ -52,13 +52,13 @@ def _github_packages_auth_error() -> RuntimeError:
 def npm_tarball_url(org: str, name: str, version: str, token: str | None) -> str:
     """Return the resolved GitHub Packages tarball URL for a workflow package version."""
     package_name = scoped_package_name(org, name)
-    request = Request(
+    request = Request(  # noqa: S310
         npm_package_metadata_url(org, name),
         headers=_github_packages_headers(token, accept="application/vnd.npm.install-v1+json"),
     )
 
     try:
-        with urlopen(request) as metadata_response:
+        with urlopen(request) as metadata_response:  # noqa: S310
             metadata = json.load(metadata_response)
     except HTTPError as exc:
         if exc.code in {HTTPStatus.UNAUTHORIZED.value, HTTPStatus.FORBIDDEN.value}:
@@ -86,14 +86,14 @@ def npm_tarball_url(org: str, name: str, version: str, token: str | None) -> str
 def download_npm_tarball(org: str, name: str, version: str, dest: Path, token: str | None) -> Path:
     """Download an npm package tarball from GitHub Packages."""
     tarball_url = npm_tarball_url(org, name, version, token)
-    request = Request(
+    request = Request(  # noqa: S310
         tarball_url,
         headers=_github_packages_headers(token, accept="application/octet-stream"),
     )
     archive_path = dest / "package.tgz"
 
     try:
-        with urlopen(request) as archive_response, archive_path.open("wb") as archive_file:
+        with urlopen(request) as archive_response, archive_path.open("wb") as archive_file:  # noqa: S310
             shutil.copyfileobj(archive_response, archive_file)
     except HTTPError as exc:
         if exc.code in {HTTPStatus.UNAUTHORIZED.value, HTTPStatus.FORBIDDEN.value}:
