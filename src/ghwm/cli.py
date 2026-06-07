@@ -25,6 +25,44 @@ LOCAL_HELP = "Path to local marketplace checkout."
 UPDATE_TRIGGERS_HELP = "Replace workflow triggers with the packaged version during updates."
 
 
+def add_install_cmd_to_parser(subcommands: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
+    install_cmd = subcommands.add_parser("install", help="Sync workflows to match the manifest (default).")
+    install_cmd.add_argument("--manifest", default=DEFAULT_MANIFEST_PATH, help=MANIFEST_HELP)
+    install_cmd.add_argument("--cwd", default=DEFAULT_CWD, help=CWD_HELP)
+    install_cmd.add_argument("--force", action="store_true", help=FORCE_HELP)
+    install_cmd.add_argument("--no-prune", action="store_true", help="Skip removal of stale workflows.")
+    install_cmd.add_argument("--local", default=None, help=LOCAL_HELP)
+    install_cmd.add_argument(
+        "--update-triggers",
+        action="store_true",
+        help=UPDATE_TRIGGERS_HELP,
+    )
+
+
+def add_update_cmd_to_parser(subcommands: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
+    update_cmd = subcommands.add_parser("update", help="Re-download and refresh all manifest workflows.")
+    update_cmd.add_argument("--manifest", default=DEFAULT_MANIFEST_PATH, help=MANIFEST_HELP)
+    update_cmd.add_argument("--cwd", default=DEFAULT_CWD, help=CWD_HELP)
+    update_cmd.add_argument("--force", action="store_true", help=FORCE_HELP)
+    update_cmd.add_argument(
+        "--prune",
+        action="store_true",
+        help="Remove managed workflows that are no longer listed in the manifest.",
+    )
+    update_cmd.add_argument("--local", default=None, help=LOCAL_HELP)
+    update_cmd.add_argument(
+        "--update-triggers",
+        action="store_true",
+        help=UPDATE_TRIGGERS_HELP,
+    )
+
+
+def add_list_cmd_to_parser(subcommands: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
+    list_cmd = subcommands.add_parser("list", help="Show workflows declared in the manifest.")
+    list_cmd.add_argument("--manifest", default=DEFAULT_MANIFEST_PATH, help=MANIFEST_HELP)
+    list_cmd.add_argument("--cwd", default=DEFAULT_CWD, help=CWD_HELP)
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="ghwm",
@@ -45,42 +83,12 @@ def build_parser() -> argparse.ArgumentParser:
 
     subcommands = parser.add_subparsers(dest="command")
 
-    # install
-    install_cmd = subcommands.add_parser("install", help="Sync workflows to match the manifest (default).")
-    install_cmd.add_argument("--manifest", default=DEFAULT_MANIFEST_PATH, help=MANIFEST_HELP)
-    install_cmd.add_argument("--cwd", default=DEFAULT_CWD, help=CWD_HELP)
-    install_cmd.add_argument("--force", action="store_true", help=FORCE_HELP)
-    install_cmd.add_argument("--no-prune", action="store_true", help="Skip removal of stale workflows.")
-    install_cmd.add_argument("--local", default=None, help=LOCAL_HELP)
-    install_cmd.add_argument(
-        "--update-triggers",
-        action="store_true",
-        help=UPDATE_TRIGGERS_HELP,
-    )
-
-    # update
-    update_cmd = subcommands.add_parser("update", help="Re-download and refresh all manifest workflows.")
-    update_cmd.add_argument("--manifest", default=DEFAULT_MANIFEST_PATH, help=MANIFEST_HELP)
-    update_cmd.add_argument("--cwd", default=DEFAULT_CWD, help=CWD_HELP)
-    update_cmd.add_argument("--force", action="store_true", help=FORCE_HELP)
-    update_cmd.add_argument(
-        "--prune",
-        action="store_true",
-        help="Remove managed workflows that are no longer listed in the manifest.",
-    )
-    update_cmd.add_argument("--local", default=None, help=LOCAL_HELP)
-    update_cmd.add_argument(
-        "--update-triggers",
-        action="store_true",
-        help=UPDATE_TRIGGERS_HELP,
-    )
-
-    # list
-    list_cmd = subcommands.add_parser("list", help="Show workflows declared in the manifest.")
-    list_cmd.add_argument("--manifest", default=DEFAULT_MANIFEST_PATH, help=MANIFEST_HELP)
-    list_cmd.add_argument("--cwd", default=DEFAULT_CWD, help=CWD_HELP)
+    add_install_cmd_to_parser(subcommands)
+    add_update_cmd_to_parser(subcommands)
+    add_list_cmd_to_parser(subcommands)
 
     return parser
+
 
 
 def print_result(result: InstallResult) -> None:
