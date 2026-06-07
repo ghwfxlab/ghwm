@@ -39,11 +39,12 @@ Use the existing Make targets:
 - `make format` - run Ruff formatter
 - `make build` - build sdist and wheel
 - `make lang` - run textlint for prose/docs
+- `make super-linter` - run super-linter via Docker
 
 For Python changes, run:
 
 ```sh
-make test && make lint && make type-check
+make test && make lint && make type-check && make super-linter
 ```
 
 For documentation changes, run:
