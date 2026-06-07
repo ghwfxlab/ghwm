@@ -14,6 +14,8 @@ Workflows are sourced from [owner/ghwm-marketplace](https://github.com/owner/ghw
 
 ## Install
 
+The recommended way to install `ghwm` is using [uv](https://docs.astral.sh/uv/) (a fast Python package manager):
+
 ```sh
 uv tool install git+https://github.com/pljanicki/ghwm.git
 ```
@@ -22,6 +24,20 @@ Or pin to a specific version tag:
 
 ```sh
 uv tool install git+https://github.com/pljanicki/ghwm.git@vX.Y.Z
+```
+
+### Alternatives
+
+If you prefer to install using [pipx](https://github.com/pypa/pipx):
+
+```sh
+pipx install git+https://github.com/pljanicki/ghwm.git
+```
+
+Or via standard `pip` (into an active virtual environment):
+
+```sh
+pip install git+https://github.com/pljanicki/ghwm.git
 ```
 
 ## Usage
@@ -127,15 +143,21 @@ workflow package set. Old tarball-era lockfiles are rejected and must be regener
 
 ### Authentication
 
-The CLI needs read access to GitHub Packages and the marketplace repository. Set one of:
+The CLI needs read access to GitHub Packages and the marketplace repository. The CLI looks for authentication in the following order:
+
+1. Active `gh` CLI credentials (using the output of `gh auth token`)
+2. `GH_TOKEN` environment variable
+3. `GITHUB_TOKEN` environment variable
+
+For example, you can set an environment variable:
 
 ```sh
-export GH_TOKEN=ghp_...        # or GITHUB_TOKEN
+export GH_TOKEN=ghp_...
+# or
+export GITHUB_TOKEN=ghp_...
 ```
 
-The CLI prefers `GH_TOKEN`/`GITHUB_TOKEN` when they are set. Those tokens need `read:packages`
-access. If you rely on the `gh` CLI instead, make sure its token can read GitHub Packages too, for
-example with:
+If you rely on the `gh` CLI, ensure that its active token has `read:packages` access. You can add this scope if needed by running:
 
 ```sh
 gh auth refresh -s read:packages
@@ -160,6 +182,9 @@ make test             # pytest
 make lint             # ruff check
 make format           # ruff format
 make type-check       # mypy
+make lang             # textlint for prose/documentation
+make precommit        # run pre-commit hooks on all files
+make super-linter     # run super-linter via Docker
 make clean            # remove build artifacts
 ```
 
