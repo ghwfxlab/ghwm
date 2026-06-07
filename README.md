@@ -52,10 +52,10 @@ workflow entry.
 ghwm install            # installs workflows listed in ghwm.yml
 ghwm install --force    # overwrites even if files were modified locally
 ghwm install --no-prune # skip removal of stale workflows
-ghwm install --update-triggers
+ghwm install --update-triggers # replace workflow triggers with the packaged version
 ghwm update             # re-downloads all workflows (respects versions)
 ghwm update --prune     # also removes managed workflows no longer in ghwm.yml
-ghwm update --update-triggers
+ghwm update --update-triggers # replace workflow triggers with the packaged version
 ghwm list               # shows workflows declared in ghwm.yml
 ```
 
