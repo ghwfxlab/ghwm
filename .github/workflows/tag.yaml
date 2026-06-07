@@ -25,20 +25,20 @@ jobs:
     outputs:
       new_tag: ${{ steps.bump-version.outputs.new_tag }}
     steps:
-      # zizmor: ignore[secrets-outside-env]
       - name: Generate GH App token
         id: app-token
         uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3.1.1
         with:
-          app-id: ${{ secrets.GH_APP_ID }}
-          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+          app-id: ${{ secrets.GH_APP_ID }} # zizmor: ignore[secrets-outside-env]
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }} # zizmor: ignore[secrets-outside-env]
+          permission-contents: write
 
-      # zizmor: ignore[artipacked]
       - name: Checkout The Source Code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           token: ${{ steps.app-token.outputs.token }}
           fetch-depth: 0
+          persist-credentials: false
 
       # Version Bumping Strategy:
       # Manual Bumping: Include #major, #minor, #patch, or #none in commit message
@@ -57,7 +57,7 @@ jobs:
           TAG_PREFIX: v
           PRERELEASE: false
 
-      - name: automatic-release
+      - name: automatic-release # zizmor: ignore[superfluous-actions]
         uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # v3.0.0
         with:
           token: ${{ steps.app-token.outputs.token }}

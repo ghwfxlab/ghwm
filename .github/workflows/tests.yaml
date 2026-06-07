@@ -54,12 +54,11 @@ jobs:
           COVERAGE=$(awk '/^TOTAL/ {print $(NF)}' pytest-coverage.txt | tr -d '%')
           echo "value=$COVERAGE" >> "$GITHUB_OUTPUT"
 
-      # zizmor: ignore[secrets-outside-env]
       - name: Upload coverage reports to Codecov
         if: github.ref == 'refs/heads/main'
         uses: codecov/codecov-action@e79a6962e0d4c0c17b229090214935d2e33f8354 # v6.0.1
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
+          token: ${{ secrets.CODECOV_TOKEN }} # zizmor: ignore[secrets-outside-env]
 
       - name: Fail if coverage too low
         if: ${{ fromJSON(steps.coverage.outputs.value) < fromJSON(env.PYTHON_COVERAGE_LIMIT) }}
