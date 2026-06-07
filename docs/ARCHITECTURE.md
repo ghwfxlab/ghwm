@@ -47,12 +47,6 @@ C4Container
     Rel(cli, gpr, "Fetches tarballs", "HTTPS")
     Rel(cli, lockfile, "Reads/Updates", "JSON")
     Rel(cli, workflows, "Syncs & Merges", "File System")
-
-    UpdateRelStyle(dev, cli, $offsetY="30")
-    UpdateRelStyle(cli, gpr, $offsetY="40")
-    UpdateRelStyle(cli, manifest, $offsetX="-40", $offsetY="-20")
-    UpdateRelStyle(cli, lockfile, $offsetX="5", $offsetY="-20")
-    UpdateRelStyle(cli, workflows, $offsetX="-5", $offsetY="-20")
 ```
 
 ### C4 Model - Component Diagram
@@ -80,22 +74,11 @@ C4Component
     Rel(manifest_mod, install_mod, "Passes WorkflowEntry[]")
     Rel(download_mod, install_mod, "Passes WorkflowSource[]")
     
-    Rel(install_mod, lock_mod, "Updates <br/> state")
-    Rel(lock_mod, lock_file, "Persists <br/> to")
+    Rel(install_mod, lock_mod, "Updates state")
+    Rel(lock_mod, lock_file, "Persists to")
     
     Rel(install_mod, files_mod, "Delegates sync")
-    Rel(files_mod, workflows_dir, "Writes <br/> managed <br/> files")
-
-    UpdateLayoutConfig($c4ShapeInRow="3", $c4BoundaryInRow="1")
-
-    UpdateRelStyle(gpr, download_mod, $offsetX="25", $offsetY="30")
-    UpdateRelStyle(download_mod, install_mod, $offsetX="-170", $offsetY="0")
-    UpdateRelStyle(manifest_mod, install_mod, $offsetX="100", $offsetY="0")
-    UpdateRelStyle(manifest_file, manifest_mod, $offsetX="-20", $offsetY="20")
-    UpdateRelStyle(install_mod, lock_mod, $offsetX="-20", $offsetY="30")
-    UpdateRelStyle(lock_mod, lock_file, $offsetX="-20", $offsetY="30")
-    UpdateRelStyle(install_mod, files_mod, $offsetX="20", $offsetY="0")
-    UpdateRelStyle(files_mod, workflows_dir, $offsetX="-30", $offsetY="-30")
+    Rel(files_mod, workflows_dir, "Writes managed files")
 ```
 
 ## Component map
