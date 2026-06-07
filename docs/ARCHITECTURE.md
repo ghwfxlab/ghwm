@@ -24,6 +24,80 @@ ghwm.yml          GitHub Packages npm registry
   (managed YAML files)  (JSON lockfile)
 ```
 
+### C4 Model - Container Diagram
+
+```mermaid
+C4Container
+    title Container Diagram for ghwm
+    
+    Person(dev, "Developer", "Runs ghwm commands")
+
+    Container_Boundary(c1, "Local Repository") {
+        Container(manifest, "ghwm.yml", "YAML", "Defines required workflows and versions.")
+        Container(lockfile, "ghwm.lock", "JSON", "Stores hashes and resolved versions (State).")
+        Container(workflows, ".github/workflows/", "YAML Files", "The managed workflow files.")
+    }
+
+    Container(cli, "ghwm CLI", "Python", "The core logic that orchestrates downloads and file syncing.")
+    
+    System_Ext(gpr, "GitHub Packages", "NPM Registry")
+
+    Rel(dev, cli, "Executes", "ghwm install")
+    Rel(cli, manifest, "Parses", "PyYAML")
+    Rel(cli, gpr, "Fetches tarballs", "HTTPS")
+    Rel(cli, lockfile, "Reads/Updates", "JSON")
+    Rel(cli, workflows, "Syncs & Merges", "File System")
+
+    UpdateRelStyle(dev, cli, $offsetY="30")
+    UpdateRelStyle(cli, gpr, $offsetY="40")
+    UpdateRelStyle(cli, manifest, $offsetX="-40", $offsetY="-20")
+    UpdateRelStyle(cli, lockfile, $offsetX="5", $offsetY="-20")
+    UpdateRelStyle(cli, workflows, $offsetX="-5", $offsetY="-20")
+```
+
+### C4 Model - Component Diagram
+
+```mermaid
+C4Component
+    title Component Diagram for ghwm
+    
+    Container_Ext(gpr, "GitHub Packages", "Registry")
+    
+    System_Boundary(ghwm, "ghwm") {
+        Component(download_mod, "download.py", "Component", "Orchestrates registry downloads into WorkflowSource objects.")
+        Component(manifest_mod, "manifest.py", "Component", "Parses YAML into WorkflowEntry objects.")
+        Container(manifest_file, "ghwm.yml", "YAML")
+        Component(install_mod, "install.py", "Component", "The central coordinator for the install lifecycle.")
+        Component(lock_mod, "lock.py", "Component", "Manages the in-memory lockfile state.")
+        Container(lock_file, "ghwm.lock", "JSON")
+        Component(files_mod, "managed_files.py", "Component", "Handles file I/O, headers, and 'on:' block merging.")
+        Container(workflows_dir, ".github/workflows/", "Directory")
+    }
+
+    Rel(manifest_file, manifest_mod, "Read by")
+    Rel(gpr, download_mod, "Download to")
+    
+    Rel(manifest_mod, install_mod, "Passes WorkflowEntry[]")
+    Rel(download_mod, install_mod, "Passes WorkflowSource[]")
+    
+    Rel(install_mod, lock_mod, "Updates <br/> state")
+    Rel(lock_mod, lock_file, "Persists <br/> to")
+    
+    Rel(install_mod, files_mod, "Delegates sync")
+    Rel(files_mod, workflows_dir, "Writes <br/> managed <br/> files")
+
+    UpdateLayoutConfig($c4ShapeInRow="3", $c4BoundaryInRow="1")
+
+    UpdateRelStyle(gpr, download_mod, $offsetX="25", $offsetY="30")
+    UpdateRelStyle(download_mod, install_mod, $offsetX="-170", $offsetY="0")
+    UpdateRelStyle(manifest_mod, install_mod, $offsetX="100", $offsetY="0")
+    UpdateRelStyle(manifest_file, manifest_mod, $offsetX="-20", $offsetY="20")
+    UpdateRelStyle(install_mod, lock_mod, $offsetX="-20", $offsetY="30")
+    UpdateRelStyle(lock_mod, lock_file, $offsetX="-20", $offsetY="30")
+    UpdateRelStyle(install_mod, files_mod, $offsetX="20", $offsetY="0")
+    UpdateRelStyle(files_mod, workflows_dir, $offsetX="-30", $offsetY="-30")
+```
+
 ## Component map
 
 | Module             | Responsibility                                                              |
