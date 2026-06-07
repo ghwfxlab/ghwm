@@ -7,6 +7,7 @@ import shutil
 import tarfile
 from collections.abc import Callable
 from dataclasses import dataclass
+from http import HTTPStatus
 from pathlib import Path
 from typing import Any
 from urllib.error import HTTPError
@@ -60,9 +61,9 @@ def npm_tarball_url(org: str, name: str, version: str, token: str | None) -> str
         with urlopen(request) as metadata_response:
             metadata = json.load(metadata_response)
     except HTTPError as exc:
-        if exc.code in {401, 403}:
+        if exc.code in {HTTPStatus.UNAUTHORIZED.value, HTTPStatus.FORBIDDEN.value}:
             raise _github_packages_auth_error() from exc
-        if exc.code == 404:
+        if exc.code == HTTPStatus.NOT_FOUND.value:
             raise FileNotFoundError(f"Workflow package not found in GitHub Packages: {package_name}") from exc
         raise
 
@@ -95,9 +96,9 @@ def download_npm_tarball(org: str, name: str, version: str, dest: Path, token: s
         with urlopen(request) as archive_response, archive_path.open("wb") as archive_file:
             shutil.copyfileobj(archive_response, archive_file)
     except HTTPError as exc:
-        if exc.code in {401, 403}:
+        if exc.code in {HTTPStatus.UNAUTHORIZED.value, HTTPStatus.FORBIDDEN.value}:
             raise _github_packages_auth_error() from exc
-        if exc.code == 404:
+        if exc.code == HTTPStatus.NOT_FOUND.value:
             raise FileNotFoundError(
                 f"Workflow package tarball not found in GitHub Packages: {scoped_package_name(org, name)}@{version}"
             ) from exc

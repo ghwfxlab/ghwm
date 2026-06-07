@@ -6,6 +6,7 @@ import io
 import json
 import tarfile
 from email.message import Message
+from http import HTTPStatus
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 from urllib.error import HTTPError
@@ -113,8 +114,8 @@ class TestNpmTarballUrl:
             "ghwm.download_npm.urlopen",
             side_effect=_http_error(
                 METADATA_URL,
-                404,
-                "Not Found",
+                HTTPStatus.NOT_FOUND.value,
+                HTTPStatus.NOT_FOUND.phrase,
             ),
         ):
             with pytest.raises(FileNotFoundError, match="Workflow package not found"):
@@ -139,8 +140,8 @@ class TestNpmTarballUrl:
             "ghwm.download_npm.urlopen",
             side_effect=_http_error(
                 METADATA_URL,
-                500,
-                "Internal Server Error",
+                HTTPStatus.INTERNAL_SERVER_ERROR.value,
+                HTTPStatus.INTERNAL_SERVER_ERROR.phrase,
             ),
         ):
             with pytest.raises(HTTPError, match="Internal Server Error"):
@@ -188,8 +189,8 @@ class TestDownloadNpmTarball:
             "ghwm.download_npm.urlopen",
             side_effect=_http_error(
                 METADATA_URL,
-                403,
-                "Forbidden",
+                HTTPStatus.FORBIDDEN.value,
+                HTTPStatus.FORBIDDEN.phrase,
             ),
         ):
             with pytest.raises(RuntimeError, match="read:packages"):
@@ -201,8 +202,8 @@ class TestDownloadNpmTarball:
                 _FakeResponse(_tarball_metadata()),
                 _http_error(
                     TARBALL_URL,
-                    403,
-                    "Forbidden",
+                    HTTPStatus.FORBIDDEN.value,
+                    HTTPStatus.FORBIDDEN.phrase,
                 ),
             ]
 
@@ -215,8 +216,8 @@ class TestDownloadNpmTarball:
                 _FakeResponse(_tarball_metadata()),
                 _http_error(
                     TARBALL_URL,
-                    404,
-                    "Not Found",
+                    HTTPStatus.NOT_FOUND.value,
+                    HTTPStatus.NOT_FOUND.phrase,
                 ),
             ]
 
@@ -231,8 +232,8 @@ class TestDownloadNpmTarball:
                 _FakeResponse(_tarball_metadata()),
                 _http_error(
                     TARBALL_URL,
-                    502,
-                    "Bad Gateway",
+                    HTTPStatus.BAD_GATEWAY.value,
+                    HTTPStatus.BAD_GATEWAY.phrase,
                 ),
             ]
 
