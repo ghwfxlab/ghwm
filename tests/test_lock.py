@@ -8,6 +8,11 @@ from pathlib import Path
 import pytest
 
 from ghwm.lock import LockEntry, Lockfile, LockFileEntry, read_lockfile, write_lockfile
+from tests.shared import AUTO_ASSIGN_PR, AUTO_ASSIGN_PR_PACKAGE_SOURCE, VERSION_1, VERSION_2
+
+TEST_NAME_A = "a"
+TEST_SOURCE_A = "@owner/ghwm-a"
+TEST_TARGET_A = ".github/workflows/a.yml"
 
 
 class TestLockfile:
@@ -15,71 +20,71 @@ class TestLockfile:
         lockfile = Lockfile(
             packages=[
                 LockEntry(
-                    name="a",
-                    version="1.0.0",
-                    source="@owner/ghwm-a",
-                    files=[LockFileEntry(target=".github/workflows/a.yml", source_hash="sha256:a")],
+                    name=TEST_NAME_A,
+                    version=VERSION_1,
+                    source=TEST_SOURCE_A,
+                    files=[LockFileEntry(target=TEST_TARGET_A, source_hash="sha256:a")],
                 )
             ]
         )
 
-        entry = lockfile.find("a")
+        entry = lockfile.find(TEST_NAME_A)
 
         assert entry is not None
-        assert entry.version == "1.0.0"
+        assert entry.version == VERSION_1
 
     def test_lockfile_should_replace_entry_when_upsert_receives_existing_package_name(self) -> None:
         lockfile = Lockfile(
             packages=[
                 LockEntry(
-                    name="a",
-                    version="1.0.0",
-                    source="@owner/ghwm-a",
-                    files=[LockFileEntry(target=".github/workflows/a.yml", source_hash="sha256:old")],
+                    name=TEST_NAME_A,
+                    version=VERSION_1,
+                    source=TEST_SOURCE_A,
+                    files=[LockFileEntry(target=TEST_TARGET_A, source_hash="sha256:old")],
                 )
             ]
         )
 
         lockfile.upsert(
             LockEntry(
-                name="a",
-                version="2.0.0",
-                source="@owner/ghwm-a",
-                files=[LockFileEntry(target=".github/workflows/a.yml", source_hash="sha256:new")],
+                name=TEST_NAME_A,
+                version=VERSION_2,
+                source=TEST_SOURCE_A,
+                files=[LockFileEntry(target=TEST_TARGET_A, source_hash="sha256:new")],
             )
         )
 
-        entry = lockfile.find("a")
+        entry = lockfile.find(TEST_NAME_A)
         assert entry is not None
-        assert entry.version == "2.0.0"
+        assert entry.version == VERSION_2
         assert entry.files[0].source_hash == "sha256:new"
 
     def test_lockfile_should_sort_packages_when_upsert_adds_multiple_entries(self) -> None:
         lockfile = Lockfile()
 
         lockfile.upsert(LockEntry("c", None, "@owner/ghwm-c", []))
-        lockfile.upsert(LockEntry("a", None, "@owner/ghwm-a", []))
+        lockfile.upsert(LockEntry(TEST_NAME_A, None, TEST_SOURCE_A, []))
 
-        assert [package_entry.name for package_entry in lockfile.packages] == ["a", "c"]
+        assert [package_entry.name for package_entry in lockfile.packages] == [TEST_NAME_A, "c"]
 
     def test_lock_entry_should_return_file_when_find_file_matches_target(self) -> None:
         entry = LockEntry(
-            name="a",
-            version="1.0.0",
-            source="@owner/ghwm-a",
-            files=[LockFileEntry(target=".github/workflows/a.yml", source_hash="sha256:a")],
+            name=TEST_NAME_A,
+            version=VERSION_1,
+            source=TEST_SOURCE_A,
+            files=[LockFileEntry(target=TEST_TARGET_A, source_hash="sha256:a")],
         )
 
-        file_entry = entry.find_file(".github/workflows/a.yml")
+        file_entry = entry.find_file(TEST_TARGET_A)
 
         assert file_entry is not None
         assert file_entry.source_hash == "sha256:a"
 
     def test_lockfile_should_remove_and_return_entry_when_remove_finds_existing_package(self) -> None:
-        entry = LockEntry("a", None, "@owner/ghwm-a", [])
+        entry = LockEntry(TEST_NAME_A, None, TEST_SOURCE_A, [])
         lockfile = Lockfile(packages=[entry])
 
-        removed = lockfile.remove("a")
+        removed = lockfile.remove(TEST_NAME_A)
 
         assert removed == entry
         assert lockfile.packages == []
@@ -87,7 +92,7 @@ class TestLockfile:
     def test_lockfile_should_return_none_when_remove_does_not_find_package(self) -> None:
         lockfile = Lockfile(packages=[])
 
-        removed = lockfile.remove("a")
+        removed = lockfile.remove(TEST_NAME_A)
 
         assert removed is None
 
@@ -103,12 +108,12 @@ class TestReadLockfile:
             "lockfileVersion": 1,
             "packages": [
                 {
-                    "name": "auto-assign-pr",
-                    "version": "1.0.0",
-                    "source": "@owner/ghwm-auto-assign-pr",
+                    "name": AUTO_ASSIGN_PR,
+                    "version": VERSION_1,
+                    "source": AUTO_ASSIGN_PR_PACKAGE_SOURCE,
                     "files": [
                         {
-                            "target": ".github/workflows/auto-assign-pr.yaml",
+                            "target": f".github/workflows/{AUTO_ASSIGN_PR}.yaml",
                             "source_hash": "sha256:workflow",
                         },
                         {
@@ -125,7 +130,7 @@ class TestReadLockfile:
         lockfile = read_lockfile(tmp_path)
 
         assert len(lockfile.packages) == 1
-        assert lockfile.packages[0].name == "auto-assign-pr"
+        assert lockfile.packages[0].name == AUTO_ASSIGN_PR
         assert lockfile.packages[0].files[1].overwrite is False
 
     def test_read_lockfile_should_raise_when_lockfile_version_is_not_supported(self, tmp_path: Path) -> None:
@@ -300,11 +305,11 @@ class TestWriteLockfile:
         lockfile = Lockfile(
             packages=[
                 LockEntry(
-                    name="auto-assign-pr",
-                    version="1.0.0",
-                    source="@owner/ghwm-auto-assign-pr",
+                    name=AUTO_ASSIGN_PR,
+                    version=VERSION_1,
+                    source=AUTO_ASSIGN_PR_PACKAGE_SOURCE,
                     files=[
-                        LockFileEntry(target=".github/workflows/auto-assign-pr.yaml", source_hash="sha256:wf"),
+                        LockFileEntry(target=f".github/workflows/{AUTO_ASSIGN_PR}.yaml", source_hash="sha256:wf"),
                         LockFileEntry(
                             target=".github/auto_assign.yaml",
                             source_hash="sha256:cfg",
@@ -319,7 +324,7 @@ class TestWriteLockfile:
         content = json.loads((tmp_path / "ghwm.lock").read_text())
 
         assert content["lockfileVersion"] == 1
-        assert content["packages"][0]["source"] == "@owner/ghwm-auto-assign-pr"
+        assert content["packages"][0]["source"] == AUTO_ASSIGN_PR_PACKAGE_SOURCE
         assert "overwrite" not in content["packages"][0]["files"][0]
         assert content["packages"][0]["files"][1]["overwrite"] is False
 
@@ -332,7 +337,7 @@ class TestWriteLockfile:
         assert not lock_path.exists()
 
     def test_write_lockfile_should_omit_none_fields_when_serializing_package(self, tmp_path: Path) -> None:
-        lockfile = Lockfile(packages=[LockEntry("a", None, "@owner/ghwm-a", [LockFileEntry("t", "sha256:x")])])
+        lockfile = Lockfile(packages=[LockEntry(TEST_NAME_A, None, TEST_SOURCE_A, [LockFileEntry("t", "sha256:x")])])
 
         write_lockfile(tmp_path, lockfile)
         content = json.loads((tmp_path / "ghwm.lock").read_text())

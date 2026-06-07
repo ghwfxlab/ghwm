@@ -11,7 +11,15 @@ from ghwm.install import install_workflows, update_workflows
 from ghwm.lock import read_lockfile
 from ghwm.managed_files import _extract_body, _load_workflow_yaml
 from ghwm.manifest import Manifest, parse_manifest
-from tests.shared import MARKETPLACE_SOURCE, WORKFLOWS_DIR
+from tests.shared import (
+    AUTO_ASSIGN_PR,
+    LINTER,
+    LINTER_PACKAGE_SOURCE,
+    MARKETPLACE_SOURCE,
+    VERSION_1,
+    VERSION_1_2_3,
+    WORKFLOWS_DIR,
+)
 
 
 def _marketplace_manifest(workflows: list[dict[str, object]]) -> Manifest:
@@ -60,8 +68,8 @@ class TestInstallWorkflows:
         marketplace = tmp_path / "marketplace"
         consumer = tmp_path / "consumer"
         consumer.mkdir()
-        _write_marketplace_package(marketplace, "linter", "name: linter\non: push\n")
-        manifest = _marketplace_manifest([{"name": "linter", "version": "1.2.3", "target": "custom-review.yml"}])
+        _write_marketplace_package(marketplace, LINTER, "name: linter\non: push\n")
+        manifest = _marketplace_manifest([{"name": LINTER, "version": VERSION_1_2_3, "target": "custom-review.yml"}])
 
         install_workflows(consumer, manifest, local_path=marketplace)
 
@@ -73,19 +81,19 @@ class TestInstallWorkflows:
         marketplace = tmp_path / "marketplace"
         consumer = tmp_path / "consumer"
         consumer.mkdir()
-        _write_marketplace_package(marketplace, "linter", "name: linter\non: push\n")
-        manifest = _marketplace_manifest([{"name": "linter", "version": "1.2.3"}])
+        _write_marketplace_package(marketplace, LINTER, "name: linter\non: push\n")
+        manifest = _marketplace_manifest([{"name": LINTER, "version": VERSION_1_2_3}])
 
         result = install_workflows(consumer, manifest, local_path=marketplace)
 
-        installed_path = _workflow_path(consumer, "linter")
+        installed_path = _workflow_path(consumer, LINTER)
         lockfile = read_lockfile(consumer)
 
-        assert result.installed == ["linter"]
+        assert result.installed == [LINTER]
         assert installed_path.is_file()
-        assert "# Managed by ghwm (linter@1.2.3)" in installed_path.read_text()
-        assert lockfile.packages[0].source == "@owner/ghwm-linter"
-        assert lockfile.packages[0].files[0].target == ".github/workflows/linter.yaml"
+        assert f"# Managed by ghwm ({LINTER}@{VERSION_1_2_3})" in installed_path.read_text()
+        assert lockfile.packages[0].source == LINTER_PACKAGE_SOURCE
+        assert lockfile.packages[0].files[0].target == f".github/workflows/{LINTER}.yaml"
 
     def test_install_workflows_should_skip_unmanaged_existing_workflow_file_when_target_workflow_file_exists(
         self, tmp_path: Path
@@ -93,16 +101,16 @@ class TestInstallWorkflows:
         marketplace = tmp_path / "marketplace"
         consumer = tmp_path / "consumer"
         consumer.mkdir()
-        _write_marketplace_package(marketplace, "linter", "name: linter\non: push\n")
-        workflow_path = _workflow_path(consumer, "linter")
+        _write_marketplace_package(marketplace, LINTER, "name: linter\non: push\n")
+        workflow_path = _workflow_path(consumer, LINTER)
         workflow_path.parent.mkdir(parents=True)
         workflow_path.write_text("name: custom\n")
-        manifest = _marketplace_manifest([{"name": "linter", "version": "1.2.3"}])
+        manifest = _marketplace_manifest([{"name": LINTER, "version": VERSION_1_2_3}])
 
         result = install_workflows(consumer, manifest, local_path=marketplace)
         lockfile = read_lockfile(consumer)
 
-        assert result.skipped == [("linter", "unmanaged file exists")]
+        assert result.skipped == [(LINTER, "unmanaged file exists")]
         assert workflow_path.read_text() == "name: custom\n"
         assert lockfile.packages == []
 
@@ -114,11 +122,11 @@ class TestInstallWorkflows:
         consumer.mkdir()
         _write_marketplace_package(
             marketplace,
-            "auto-assign-pr",
+            AUTO_ASSIGN_PR,
             "name: auto-assign-pr\non: pull_request\n",
             config_content="enabled: true\n",
         )
-        manifest = _marketplace_manifest([{"name": "auto-assign-pr", "version": "1.0.0"}])
+        manifest = _marketplace_manifest([{"name": AUTO_ASSIGN_PR, "version": VERSION_1}])
 
         install_workflows(consumer, manifest, local_path=marketplace)
 
@@ -134,18 +142,18 @@ class TestInstallWorkflows:
         (consumer / ".github" / "config.yml").write_text("custom: true\n")
         _write_marketplace_package(
             marketplace,
-            "auto-assign-pr",
+            AUTO_ASSIGN_PR,
             "name: auto-assign-pr\non: pull_request\n",
             config_content="enabled: true\n",
         )
-        manifest = _marketplace_manifest([{"name": "auto-assign-pr", "version": "1.0.0"}])
+        manifest = _marketplace_manifest([{"name": AUTO_ASSIGN_PR, "version": VERSION_1}])
 
         install_workflows(consumer, manifest, local_path=marketplace)
         lockfile = read_lockfile(consumer)
 
         assert (consumer / ".github" / "config.yml").read_text() == "custom: true\n"
         assert [file_entry.target for file_entry in lockfile.packages[0].files] == [
-            ".github/workflows/auto-assign-pr.yaml"
+            f".github/workflows/{AUTO_ASSIGN_PR}.yaml"
         ]
 
     def test_update_workflows_should_preserve_existing_triggers_by_default_when_installed_workflow_has_custom_triggers(
@@ -159,10 +167,10 @@ class TestInstallWorkflows:
             "linter",
             "name: v1\non:\n  push:\n    branches:\n      - main\njobs:\n  review:\n    runs-on: ubuntu-latest\n",
         )
-        manifest = _marketplace_manifest([{"name": "linter", "version": "1.0.0"}])
+        manifest = _marketplace_manifest([{"name": LINTER, "version": VERSION_1}])
         install_workflows(consumer, manifest, local_path=marketplace)
 
-        installed_path = _workflow_path(consumer, "linter")
+        installed_path = _workflow_path(consumer, LINTER)
         installed_path.write_text(
             installed_path.read_text().replace("- main", "- release/*"),
             encoding="utf-8",
@@ -190,7 +198,7 @@ class TestInstallWorkflows:
             "linter",
             "name: v1\non:\n  push:\n    branches:\n      - main\njobs:\n  review:\n    runs-on: ubuntu-latest\n",
         )
-        manifest = _marketplace_manifest([{"name": "linter", "version": "1.0.0"}])
+        manifest = _marketplace_manifest([{"name": LINTER, "version": VERSION_1}])
         empty_manifest = _marketplace_manifest([])
         install_workflows(consumer, manifest, local_path=marketplace)
         _write_marketplace_package(
@@ -202,26 +210,26 @@ class TestInstallWorkflows:
         update_workflows(consumer, manifest, local_path=marketplace)
         result = install_workflows(consumer, empty_manifest, local_path=marketplace)
 
-        assert result.pruned == ["linter"]
-        assert not _workflow_path(consumer, "linter").exists()
+        assert result.pruned == [LINTER]
+        assert not _workflow_path(consumer, LINTER).exists()
 
     def test_update_workflows_should_raise_when_existing_workflow_yaml_is_not_a_mapping(self, tmp_path: Path) -> None:
         marketplace = tmp_path / "marketplace"
         consumer = tmp_path / "consumer"
         consumer.mkdir()
-        _write_marketplace_package(marketplace, "linter", "name: v1\non: push\n")
-        manifest = _marketplace_manifest([{"name": "linter", "version": "1.0.0"}])
+        _write_marketplace_package(marketplace, LINTER, "name: v1\non: push\n")
+        manifest = _marketplace_manifest([{"name": LINTER, "version": VERSION_1}])
         install_workflows(consumer, manifest, local_path=marketplace)
-        installed_path = _workflow_path(consumer, "linter")
+        installed_path = _workflow_path(consumer, LINTER)
         installed_path.write_text(
-            "# Managed by ghwm (linter@1.0.0)\n"
+            f"# Managed by ghwm ({LINTER}@{VERSION_1})\n"
             "# Source: anything\n"
             "# Hash: sha256:anything\n"
             "# Re-run `ghwm install` to refresh this file.\n\n"
             "- not\n- a\n- mapping\n",
             encoding="utf-8",
         )
-        _write_marketplace_package(marketplace, "linter", "name: v2\non: pull_request\n")
+        _write_marketplace_package(marketplace, LINTER, "name: v2\non: pull_request\n")
 
         with pytest.raises(ValueError, match="mapping"):
             update_workflows(consumer, manifest, local_path=marketplace)
@@ -232,15 +240,15 @@ class TestInstallWorkflows:
         marketplace = tmp_path / "marketplace"
         consumer = tmp_path / "consumer"
         consumer.mkdir()
-        _write_marketplace_package(marketplace, "linter", "name: v1\njobs:\n  review:\n    runs-on: ubuntu-latest\n")
+        _write_marketplace_package(marketplace, LINTER, "name: v1\njobs:\n  review:\n    runs-on: ubuntu-latest\n")
         manifest = parse_manifest(
             {
                 "source": "owner/ghwm-marketplace",
-                "workflows": [{"name": "linter", "version": "1.0.0"}],
+                "workflows": [{"name": LINTER, "version": VERSION_1}],
             }
         )
         install_workflows(consumer, manifest, local_path=marketplace)
-        _write_marketplace_package(marketplace, "linter", "name: v2\non: pull_request\n")
+        _write_marketplace_package(marketplace, LINTER, "name: v2\non: pull_request\n")
 
         update_workflows(consumer, manifest, local_path=marketplace)
 
@@ -263,7 +271,7 @@ class TestInstallWorkflows:
         manifest = parse_manifest(
             {
                 "source": "owner/ghwm-marketplace",
-                "workflows": [{"name": "linter", "version": "1.0.0", "update-triggers": True}],
+                "workflows": [{"name": LINTER, "version": VERSION_1, "update-triggers": True}],
             }
         )
         install_workflows(consumer, manifest, local_path=marketplace)
@@ -273,7 +281,7 @@ class TestInstallWorkflows:
             installed_path.read_text().replace("- main", "- release/*"),
             encoding="utf-8",
         )
-        _write_marketplace_package(marketplace, "linter", "name: v2\non:\n  pull_request:\n")
+        _write_marketplace_package(marketplace, LINTER, "name: v2\non:\n  pull_request:\n")
 
         update_workflows(consumer, manifest, local_path=marketplace)
 
@@ -293,7 +301,7 @@ class TestInstallWorkflows:
         manifest = parse_manifest(
             {
                 "source": "owner/ghwm-marketplace",
-                "workflows": [{"name": "linter", "version": "1.0.0"}],
+                "workflows": [{"name": LINTER, "version": VERSION_1}],
             }
         )
         install_workflows(consumer, manifest, local_path=marketplace)
@@ -303,7 +311,7 @@ class TestInstallWorkflows:
             installed_path.read_text().replace("- main", "- release/*"),
             encoding="utf-8",
         )
-        _write_marketplace_package(marketplace, "linter", "name: v2\non:\n  pull_request:\n")
+        _write_marketplace_package(marketplace, LINTER, "name: v2\non:\n  pull_request:\n")
 
         update_workflows(consumer, manifest, local_path=marketplace, update_triggers=True)
 
@@ -318,21 +326,21 @@ class TestInstallWorkflows:
         consumer.mkdir()
         _write_marketplace_package(
             marketplace,
-            "auto-assign-pr",
+            AUTO_ASSIGN_PR,
             "name: v1\non: pull_request\n",
             config_content="enabled: true\n",
         )
         manifest = parse_manifest(
             {
                 "source": "owner/ghwm-marketplace",
-                "workflows": [{"name": "auto-assign-pr", "version": "1.0.0"}],
+                "workflows": [{"name": AUTO_ASSIGN_PR, "version": VERSION_1}],
             }
         )
         install_workflows(consumer, manifest, local_path=marketplace)
         (consumer / ".github" / "config.yml").write_text("custom: true\n")
         _write_marketplace_package(
             marketplace,
-            "auto-assign-pr",
+            AUTO_ASSIGN_PR,
             "name: v2\non: pull_request\n",
             config_content="enabled: false\n",
         )
@@ -345,17 +353,17 @@ class TestInstallWorkflows:
         marketplace = tmp_path / "marketplace"
         consumer = tmp_path / "consumer"
         consumer.mkdir()
-        _write_marketplace_package(marketplace, "auto-assign-pr", "name: v1\non: pull_request\n")
+        _write_marketplace_package(marketplace, AUTO_ASSIGN_PR, "name: v1\non: pull_request\n")
         manifest = parse_manifest(
             {
                 "source": "owner/ghwm-marketplace",
-                "workflows": [{"name": "auto-assign-pr", "version": "1.0.0"}],
+                "workflows": [{"name": AUTO_ASSIGN_PR, "version": VERSION_1}],
             }
         )
         install_workflows(consumer, manifest, local_path=marketplace)
         _write_marketplace_package(
             marketplace,
-            "auto-assign-pr",
+            AUTO_ASSIGN_PR,
             "name: v2\non: pull_request\n",
             config_content="enabled: true\n",
         )
@@ -372,14 +380,14 @@ class TestInstallWorkflows:
         consumer.mkdir()
         _write_marketplace_package(
             marketplace,
-            "auto-assign-pr",
+            AUTO_ASSIGN_PR,
             "name: v1\non: pull_request\n",
             config_content="enabled: true\n",
         )
         install_manifest = parse_manifest(
             {
                 "source": "owner/ghwm-marketplace",
-                "workflows": [{"name": "auto-assign-pr", "version": "1.0.0"}],
+                "workflows": [{"name": AUTO_ASSIGN_PR, "version": VERSION_1}],
             }
         )
         update_manifest = parse_manifest(
@@ -398,7 +406,7 @@ class TestInstallWorkflows:
         (consumer / ".github" / "config.yml").write_text("custom: true\n")
         _write_marketplace_package(
             marketplace,
-            "auto-assign-pr",
+            AUTO_ASSIGN_PR,
             "name: v2\non: pull_request\n",
             config_content="enabled: false\n",
         )
@@ -415,14 +423,14 @@ class TestInstallWorkflows:
         marketplace = tmp_path / "marketplace"
         consumer = tmp_path / "consumer"
         consumer.mkdir()
-        _write_marketplace_package(marketplace, "linter", "name: linter\non: push\n")
+        _write_marketplace_package(marketplace, LINTER, "name: linter\non: push\n")
         install_manifest = parse_manifest(
             {
                 "source": "owner/ghwm-marketplace",
-                "workflows": [{"name": "linter", "version": "1.0.0"}],
+                "workflows": [{"name": LINTER, "version": VERSION_1}],
             }
         )
-        empty_manifest = parse_manifest({"source": "owner/ghwm-marketplace", "workflows": []})
+        empty_manifest = parse_manifest({"source": MARKETPLACE_SOURCE, "workflows": []})
         install_workflows(consumer, install_manifest, local_path=marketplace)
 
         result = update_workflows(consumer, empty_manifest, local_path=marketplace)
@@ -436,20 +444,20 @@ class TestInstallWorkflows:
         marketplace = tmp_path / "marketplace"
         consumer = tmp_path / "consumer"
         consumer.mkdir()
-        _write_marketplace_package(marketplace, "linter", "name: linter\non: push\n")
+        _write_marketplace_package(marketplace, LINTER, "name: linter\non: push\n")
         install_manifest = parse_manifest(
             {
                 "source": "owner/ghwm-marketplace",
-                "workflows": [{"name": "linter", "version": "1.0.0"}],
+                "workflows": [{"name": LINTER, "version": VERSION_1}],
             }
         )
-        empty_manifest = parse_manifest({"source": "owner/ghwm-marketplace", "workflows": []})
+        empty_manifest = parse_manifest({"source": MARKETPLACE_SOURCE, "workflows": []})
         install_workflows(consumer, install_manifest, local_path=marketplace)
 
         result = update_workflows(consumer, empty_manifest, local_path=marketplace, prune=True)
         lockfile = read_lockfile(consumer)
 
-        assert result.pruned == ["linter"]
+        assert result.pruned == [LINTER]
         assert not (consumer / ".github" / "workflows" / "linter.yaml").exists()
         assert lockfile.find("linter") is None
 
@@ -461,22 +469,22 @@ class TestInstallWorkflows:
         consumer.mkdir()
         _write_marketplace_package(
             marketplace,
-            "auto-assign-pr",
+            AUTO_ASSIGN_PR,
             "name: auto-assign-pr\non: pull_request\n",
             config_content="enabled: true\n",
         )
         manifest = parse_manifest(
             {
                 "source": "owner/ghwm-marketplace",
-                "workflows": [{"name": "auto-assign-pr", "version": "1.0.0"}],
+                "workflows": [{"name": AUTO_ASSIGN_PR, "version": VERSION_1}],
             }
         )
-        empty_manifest = parse_manifest({"source": "owner/ghwm-marketplace", "workflows": []})
+        empty_manifest = parse_manifest({"source": MARKETPLACE_SOURCE, "workflows": []})
         install_workflows(consumer, manifest, local_path=marketplace)
 
         result = update_workflows(consumer, empty_manifest, local_path=marketplace, prune=True)
 
-        assert result.pruned == ["auto-assign-pr"]
+        assert result.pruned == [AUTO_ASSIGN_PR]
         assert not (consumer / ".github" / "workflows" / "auto-assign-pr.yaml").exists()
         assert (consumer / ".github" / "config.yml").read_text() == "enabled: true\n"
 
@@ -488,22 +496,22 @@ class TestInstallWorkflows:
         consumer.mkdir()
         _write_marketplace_package(
             marketplace,
-            "auto-assign-pr",
+            AUTO_ASSIGN_PR,
             "name: auto-assign-pr\non: pull_request\n",
             config_content="enabled: true\n",
         )
         manifest = parse_manifest(
             {
                 "source": "owner/ghwm-marketplace",
-                "workflows": [{"name": "auto-assign-pr", "version": "1.0.0"}],
+                "workflows": [{"name": AUTO_ASSIGN_PR, "version": VERSION_1}],
             }
         )
-        empty_manifest = parse_manifest({"source": "owner/ghwm-marketplace", "workflows": []})
+        empty_manifest = parse_manifest({"source": MARKETPLACE_SOURCE, "workflows": []})
         install_workflows(consumer, manifest, local_path=marketplace)
 
         result = install_workflows(consumer, empty_manifest, local_path=marketplace)
 
-        assert result.pruned == ["auto-assign-pr"]
+        assert result.pruned == [AUTO_ASSIGN_PR]
         assert not (consumer / ".github" / "workflows" / "auto-assign-pr.yaml").exists()
         assert (consumer / ".github" / "config.yml").read_text() == "enabled: true\n"
 
@@ -511,14 +519,14 @@ class TestInstallWorkflows:
         marketplace = tmp_path / "marketplace"
         consumer = tmp_path / "consumer"
         consumer.mkdir()
-        _write_marketplace_package(marketplace, "linter", "name: linter\non: push\n")
+        _write_marketplace_package(marketplace, LINTER, "name: linter\non: push\n")
         manifest = parse_manifest(
             {
                 "source": "owner/ghwm-marketplace",
-                "workflows": [{"name": "linter", "version": "1.0.0"}],
+                "workflows": [{"name": LINTER, "version": VERSION_1}],
             }
         )
-        empty_manifest = parse_manifest({"source": "owner/ghwm-marketplace", "workflows": []})
+        empty_manifest = parse_manifest({"source": MARKETPLACE_SOURCE, "workflows": []})
         install_workflows(consumer, manifest, local_path=marketplace)
         workflow_path = consumer / ".github" / "workflows" / "linter.yaml"
         workflow_path.write_text("name: custom\n")
@@ -527,7 +535,7 @@ class TestInstallWorkflows:
         lockfile = read_lockfile(consumer)
 
         assert result.pruned == []
-        assert result.skipped == [("linter", "unmanaged")]
+        assert result.skipped == [(LINTER, "unmanaged")]
         assert workflow_path.is_file()
         assert lockfile.find("linter") is not None
 
@@ -535,14 +543,14 @@ class TestInstallWorkflows:
         marketplace = tmp_path / "marketplace"
         consumer = tmp_path / "consumer"
         consumer.mkdir()
-        _write_marketplace_package(marketplace, "linter", "name: linter\non: push\n")
+        _write_marketplace_package(marketplace, LINTER, "name: linter\non: push\n")
         manifest = parse_manifest(
             {
                 "source": "owner/ghwm-marketplace",
-                "workflows": [{"name": "linter", "version": "1.0.0"}],
+                "workflows": [{"name": LINTER, "version": VERSION_1}],
             }
         )
-        empty_manifest = parse_manifest({"source": "owner/ghwm-marketplace", "workflows": []})
+        empty_manifest = parse_manifest({"source": MARKETPLACE_SOURCE, "workflows": []})
         install_workflows(consumer, manifest, local_path=marketplace)
         workflow_path = consumer / ".github" / "workflows" / "linter.yaml"
         workflow_path.write_text(
@@ -554,6 +562,6 @@ class TestInstallWorkflows:
         lockfile = read_lockfile(consumer)
 
         assert result.pruned == []
-        assert result.skipped == [("linter", "modified")]
+        assert result.skipped == [(LINTER, "modified")]
         assert workflow_path.is_file()
         assert lockfile.find("linter") is not None
