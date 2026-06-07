@@ -124,6 +124,7 @@ def parse_manifest(data: Any) -> Manifest:
 
     return Manifest(source=source, workflows=entries)
 
+
 def _validate_and_collect_entries(workflows_raw: list[Any]) -> list[WorkflowEntry]:
     """Ensures all workflow entries are unique and valid."""
     entries: list[WorkflowEntry] = []
