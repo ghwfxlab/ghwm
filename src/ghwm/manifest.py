@@ -118,7 +118,7 @@ def parse_manifest(data: Any) -> Manifest:
         raise ValueError("ghwm.yml must contain a 'workflows' list.")
 
     source = str(data.get("source", DEFAULT_SOURCE)).strip()
-    
+
     # Extracted logic
     entries = _validate_and_collect_entries(workflows_raw)
 

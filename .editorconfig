@@ -23,7 +23,7 @@ indent_size = unset
 spaces_around_operators = true
 spaces_around_brackets = false
 
-[{Makefile,go.mod,go.sum,*.go,.gitmodules}]
+[Makefile]
 indent_style = tab
 indent_size = 4
 
@@ -34,27 +34,3 @@ indent_size = 4
 [*.json]
 indent_style = space
 indent_size = 4
-
-[.github/aw/actions-lock.json]
-indent_style = unset
-indent_size = unset
-end_of_line = unset
-insert_final_newline = unset
-trim_trailing_whitespace = unset
-charset = unset
-
-[.github/workflows/agentics-maintenance.yml]
-indent_style = unset
-indent_size = unset
-end_of_line = unset
-insert_final_newline = unset
-trim_trailing_whitespace = unset
-charset = unset
-
-[.github/workflows/*.md]
-end_of_line = unset
-insert_final_newline = unset
-trim_trailing_whitespace = unset
-
-[.github/workflows/*.lock.yml]
-trim_trailing_whitespace = unset
