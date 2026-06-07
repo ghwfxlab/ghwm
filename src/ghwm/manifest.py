@@ -118,7 +118,14 @@ def parse_manifest(data: Any) -> Manifest:
         raise ValueError("ghwm.yml must contain a 'workflows' list.")
 
     source = str(data.get("source", DEFAULT_SOURCE)).strip()
+    
+    # Extracted logic
+    entries = _validate_and_collect_entries(workflows_raw)
 
+    return Manifest(source=source, workflows=entries)
+
+def _validate_and_collect_entries(workflows_raw: list[Any]) -> list[WorkflowEntry]:
+    """Ensures all workflow entries are unique and valid."""
     entries: list[WorkflowEntry] = []
     seen: set[str] = set()
 
@@ -132,8 +139,7 @@ def parse_manifest(data: Any) -> Manifest:
 
         seen.add(entry.name)
         entries.append(entry)
-
-    return Manifest(source=source, workflows=entries)
+    return entries
 
 
 def read_manifest(cwd: Path, manifest_path: str | None = None) -> Manifest:
