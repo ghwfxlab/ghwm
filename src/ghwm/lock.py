@@ -98,20 +98,12 @@ def _parse_file_entry(workflow_name: str, raw: Any) -> LockFileEntry:
     return LockFileEntry(target=target, source_hash=source_hash, overwrite=overwrite_raw)
 
 
-def read_lockfile(cwd: Path, lockfile_path: str | None = None) -> Lockfile:
-    """Read a ``ghwm.lock`` file, returning an empty lockfile if it doesn't exist."""
-    file_path = cwd / (lockfile_path or DEFAULT_LOCKFILE)
-
-    if not file_path.is_file():
-        return Lockfile()
-
-    data = json.loads(file_path.read_text(encoding="utf-8"))
-    lockfile_version = data.get("lockfileVersion")
-    if lockfile_version != LOCKFILE_VERSION:
-        raise ValueError("Unsupported ghwm.lock format. Delete ghwm.lock and run `ghwm install` to regenerate it.")
-
+def _parse_lock_entries(packages_data: Any) -> list[LockEntry]:
+    """Parse package entries from raw lockfile data."""
+    if not isinstance(packages_data, list):
+        return []
     packages: list[LockEntry] = []
-    for package_data in data.get("packages", []):
+    for package_data in packages_data:
         if not isinstance(package_data, dict):
             raise ValueError("ghwm.lock contains an invalid package entry.")
         raw_files = package_data.get("files")
@@ -131,6 +123,22 @@ def read_lockfile(cwd: Path, lockfile_path: str | None = None) -> Lockfile:
                 files=[_parse_file_entry(workflow_name, raw_file) for raw_file in raw_files],
             )
         )
+    return packages
+
+
+def read_lockfile(cwd: Path, lockfile_path: str | None = None) -> Lockfile:
+    """Read a ``ghwm.lock`` file, returning an empty lockfile if it doesn't exist."""
+    file_path = cwd / (lockfile_path or DEFAULT_LOCKFILE)
+
+    if not file_path.is_file():
+        return Lockfile()
+
+    data = json.loads(file_path.read_text(encoding="utf-8"))
+    lockfile_version = data.get("lockfileVersion")
+    if lockfile_version != LOCKFILE_VERSION:
+        raise ValueError("Unsupported ghwm.lock format. Delete ghwm.lock and run `ghwm install` to regenerate it.")
+
+    packages = _parse_lock_entries(data.get("packages"))
 
     return Lockfile(lockfile_version=lockfile_version, packages=packages)
 

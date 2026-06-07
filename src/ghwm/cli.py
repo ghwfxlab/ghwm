@@ -90,7 +90,6 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-
 def print_result(result: InstallResult) -> None:
     for name in result.installed:
         print(f"  ✓ Installed {name}")
