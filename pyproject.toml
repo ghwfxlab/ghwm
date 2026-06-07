@@ -6,6 +6,21 @@ readme = "README.md"
 license = { text = "MIT" }
 requires-python = ">=3.12"
 dependencies = ["pyyaml>=6.0"]
+authors = [
+  { name = "Pawel Lukasz Janicki" },
+  { name = "Peter Meyer Elphick Frandsen" },
+]
+keywords = ["github", "github-actions", "workflow-manager", "cli", "ci-cd"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Software Development :: Build Tools",
+  "Topic :: Software Development :: Version Control",
+]
 
 [dependency-groups]
 test = [
@@ -43,6 +58,8 @@ ghwm = "ghwm.cli:main"
 [project.urls]
 Repository = "https://github.com/pljanicki/ghwm"
 Issues = "https://github.com/pljanicki/ghwm/issues"
+"Pawel's GitHub" = "https://github.com/pljanicki"
+"Peter's GitHub" = "https://github.com/petermefrandsen"
 
 [build-system]
 requires = ["hatch-vcs", "hatchling"]
@@ -66,7 +83,10 @@ target-version = "py312"
 line-length = 120
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "W"]
+select = ["E", "F", "I", "W", "B", "S", "UP", "RUF", "N"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101", "S105", "S108"]
 
 [tool.isort]
 profile = "black"
