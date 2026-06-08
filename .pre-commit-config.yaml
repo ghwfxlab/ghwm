@@ -1,0 +1,26 @@
+---
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    # Ruff version matching project dependencies.
+    rev: v0.15.12
+    hooks:
+      # Run the linter.
+      - id: ruff-check
+        args: [--fix]
+      # Run the formatter.
+      - id: ruff-format
+  - repo: local
+    hooks:
+      - id: mypy
+        name: mypy
+        language: system
+        entry: uv run mypy
+        pass_filenames: false
+        args: [
+          'src/', '--config', 'pyproject.toml'
+        ]
+      - id: super-linter
+        name: super-linter
+        language: system
+        entry: make super-linter-fix
+        pass_filenames: false

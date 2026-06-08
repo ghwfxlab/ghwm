@@ -1,0 +1,21 @@
+[run]
+branch = True
+source =
+    ghwm
+omit =
+    */tests/*
+    */__pycache__/*
+    */__init__.py
+    */conftest.py
+    tests/*
+    .github/*
+    .agents/*
+    AGENTS.md
+    README.md
+    workflows/*
+
+[report]
+show_missing = True
+exclude_lines =
+    pragma: no cover
+    if __name__ == "__main__":

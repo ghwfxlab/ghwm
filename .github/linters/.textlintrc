@@ -1,0 +1,16 @@
+{
+  "filters": {
+    "comments": true
+  },
+  "rules": {
+    "terminology": {
+      "terms": [
+        ["prerelease","pre-release"]
+      ],
+      "exclude": [
+        "end-?user(s)?",
+        "pre[- ]release(s)?"
+      ]
+    }
+  }
+}

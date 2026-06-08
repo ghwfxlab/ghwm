@@ -1,0 +1,66 @@
+---
+name: Tag Release Candidate
+
+on: # yamllint disable-line rule:truthy
+  push:
+    branches:
+      - main
+    paths:
+      - "src/**"
+      - "pyproject.toml"
+      - ".github/workflows/tag.yaml"
+
+permissions: {}
+
+concurrency:
+  group: tag-release-candidate
+  cancel-in-progress: false
+
+jobs:
+  tag:
+    name: Tag and Release
+    runs-on: ubuntu-slim
+    permissions:
+      contents: write
+    outputs:
+      new_tag: ${{ steps.bump-version.outputs.new_tag }}
+    steps:
+      - name: Generate GH App token
+        id: app-token
+        uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3.1.1
+        with:
+          app-id: ${{ secrets.GH_APP_ID }} # zizmor: ignore[secrets-outside-env]
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }} # zizmor: ignore[secrets-outside-env]
+          permission-contents: write
+
+      - name: Checkout The Source Code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      # Version Bumping Strategy:
+      # Manual Bumping: Include #major, #minor, #patch, or #none in commit message
+      #   - #major: Bumps major version (e.g., v1.2.3 -> v2.0.0)
+      #   - #minor: Bumps minor version (e.g., v1.2.3 -> v1.3.0)
+      #   - #patch: Bumps patch version (e.g., v1.2.3 -> v1.2.4)
+      #   - #none: Skips version bump entirely for that commit
+      #   - If multiple tags present, highest-ranking one takes precedence
+      # Automatic Bumping: If no tag is present, defaults to minor bump
+      #   - To change default, set DEFAULT_BUMP env var (major, minor, patch, none)
+      - name: Bump version and push tag
+        id: bump-version
+        uses: anothrNick/github-tag-action@4ed44965e0db8dab2b466a16da04aec3cc312fd8 # 1.75.0
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+          TAG_PREFIX: v
+          PRERELEASE: false
+
+      - name: automatic-release # zizmor: ignore[superfluous-actions]
+        uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # v3.0.0
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          tag_name: ${{ steps.bump-version.outputs.new_tag }}
+          generate_release_notes: true
+          prerelease: false

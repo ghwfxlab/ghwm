@@ -1,0 +1,67 @@
+---
+name: Run Tests
+
+on: # yamllint disable-line rule:truthy
+  pull_request:
+    paths:
+      - "src/**"
+      - "tests/**"
+      - "pyproject.toml"
+      - "uv.lock"
+      - ".coveragerc"
+      - ".github/workflows/tests.yaml"
+      - "Makefile"
+  push:
+    branches:
+      - main
+    paths:
+      - "src/**"
+      - "tests/**"
+      - "pyproject.toml"
+      - "uv.lock"
+      - ".coveragerc"
+      - ".github/workflows/tests.yaml"
+      - "Makefile"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  test:
+    name: Tests
+    runs-on: ubuntu-slim
+    timeout-minutes: 10
+    env:
+      PYTHON_COVERAGE_LIMIT: 90
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout The Source Code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+
+      - name: Run tests
+        run: make test 2>&1 | tee pytest-coverage.txt
+
+      - name: Read coverage
+        id: coverage
+        run: |
+          COVERAGE=$(awk '/^TOTAL/ {print $(NF)}' pytest-coverage.txt | tr -d '%')
+          echo "value=$COVERAGE" >> "$GITHUB_OUTPUT"
+
+      - name: Upload coverage reports to Codecov
+        if: github.ref == 'refs/heads/main'
+        uses: codecov/codecov-action@e79a6962e0d4c0c17b229090214935d2e33f8354 # v6.0.1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }} # zizmor: ignore[secrets-outside-env]
+
+      - name: Fail if coverage too low
+        if: ${{ fromJSON(steps.coverage.outputs.value) < fromJSON(env.PYTHON_COVERAGE_LIMIT) }}
+        run: |
+          echo "Coverage is below ${{ env.PYTHON_COVERAGE_LIMIT }}%!"
+          exit 1

@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+.venv/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+
+# Legacy Node.js (keep until fully purged from CI)
+node_modules/
+
+# Build / test artifacts
+.test-workspace/
+.coverage
+pytest-coverage.txt
+htmlcov/
+.rtk/filters.toml
+.DS_Store
