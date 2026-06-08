@@ -13,7 +13,5 @@ updates:
       actions:
         patterns:
           - "*"
-    registries:
-      - github-private
     labels:
       - "flag:dependencies"
