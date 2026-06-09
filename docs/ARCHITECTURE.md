@@ -154,8 +154,8 @@ categories:
 
 1. Decode the source content as UTF-8.
 2. On update, preserve the existing `on:` block unless `update-triggers` is enabled.
-3. Normalise the body (strip trailing whitespace, ensure trailing newline).
-4. Compute `sha256` of the normalised body — this is the **source hash**.
+3. Normalize the body (strip trailing whitespace, ensure trailing newline).
+4. Compute `sha256` of the normalized body — this is the **source hash**.
 5. Prepend a four-line managed header (name@version, source path, hash, refresh hint).
 6. Write if content changed; skip otherwise.
 
@@ -236,7 +236,7 @@ Per-file fields:
 | Field         | Description                                                       |
 | ------------- | ----------------------------------------------------------------- |
 | `target`      | Relative path of the installed file in the consumer repository    |
-| `source_hash` | `sha256:<hex>` of the normalised body written to disk             |
+| `source_hash` | `sha256:<hex>` of the normalized body written to disk             |
 | `overwrite`   | `false` for config files that should not be overwritten on update |
 
 Old lockfiles (version ≠ 1) are rejected; delete and re-run `ghwm install`.

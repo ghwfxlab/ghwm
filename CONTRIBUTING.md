@@ -46,6 +46,7 @@ To build and run `ghwm` locally, ensure you have the following tools installed:
 ## Development Setup
 
 1. **Clone the Repository**:
+
    ```sh
    git clone https://github.com/pljanicki/ghwm.git
    cd ghwm
@@ -53,12 +54,14 @@ To build and run `ghwm` locally, ensure you have the following tools installed:
 
 2. **Set Up Python Dependencies**:
    Initialize a virtual environment and sync dependencies using `uv` via the provided [Makefile](Makefile):
+
    ```sh
    make install
    ```
 
 3. **Install Pre-commit Hooks**:
    Enable automated code quality checks before each commit:
+
    ```sh
    make setup-precommit
    ```
@@ -72,19 +75,25 @@ We use [Makefile](Makefile) targets to orchestrate common development tasks.
 ### Syncing Dependencies
 
 Whenever dependencies are added or updated in [pyproject.toml](pyproject.toml), re-sync your virtual environment:
+
 ```sh
 make install
 ```
+
 *(Alternatively, run `uv sync` directly.)*
 
 ### Linting and Formatting
 
 We use **Ruff** for linting and formatting. Run these targets frequently to keep the codebase clean:
+
 - **Lint Check**:
+
   ```sh
   make lint
   ```
+
 - **Code Formatter**:
+
   ```sh
   make format
   ```
@@ -92,6 +101,7 @@ We use **Ruff** for linting and formatting. Run these targets frequently to keep
 ### Type Checking
 
 The codebase uses static typing extensively, and **mypy** is configured to run in **strict** mode. Ensure all your changes have full type hints:
+
 ```sh
 make type-check
 ```
@@ -99,19 +109,25 @@ make type-check
 ### Running Tests
 
 We use **pytest** and **pytest-cov** to run unit and integration tests under the [tests/](tests) directory.
+
 - **Run Tests**:
+
   ```sh
   make test
   ```
+
 All tests must pass, and code coverage should be kept high (aim for 95%+).
 
 ### Documentation Linting
 
 We use **textlint** to ensure consistency in prose and documentation files. Check Markdown documentation style using:
+
 ```sh
 make lang
 ```
+
 To automatically fix common prose and style warnings:
+
 ```sh
 make lang-fix
 ```
@@ -119,6 +135,7 @@ make lang-fix
 ### Pre-commit Hooks
 
 To run the full suite of pre-commit hooks manually against all files:
+
 ```sh
 make precommit
 ```
@@ -126,11 +143,15 @@ make precommit
 ### Super-Linter (Docker-based)
 
 To replicate the full CI environment locally, run **super-linter** using Docker:
+
 - **Run Super-Linter**:
+
   ```sh
   make super-linter
   ```
+
 - **Run Super-Linter and autofix**:
+
   ```sh
   make super-linter-fix
   ```
@@ -169,6 +190,7 @@ All tests are placed in the [tests/](tests) directory and follow these rules:
 ### Branching Conventions
 
 Name your branches to indicate the purpose of your changes:
+
 - `feat/description` — New features (e.g., `feat/add-audit-command`)
 - `fix/description` — bugfixes (e.g., `fix/path-traversal-leak`)
 - `docs/description` — Documentation improvements (e.g., `docs/add-contributing-guide`)
@@ -177,6 +199,7 @@ Name your branches to indicate the purpose of your changes:
 ### Commit Message Guidelines
 
 Keep commit messages concise and descriptive. Use conventional commit prefixes:
+
 - `feat: add audit command to scan managed workflows using zizmor`
 - `fix: correct path resolution when handling custom target files`
 - `chore: update dependabot configurations`
@@ -195,6 +218,7 @@ make lang
 ```
 
 Verify that:
+
 1. All unit tests pass.
 2. Mypy reports no strict type-checking issues.
 3. Ruff reports no linting or formatting violations.
