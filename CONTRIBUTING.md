@@ -2,7 +2,7 @@
 
 Thank you for your interest in contributing to `ghwm`! This document provides guidelines and instructions to help you set up your local development environment, run quality checks, write tests, and submit your contributions.
 
-Before you begin, please read the [Architecture Documentation](docs/ARCHITECTURE.md) and the [AI/Developer Agent Guide](AGENTS.md) to understand the codebase structure, design principles, and invariants.
+Before you begin, please read the [Architecture Documentation](docs/ARCHITECTURE.md) and the [AI/Developer Agent Guide](AGENTS.md) to understand the codebase structure, design principles, and invariants. Automated developer agents can also find pre-configured coding and testing standards under [.agents/skills/](.agents/skills/).
 
 ---
 

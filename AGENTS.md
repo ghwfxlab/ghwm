@@ -15,6 +15,14 @@ The core lifecycle is:
 
 Read `docs/ARCHITECTURE.md` before making structural changes.
 
+## Agent skills
+
+To guide automated developer agents, this repository provides pre-configured workspace skills under `.agents/skills/`:
+- [python-coding-standards](.agents/skills/python-coding-standards/SKILL.md): Reusable Python coding standards for implementation, refactoring, and code review (typing, error handling, subprocess safety, etc.).
+- [testing-standards](.agents/skills/testing-standards/SKILL.md): Reusable test-writing and test-review guidance (Arrange/Act/Assert, mock isolation, naming conventions).
+
+Agents should read and follow these standards for all contributions.
+
 ## Repository layout
 
 - `src/ghwm/cli.py` - argparse entry point and user-facing command flow
