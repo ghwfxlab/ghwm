@@ -116,6 +116,17 @@ When changing code, preserve these unless the task explicitly changes them:
 - Older lockfiles are rejected with a regenerate message; do not preserve legacy tarball compatibility.
 - Delete the lockfile when no packages remain.
 
+### Auditing
+
+- `audit` command runs static security analysis using `zizmor` on managed workflows.
+- It scans only workflow targets under `.github/workflows/` (non-workflow files or custom config targets are skipped).
+- It reads `ghwm.lock` to find managed files; if the lockfile is missing, it exits with `1`.
+- If no managed workflows are found in the lockfile, it prints a message and exits with `0`.
+- Ignored findings are excluded from the results.
+- The Security Score is calculated by starting at 100 and deducting: High (20), Medium (10), Low (5), Informational (1).
+- The minimum possible Security Score is 0 (score cannot go negative).
+- It exits with code `1` if any High or Medium findings are reported, or if the tool fails to run.
+
 ## Testing guidance
 
 - Add or update tests in the module-aligned file under `tests/`.

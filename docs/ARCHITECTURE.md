@@ -243,6 +243,21 @@ Old lockfiles (version ≠ 1) are rejected; delete and re-run `ghwm install`.
 
 The lockfile is deleted automatically when all packages are removed.
 
+### 6 — Security auditing (`cli.py`)
+
+`run_audit()` performs static security analysis on the managed workflow files:
+
+1. Read `ghwm.lock` to find all currently managed files.
+2. Filter the tracked files to locate only workflow files (targets under `.github/workflows/`).
+3. Run [zizmor](https://docs.zizmor.sh) (locally or via `uvx zizmor`) on all detected files.
+4. Parse the resulting security findings, ignoring any marked as `ignored`.
+5. Calculate a **Security Score** starting at 100/100, deducting points based on findings:
+   - **High severity**: Deducts 20 points
+   - **Medium severity**: Deducts 10 points
+   - **Low severity**: Deducts 5 points
+   - **Informational**: Deducts 1 point
+6. If any High or Medium severity findings are present, exit with code `1` to fail CI builds.
+
 ## CLI command flow
 
 ```text
