@@ -6,7 +6,7 @@
 [![Python](https://img.shields.io/badge/python-3.12-blue?logo=python&logoColor=white)](https://www.python.org/)
 
 | ![ghwm CLI](.github/static/readme_header.png) |
-| :---------------------------------------------------: |
+| :-------------------------------------------: |
 
 > Install managed GitHub workflow files from a central marketplace repository.
 
@@ -73,6 +73,7 @@ ghwm update             # re-downloads all workflows (respects versions)
 ghwm update --prune     # also removes managed workflows no longer in ghwm.yml
 ghwm update --update-triggers # replace workflow triggers with the packaged version
 ghwm list               # shows workflows declared in ghwm.yml
+ghwm audit              # audits managed workflows for security vulnerabilities
 ```
 
 Workflow files are written to `.github/workflows/` with a managed header. Additional packaged files
@@ -80,10 +81,10 @@ such as config files are written as-is. On first install, config files are only 
 does not already exist. On update, config files are only overwritten when
 `update-config-files: true` is set for that workflow.
 
-| File type | First install | Update | Prune |
-| --- | --- | --- | --- |
+| File type                             | First install               | Update                                              | Prune  |
+| ------------------------------------- | --------------------------- | --------------------------------------------------- | ------ |
 | Workflow file (`.github/workflows/*`) | Install with managed header | Update in place; preserve existing `on:` by default | Remove |
-| Packaged config file | Create only when missing | Overwrite only with `update-config-files: true` | Keep |
+| Packaged config file                  | Create only when missing    | Overwrite only with `update-config-files: true`     | Keep   |
 
 #### Managed files
 
@@ -140,6 +141,25 @@ Use `ghwm update --prune` when you want one command to refresh workflows that ar
 
 Commit `ghwm.lock` alongside `ghwm.yml` so CI and teammates install the exact same
 workflow package set. Old tarball-era lockfiles are rejected and must be regenerated.
+
+## Auditing Workflows (Security Scoring)
+
+Since workflows are imported from shared marketplace repositories, keeping them secure is critical. The `ghwm audit` command runs static security analysis on all your installed/managed workflows using [zizmor](https://docs.zizmor.sh) (a fast security linter for GitHub Actions).
+
+```sh
+ghwm audit
+```
+
+If the linter is not installed locally, `ghwm` will attempt to execute it dynamically using `uvx zizmor`.
+
+`ghwm audit` calculates a **Security Score** out of 100 based on the severity of the findings:
+
+- **High severity**: Deducts 20 points
+- **Medium severity**: Deducts 10 points
+- **Low severity**: Deducts 5 points
+- **Informational**: Deducts 1 point
+
+If any High or Medium severity vulnerabilities are detected, `ghwm audit` exits with code `1`, making it ideal for integration into CI pipelines.
 
 ### Authentication
 

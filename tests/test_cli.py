@@ -2,14 +2,25 @@
 
 from __future__ import annotations
 
+import subprocess
+import sys
 from pathlib import Path
+from unittest.mock import MagicMock
 
 import pytest
 
 from ghwm import __version__
 from ghwm.cli import build_parser, main, print_result
 from ghwm.install import InstallResult
-from tests.shared import AUTO_ASSIGN_PR, DEFAULT_MANIFEST_PATH, LINTER, WORKFLOWS_DIR
+from ghwm.lock import LockEntry, Lockfile, LockFileEntry, write_lockfile
+from tests.shared import (
+    AUTO_ASSIGN_PR,
+    DEFAULT_MANIFEST_PATH,
+    LINTER,
+    LINTER_PACKAGE_SOURCE,
+    VERSION_1,
+    WORKFLOWS_DIR,
+)
 
 DEFAULT_WORKFLOW_CONTENT = "name: test\non: push\n"
 
@@ -566,3 +577,262 @@ class TestMainList:
 
         # Assert
         assert exc.value.code == 1
+
+    def test_main_should_exit_one_when_audit_lockfile_is_missing(self, tmp_path: Path) -> None:
+        # Arrange
+        consumer = tmp_path / "consumer"
+        consumer.mkdir()
+        _write_manifest(consumer, [LINTER])
+
+        # Act
+        with pytest.raises(SystemExit) as exc:
+            main(["audit", "--cwd", str(consumer)])
+
+        # Assert
+        assert exc.value.code == 1
+
+    def test_main_should_run_audit_and_show_no_findings(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        # Arrange
+        consumer = tmp_path / "consumer"
+        consumer.mkdir()
+        _write_manifest(consumer, [LINTER])
+
+        lock = Lockfile(
+            packages=[
+                LockEntry(
+                    name=LINTER,
+                    version=VERSION_1,
+                    source=LINTER_PACKAGE_SOURCE,
+                    files=[LockFileEntry(target=".github/workflows/linter.yml", source_hash="sha256:abc")],
+                )
+            ]
+        )
+        write_lockfile(consumer, lock)
+
+        wf_file = consumer / ".github" / "workflows" / "linter.yml"
+        wf_file.parent.mkdir(parents=True, exist_ok=True)
+        wf_file.write_text("content")
+
+        mock_run = MagicMock()
+        mock_run.return_value.returncode = 0
+        mock_run.return_value.stdout = "[]"
+        mock_run.return_value.stderr = ""
+        monkeypatch.setattr(subprocess, "run", mock_run)
+
+        # Act
+        main(["audit", "--cwd", str(consumer)])
+        output = capsys.readouterr().out
+
+        # Assert
+        assert "No security findings reported" in output
+        assert "Security Score: 100/100" in output
+        mock_run.assert_called_once()
+
+    def test_main_should_run_audit_and_show_findings_and_exit_one(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        # Arrange
+        consumer = tmp_path / "consumer"
+        consumer.mkdir()
+        _write_manifest(consumer, [LINTER])
+
+        lock = Lockfile(
+            packages=[
+                LockEntry(
+                    name=LINTER,
+                    version=VERSION_1,
+                    source=LINTER_PACKAGE_SOURCE,
+                    files=[LockFileEntry(target=".github/workflows/linter.yml", source_hash="sha256:abc")],
+                )
+            ]
+        )
+        write_lockfile(consumer, lock)
+
+        wf_file = consumer / ".github" / "workflows" / "linter.yml"
+        wf_file.parent.mkdir(parents=True, exist_ok=True)
+        wf_file.write_text("content")
+
+        mock_run = MagicMock()
+        mock_run.return_value.returncode = 0
+        mock_run.return_value.stdout = """[
+            {
+                "ident": "dangerous-triggers",
+                "desc": "use of fundamentally insecure workflow trigger",
+                "determinations": {
+                    "confidence": "Medium",
+                    "severity": "High"
+                },
+                "locations": [
+                    {
+                        "symbolic": {
+                            "key": {
+                                "Local": {
+                                    "given_path": "./.github/workflows/linter.yml"
+                                }
+                            }
+                        },
+                        "concrete": {
+                            "location": {
+                                "start_point": {
+                                    "row": 4
+                                }
+                            }
+                        }
+                    }
+                ],
+                "ignored": false
+            }
+        ]"""
+        mock_run.return_value.stderr = ""
+        monkeypatch.setattr(subprocess, "run", mock_run)
+
+        # Act
+        with pytest.raises(SystemExit) as exc:
+            main(["audit", "--cwd", str(consumer)])
+
+        output = capsys.readouterr().out
+
+        # Assert
+        assert exc.value.code == 1
+        assert "Security Findings:" in output
+        assert "[HIGH] dangerous-triggers: use of fundamentally insecure workflow trigger" in output
+        assert "Security Score: 80/100" in output
+
+    def test_main_should_show_no_files_found_when_lockfile_contains_no_workflows(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        # Arrange
+        consumer = tmp_path / "consumer"
+        consumer.mkdir()
+        _write_manifest(consumer, [LINTER])
+
+        lock = Lockfile(
+            packages=[
+                LockEntry(
+                    name=LINTER,
+                    version=VERSION_1,
+                    source=LINTER_PACKAGE_SOURCE,
+                    files=[LockFileEntry(target=".github/auto_assign.yaml", source_hash="sha256:abc")],
+                )
+            ]
+        )
+        write_lockfile(consumer, lock)
+
+        # Act
+        main(["audit", "--cwd", str(consumer)])
+        output = capsys.readouterr().out
+
+        # Assert
+        assert "No managed workflow files found to audit." in output
+
+    def test_main_should_run_audit_with_colors_when_stdout_is_atty(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        # Arrange
+        consumer = tmp_path / "consumer"
+        consumer.mkdir()
+        _write_manifest(consumer, [LINTER])
+
+        lock = Lockfile(
+            packages=[
+                LockEntry(
+                    name=LINTER,
+                    version=VERSION_1,
+                    source=LINTER_PACKAGE_SOURCE,
+                    files=[LockFileEntry(target=".github/workflows/linter.yml", source_hash="sha256:abc")],
+                )
+            ]
+        )
+        write_lockfile(consumer, lock)
+
+        wf_file = consumer / ".github" / "workflows" / "linter.yml"
+        wf_file.parent.mkdir(parents=True, exist_ok=True)
+        wf_file.write_text("content")
+
+        mock_run = MagicMock()
+        mock_run.return_value.returncode = 0
+        mock_run.return_value.stdout = """[
+            {
+                "ident": "dangerous-triggers",
+                "desc": "use of fundamentally insecure workflow trigger",
+                "determinations": {
+                    "confidence": "Medium",
+                    "severity": "High"
+                },
+                "locations": [
+                    {
+                        "symbolic": {
+                            "key": {
+                                "Local": {
+                                    "given_path": "./.github/workflows/linter.yml"
+                                }
+                            }
+                        },
+                        "concrete": {
+                            "location": {
+                                "start_point": {
+                                    "row": 4
+                                }
+                            }
+                        }
+                    }
+                ],
+                "ignored": false
+            }
+        ]"""
+        mock_run.return_value.stderr = ""
+        monkeypatch.setattr(subprocess, "run", mock_run)
+        monkeypatch.setattr(sys.stdout, "isatty", lambda: True)
+
+        # Act
+        with pytest.raises(SystemExit) as exc:
+            main(["audit", "--cwd", str(consumer)])
+
+        output = capsys.readouterr().out
+
+        # Assert
+        assert exc.value.code == 1
+        assert "Security Findings:" in output
+        assert "\033[31m[HIGH]\033[0m dangerous-triggers: use of fundamentally insecure workflow trigger" in output
+        assert "\033[31mSecurity Score: 80/100\033[0m" in output
+
+    def test_main_should_run_audit_with_colors_when_stdout_is_atty_and_no_findings(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        # Arrange
+        consumer = tmp_path / "consumer"
+        consumer.mkdir()
+        _write_manifest(consumer, [LINTER])
+
+        lock = Lockfile(
+            packages=[
+                LockEntry(
+                    name=LINTER,
+                    version=VERSION_1,
+                    source=LINTER_PACKAGE_SOURCE,
+                    files=[LockFileEntry(target=".github/workflows/linter.yml", source_hash="sha256:abc")],
+                )
+            ]
+        )
+        write_lockfile(consumer, lock)
+
+        wf_file = consumer / ".github" / "workflows" / "linter.yml"
+        wf_file.parent.mkdir(parents=True, exist_ok=True)
+        wf_file.write_text("content")
+
+        mock_run = MagicMock()
+        mock_run.return_value.returncode = 0
+        mock_run.return_value.stdout = "[]"
+        mock_run.return_value.stderr = ""
+        monkeypatch.setattr(subprocess, "run", mock_run)
+        monkeypatch.setattr(sys.stdout, "isatty", lambda: True)
+
+        # Act
+        main(["audit", "--cwd", str(consumer)])
+        output = capsys.readouterr().out
+
+        # Assert
+        assert "\033[32mNo security findings reported. Good job!\033[0m" in output
+        assert "\033[32mSecurity Score: 100/100\033[0m" in output
