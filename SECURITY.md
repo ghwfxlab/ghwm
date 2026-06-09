@@ -13,6 +13,6 @@ We actively support and patch the latest major release of `ghwm`.
 
 If you discover a potential security vulnerability in this project, please do not open a public GitHub issue. Instead, report it by emailing:
 
-**security@example.com**
+**<security@example.com>**
 
 We will acknowledge your report within 48 hours and provide a timeline for addressing the issue. Thank you for helping keep this project secure!
