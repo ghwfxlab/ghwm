@@ -19,8 +19,3 @@ repos:
         args: [
           'src/', '--config', 'pyproject.toml'
         ]
-      - id: super-linter
-        name: super-linter
-        language: system
-        entry: make super-linter-fix
-        pass_filenames: false

@@ -192,7 +192,7 @@ All tests are placed in the [tests/](tests) directory and follow these rules:
 Name your branches to indicate the purpose of your changes:
 
 - `feat/description` — New features (e.g., `feat/add-audit-command`)
-- `fix/description` — bugfixes (e.g., `fix/path-traversal-leak`)
+- `fix/description` — Bug fixes (e.g., `fix/path-traversal-leak`)
 - `docs/description` — Documentation improvements (e.g., `docs/add-contributing-guide`)
 - `chore/description` — CI updates, dependencies, refactorings (e.g., `chore/bump-actions`)
 
