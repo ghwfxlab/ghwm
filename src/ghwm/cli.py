@@ -8,6 +8,7 @@ import subprocess
 import sys
 import tarfile
 from pathlib import Path
+from typing import Any, cast
 from urllib.error import HTTPError, URLError
 
 import yaml
@@ -109,74 +110,72 @@ def print_result(result: InstallResult) -> None:
         print(f"  ⊘ Skipped {name} ({reason})")
 
 
-def run_audit(cwd: Path) -> None:
-    """Audit managed workflows for security vulnerabilities using zizmor."""
-    from ghwm.lock import read_lockfile
+HIGH_DEDUCTION = 20
+MEDIUM_DEDUCTION = 10
+LOW_DEDUCTION = 5
+INFORMATIONAL_DEDUCTION = 1
 
-    lockfile = read_lockfile(cwd)
-    if not lockfile.packages:
-        print("Error: No workflows installed. Please run 'ghwm install' first.", file=sys.stderr)
-        sys.exit(1)
+# ANSI color codes
+RED = "\033[31m"
+YELLOW = "\033[33m"
+GREEN = "\033[32m"
+BLUE = "\033[34m"
+RESET = "\033[0m"
 
-    files_to_audit = []
-    for package in lockfile.packages:
-        for file_entry in package.files:
-            if file_entry.target.startswith(".github/workflows/"):
-                target_path = cwd / file_entry.target
-                if target_path.is_file():
-                    files_to_audit.append(str(target_path))
+SEVERITY_COLORS = {
+    "HIGH": RED,
+    "MEDIUM": YELLOW,
+    "LOW": GREEN,
+    "INFORMATIONAL": BLUE,
+}
 
-    if not files_to_audit:
-        print("No managed workflow files found to audit.")
-        return
 
+def _run_zizmor(files_to_audit: list[str]) -> subprocess.CompletedProcess[str]:
     cmd = ["zizmor", "--format", "json", *files_to_audit]
     try:
-        res = subprocess.run(cmd, capture_output=True, text=True, check=False)  # noqa: S603
+        return subprocess.run(cmd, capture_output=True, text=True, check=False)  # noqa: S603
     except FileNotFoundError:
         cmd = ["uvx", "zizmor", "--format", "json", *files_to_audit]
         try:
-            res = subprocess.run(cmd, capture_output=True, text=True, check=False)  # noqa: S603
+            return subprocess.run(cmd, capture_output=True, text=True, check=False)  # noqa: S603
         except FileNotFoundError as exc:
             raise RuntimeError(
                 "zizmor linter is not installed and 'uvx' is not available. "
                 "Please install zizmor (https://docs.zizmor.sh) or uv (https://astral.sh/uv) to run audits."
             ) from exc
 
+
+def _get_findings(res: subprocess.CompletedProcess[str]) -> list[dict[str, Any]]:
     if res.returncode != 0 and not res.stdout.strip().startswith("["):
         error_msg = res.stderr.strip() or res.stdout.strip()
         raise RuntimeError(f"zizmor execution failed: {error_msg}")
 
     try:
-        findings = json.loads(res.stdout) if res.stdout.strip() else []
+        data = json.loads(res.stdout) if res.stdout.strip() else []
+        return cast(list[dict[str, Any]], data)
     except json.JSONDecodeError as exc:
         error_msg = res.stderr.strip() or res.stdout.strip()
         if error_msg:
             raise RuntimeError(f"zizmor execution failed: {error_msg}") from exc
-        findings = []
+        return []
 
+
+def _get_score_from_findings(severity_counts: dict[str, int]) -> int:
     score = 100
-    active_findings = []
-    severity_counts = {"High": 0, "Medium": 0, "Low": 0, "Informational": 0}
+    score -= severity_counts.get("High", 0) * HIGH_DEDUCTION
+    score -= severity_counts.get("Medium", 0) * MEDIUM_DEDUCTION
+    score -= severity_counts.get("Low", 0) * LOW_DEDUCTION
+    score -= severity_counts.get("Informational", 0) * INFORMATIONAL_DEDUCTION
+    return max(0, score)
 
-    for finding in findings:
-        if finding.get("ignored", False):
-            continue
-        active_findings.append(finding)
 
-        determinations = finding.get("determinations", {})
-        severity = determinations.get("severity", "Low")
-        sev_key = severity.title()
-        if sev_key in severity_counts:
-            severity_counts[sev_key] += 1
-        else:
-            severity_counts["Low"] += 1
-
-    score -= severity_counts["High"] * 20
-    score -= severity_counts["Medium"] * 10
-    score -= severity_counts["Low"] * 5
-    score -= severity_counts["Informational"] * 1
-    score = max(0, score)
+def _print_findings(
+    files_to_audit: list[str],
+    active_findings: list[dict[str, Any]],
+    severity_counts: dict[str, int],
+    score: int,
+) -> None:
+    is_atty = sys.stdout.isatty()
 
     if active_findings:
         print(f"Auditing {len(files_to_audit)} managed workflow file(s)...")
@@ -206,7 +205,12 @@ def run_audit(cwd: Path) -> None:
                 line_str = f":{row + 1}" if row is not None else ""
                 location_str = f"{given_path}{line_str}"
 
-            print(f"[{severity}] {ident}: {desc}")
+            if is_atty and severity in SEVERITY_COLORS:
+                colored_sev = f"{SEVERITY_COLORS[severity]}[{severity}]{RESET}"
+            else:
+                colored_sev = f"[{severity}]"
+
+            print(f"{colored_sev} {ident}: {desc}")
             print(f"  Location:   {location_str}")
             print(f"  Confidence: {confidence}")
             print()
@@ -217,14 +221,73 @@ def run_audit(cwd: Path) -> None:
         print(f"  Medium:        {severity_counts['Medium']}")
         print(f"  Low:           {severity_counts['Low']}")
         print(f"  Informational: {severity_counts['Informational']}")
-        print(f"\nSecurity Score: {score}/100")
+
+        if is_atty:
+            if severity_counts["High"] > 0:
+                score_color = RED
+            elif severity_counts["Medium"] > 0:
+                score_color = YELLOW
+            else:
+                score_color = GREEN
+            print(f"\n{score_color}Security Score: {score}/100{RESET}")
+        else:
+            print(f"\nSecurity Score: {score}/100")
 
         if severity_counts["High"] > 0 or severity_counts["Medium"] > 0:
             sys.exit(1)
     else:
         print(f"Auditing {len(files_to_audit)} managed workflow file(s)...")
-        print("\nNo security findings reported. Good job!")
-        print(f"Security Score: {score}/100")
+        if is_atty:
+            print(f"\n{GREEN}No security findings reported. Good job!{RESET}")
+            print(f"{GREEN}Security Score: {score}/100{RESET}")
+        else:
+            print("\nNo security findings reported. Good job!")
+            print(f"Security Score: {score}/100")
+
+
+def run_audit(cwd: Path) -> None:
+    """Audit managed workflows for security vulnerabilities using zizmor."""
+    from ghwm.lock import read_lockfile
+
+    lockfile = read_lockfile(cwd)
+    if not lockfile.packages:
+        print("Error: No workflows installed. Please run 'ghwm install' first.", file=sys.stderr)
+        sys.exit(1)
+
+    files_to_audit = []
+    for package in lockfile.packages:
+        for file_entry in package.files:
+            if file_entry.target.startswith(".github/workflows/"):
+                target_path = cwd / file_entry.target
+                if target_path.is_file():
+                    files_to_audit.append(str(target_path))
+
+    if not files_to_audit:
+        print("No managed workflow files found to audit.")
+        return
+
+    res = _run_zizmor(files_to_audit)
+    findings = _get_findings(res)
+
+    active_findings = []
+    severity_counts = {"High": 0, "Medium": 0, "Low": 0, "Informational": 0}
+
+    for finding in findings:
+        if finding.get("ignored", False):
+            continue
+        active_findings.append(finding)
+
+        determinations = finding.get("determinations", {})
+        severity = determinations.get("severity", "Low")
+        sev_key = severity.title()
+        if sev_key in severity_counts:
+            severity_counts[sev_key] += 1
+        else:
+            severity_counts["Low"] += 1
+
+    score = _get_score_from_findings(severity_counts)
+
+    _print_findings(files_to_audit, active_findings, severity_counts, score)
 
 
 def main(argv: list[str] | None = None) -> None:
