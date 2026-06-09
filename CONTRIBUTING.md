@@ -2,7 +2,7 @@
 
 Thank you for your interest in contributing to `ghwm`! This document provides guidelines and instructions to help you set up your local development environment, run quality checks, write tests, and submit your contributions.
 
-Before you begin, please read the [Architecture Documentation](file:///Users/pawel/code/ghwm/docs/ARCHITECTURE.md) and the [AI/Developer Agent Guide](file:///Users/pawel/code/ghwm/AGENTS.md) to understand the codebase structure, design principles, and invariants.
+Before you begin, please read the [Architecture Documentation](docs/ARCHITECTURE.md) and the [AI/Developer Agent Guide](AGENTS.md) to understand the codebase structure, design principles, and invariants.
 
 ---
 
@@ -52,7 +52,7 @@ To build and run `ghwm` locally, ensure you have the following tools installed:
    ```
 
 2. **Set Up Python Dependencies**:
-   Initialize a virtual environment and sync dependencies using `uv` via the provided [Makefile](file:///Users/pawel/code/ghwm/Makefile):
+   Initialize a virtual environment and sync dependencies using `uv` via the provided [Makefile](Makefile):
    ```sh
    make install
    ```
@@ -67,11 +67,11 @@ To build and run `ghwm` locally, ensure you have the following tools installed:
 
 ## Development Workflow
 
-We use [Makefile](file:///Users/pawel/code/ghwm/Makefile) targets to orchestrate common development tasks.
+We use [Makefile](Makefile) targets to orchestrate common development tasks.
 
 ### Syncing Dependencies
 
-Whenever dependencies are added or updated in [pyproject.toml](file:///Users/pawel/code/ghwm/pyproject.toml), re-sync your virtual environment:
+Whenever dependencies are added or updated in [pyproject.toml](pyproject.toml), re-sync your virtual environment:
 ```sh
 make install
 ```
@@ -98,7 +98,7 @@ make type-check
 
 ### Running Tests
 
-We use **pytest** and **pytest-cov** to run unit and integration tests under the [tests/](file:///Users/pawel/code/ghwm/tests) directory.
+We use **pytest** and **pytest-cov** to run unit and integration tests under the [tests/](tests) directory.
 - **Run Tests**:
   ```sh
   make test
@@ -144,16 +144,16 @@ Please adhere to the following design patterns and styling guidelines:
 - **Simplicity & Clarity**: Prefer small, focused dataclasses and pure functions. Minimize complex class hierarchies or hidden state.
 - **Explicit Branching**: Write explicit, readable control flows. Avoid clever tricks or overly generic abstractions.
 - **Separation of Concerns**:
-  - Keep CLI arguments and command orchestration in [src/ghwm/cli.py](file:///Users/pawel/code/ghwm/src/ghwm/cli.py).
-  - Put low-level workflow/config file interactions in [src/ghwm/managed_files.py](file:///Users/pawel/code/ghwm/src/ghwm/managed_files.py).
-  - Put high-level installation and pruning steps in [src/ghwm/install.py](file:///Users/pawel/code/ghwm/src/ghwm/install.py).
-- **Documentation**: If you change any public behavior, flags, or manifest file formats, document them in [README.md](file:///Users/pawel/code/ghwm/README.md) and update [docs/ARCHITECTURE.md](file:///Users/pawel/code/ghwm/docs/ARCHITECTURE.md) where relevant.
+  - Keep CLI arguments and command orchestration in [src/ghwm/cli.py](src/ghwm/cli.py).
+  - Put low-level workflow/config file interactions in [src/ghwm/managed_files.py](src/ghwm/managed_files.py).
+  - Put high-level installation and pruning steps in [src/ghwm/install.py](src/ghwm/install.py).
+- **Documentation**: If you change any public behavior, flags, or manifest file formats, document them in [README.md](README.md) and update [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) where relevant.
 
 ---
 
 ## Testing Standards
 
-All tests are placed in the [tests/](file:///Users/pawel/code/ghwm/tests) directory and follow these rules:
+All tests are placed in the [tests/](tests) directory and follow these rules:
 
 - **Arrange / Act / Assert**: Structure your test logic using the AAA pattern.
 - **Naming Conventions**: Use descriptive test names in the following format:
