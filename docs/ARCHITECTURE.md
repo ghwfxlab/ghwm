@@ -261,7 +261,8 @@ argv
               │     ├─▶ _prune_stale()
               │     └─▶ write_lockfile()
               ├─▶ update_workflows()   (install_workflows, prune=False)
-              └─▶ list  (prints manifest entries, no download)
+              ├─▶ list  (prints manifest entries, no download)
+              └─▶ audit (audits managed workflows via zizmor)
 ```
 
 ## Versioning and update strategy
@@ -271,6 +272,7 @@ argv
 | `install` | Yes (missing/changed only) | Yes          | Yes                     |
 | `update`  | Yes (all)                  | No           | Yes                     |
 | `list`    | No                         | No           | —                       |
+| `audit`   | No                         | No           | —                       |
 
 Running `install` twice is idempotent: the second run skips all up-to-date
 workflows.
