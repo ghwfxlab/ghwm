@@ -161,6 +161,30 @@ If the linter is not installed locally, `ghwm` will attempt to execute it dynami
 
 If any High or Medium severity vulnerabilities are detected, `ghwm audit` exits with code `1`, making it ideal for integration into CI pipelines.
 
+## Keep Workflows Updated (Renovate Integration)
+
+Since `ghwm` resolves workflows to npm packages (e.g., `@owner/ghwm-<name>`) published to GitHub Packages, you can use **Renovate** to automatically detect updates and open pull requests to update the versions in your `ghwm.yml`.
+
+Add the following `regexManagers` configuration to your `renovate.json` or `renovate.json5` file:
+
+```json
+{
+  "regexManagers": [
+    {
+      "fileMatch": ["^ghwm\\.yml$"],
+      "matchStrings": [
+        "name:\\s+(?<depName>\\S+)\\s+version:\\s+[\"']?(?<currentValue>[^\"'\\s]+)[\"']?"
+      ],
+      "datasourceTemplate": "npm",
+      "depNameTemplate": "@owner/ghwm-{{depName}}",
+      "registryUrlTemplates": ["https://npm.pkg.github.com"]
+    }
+  ]
+}
+```
+
+_Note: Replace `@owner` with the GitHub organization or username where your marketplace packages are published._
+
 ### Authentication
 
 The CLI needs read access to GitHub Packages and the marketplace repository. The CLI looks for authentication in the following order:
