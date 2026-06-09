@@ -138,7 +138,7 @@ Authentication priority:
 1. `GH_TOKEN` / `GITHUB_TOKEN` environment variable.
 2. `gh auth token` — used when the `gh` CLI is on `PATH` and the env vars are absent.
 
-Tokens must have `read:packages` scope.
+Tokens must have `read:packages` scope. For public marketplaces, packages must be public on GitHub Packages to allow anonymous downloads (otherwise resulting in 404 or 401 HTTP errors).
 
 **Local development mode** (`--local`) skips the network entirely and reads
 `workflows/<name>/workflow.yml` plus the files it declares directly from a

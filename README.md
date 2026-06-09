@@ -193,6 +193,9 @@ The CLI needs read access to GitHub Packages and the marketplace repository. The
 2. `GH_TOKEN` environment variable
 3. `GITHUB_TOKEN` environment variable
 
+> [!IMPORTANT]
+> When setting up a public marketplace repository, ensure that the visibility of the published packages on GitHub Packages is explicitly changed from **Private** to **Public**. If they remain private, external consumers running `ghwm install` will fail with `404 Not Found` or `401 Unauthorized` errors.
+
 For example, you can set an environment variable:
 
 ```sh
