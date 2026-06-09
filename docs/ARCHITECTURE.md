@@ -29,7 +29,7 @@ ghwm.yml          GitHub Packages npm registry
 ```mermaid
 C4Container
     title Container Diagram for ghwm
-    
+
     Person(dev, "Developer", "Runs ghwm commands")
 
     Container_Boundary(c1, "Local Repository") {
@@ -39,7 +39,7 @@ C4Container
     }
 
     Container(cli, "ghwm CLI", "Python", "The core logic that orchestrates downloads and file syncing.")
-    
+
     System_Ext(gpr, "GitHub Packages", "NPM Registry")
 
     Rel(dev, cli, "Executes", "ghwm install")
@@ -54,9 +54,9 @@ C4Container
 ```mermaid
 C4Component
     title Component Diagram for ghwm
-    
+
     Container_Ext(gpr, "GitHub Packages", "Registry")
-    
+
     System_Boundary(ghwm, "ghwm") {
         Component(download_mod, "download.py", "Component", "Orchestrates registry downloads into WorkflowSource objects.")
         Component(manifest_mod, "manifest.py", "Component", "Parses YAML into WorkflowEntry objects.")
@@ -70,13 +70,13 @@ C4Component
 
     Rel(manifest_file, manifest_mod, "Read by")
     Rel(gpr, download_mod, "Download to")
-    
+
     Rel(manifest_mod, install_mod, "Passes WorkflowEntry[]")
     Rel(download_mod, install_mod, "Passes WorkflowSource[]")
-    
+
     Rel(install_mod, lock_mod, "Updates state")
     Rel(lock_mod, lock_file, "Persists to")
-    
+
     Rel(install_mod, files_mod, "Delegates sync")
     Rel(files_mod, workflows_dir, "Writes managed files")
 ```
@@ -93,6 +93,7 @@ C4Component
 | `install.py`       | Orchestrate install/update/prune; delegate file ops to `managed_files`      |
 | `lock.py`          | Read and write `ghwm.lock` (JSON); in-memory lockfile operations            |
 | `package_names.py` | Helpers to compute scoped npm package names from org and workflow name      |
+| `paths.py`         | Path security utilities including path traversal checks                     |
 
 ## Workflow lifecycle
 

@@ -106,7 +106,7 @@ def _install_one(
 
     try:
         for installed_file in sorted_files:
-            target = _resolve_target(entry, installed_file)
+            target = _resolve_target(cwd, entry, installed_file)
             previous_lock_file = existing_lock.find_file(target) if existing_lock is not None else None
 
             if _is_workflow_target(installed_file.target):

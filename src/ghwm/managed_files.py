@@ -13,6 +13,7 @@ from ghwm.download import WorkflowSource
 from ghwm.download_npm import InstalledFile
 from ghwm.lock import LockEntry, LockFileEntry
 from ghwm.manifest import WorkflowEntry
+from ghwm.paths import safe_resolve_path
 
 
 class _WorkflowBlockedError(Exception):
@@ -108,10 +109,13 @@ def _preserve_existing_triggers(existing_content: str, new_content: str) -> str:
     return yaml.safe_dump(new_data, sort_keys=False)
 
 
-def _resolve_target(entry: WorkflowEntry, installed_file: InstalledFile) -> str:
+def _resolve_target(cwd: Path, entry: WorkflowEntry, installed_file: InstalledFile) -> str:
     if _is_workflow_target(installed_file.target) and entry.target:
-        return f".github/workflows/{entry.target}"
-    return installed_file.target
+        raw_target = f".github/workflows/{entry.target}"
+    else:
+        raw_target = installed_file.target
+    safe_path = safe_resolve_path(cwd, raw_target)
+    return str(safe_path.relative_to(cwd))
 
 
 def _sync_workflow_file(
@@ -124,7 +128,7 @@ def _sync_workflow_file(
     is_update: bool,
     update_triggers: bool,
 ) -> _InstalledFileResult:
-    target = _resolve_target(entry, installed_file)
+    target = _resolve_target(cwd, entry, installed_file)
     target_path = cwd / target
     existing_content = target_path.read_text(encoding="utf-8") if target_path.is_file() else None
 
@@ -164,7 +168,8 @@ def _sync_config_file(
     is_update: bool,
     previous_lock_file: LockFileEntry | None,
 ) -> _InstalledFileResult:
-    target_path = cwd / installed_file.target
+    target = _resolve_target(cwd, entry, installed_file)
+    target_path = cwd / target
     source_hash = _sha256_bytes(installed_file.content)
 
     if not is_update:
@@ -174,7 +179,7 @@ def _sync_config_file(
         target_path.write_bytes(installed_file.content)
         return _InstalledFileResult(
             changed=True,
-            lock_file=LockFileEntry(target=installed_file.target, source_hash=source_hash, overwrite=False),
+            lock_file=LockFileEntry(target=target, source_hash=source_hash, overwrite=False),
         )
 
     if not entry.update_config_files:
@@ -190,7 +195,7 @@ def _sync_config_file(
 
     return _InstalledFileResult(
         changed=changed,
-        lock_file=LockFileEntry(target=installed_file.target, source_hash=source_hash, overwrite=True),
+        lock_file=LockFileEntry(target=target, source_hash=source_hash, overwrite=True),
     )
 
 
@@ -199,7 +204,7 @@ def _prune_workflow_files(cwd: Path, entry: LockEntry, *, force: bool) -> str | 
         if not _is_workflow_target(file_entry.target):
             continue
 
-        target_path = cwd / file_entry.target
+        target_path = safe_resolve_path(cwd, file_entry.target)
         if not target_path.is_file():
             continue
 

@@ -20,6 +20,7 @@ from ghwm.download_npm import (
     read_workflow_manifest,
 )
 from ghwm.package_names import scoped_package_name
+from ghwm.paths import safe_resolve_path
 
 
 @dataclass(frozen=True)
@@ -131,7 +132,7 @@ def read_from_tree(repo_root: Path, source: str, workflow_names: list[str]) -> l
 
 
 def _read_local_package_file(workflow_dir: Path, workflow_name: str, file_source: str) -> bytes:
-    source_path = workflow_dir / file_source
+    source_path = safe_resolve_path(workflow_dir, file_source)
     if not source_path.is_file():
         raise FileNotFoundError(f"Workflow package file not found: workflows/{workflow_name}/{file_source}")
     return source_path.read_bytes()
