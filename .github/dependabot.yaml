@@ -9,10 +9,14 @@ updates:
       default-days: 7
     commit-message:
       prefix: "chore(ci)"
+    open-pull-requests-limit: 10
     groups:
       actions:
         patterns:
           - "*"
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
     labels:
       - "flag:dependencies"
 
@@ -24,9 +28,13 @@ updates:
       default-days: 7
     commit-message:
       prefix: "chore(deps)"
+    open-pull-requests-limit: 10
     groups:
       pip-dependencies:
         patterns:
           - "*"
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
     labels:
       - "flag:dependencies"
