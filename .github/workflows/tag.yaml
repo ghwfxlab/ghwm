@@ -38,7 +38,7 @@ jobs:
         with:
           token: ${{ steps.app-token.outputs.token }}
           fetch-depth: 0
-          persist-credentials: false
+          persist-credentials: true
 
       # Version Bumping Strategy:
       # Manual Bumping: Include #major, #minor, #patch, or #none in commit message
