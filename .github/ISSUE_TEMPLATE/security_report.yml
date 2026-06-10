@@ -1,0 +1,67 @@
+---
+name: Security Report
+description: Report a security vulnerability in the ghwm CLI
+title: "[Security]: "
+labels: ["security"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for taking the time to report a security vulnerability.
+        Please fill out the sections below to help us understand and resolve the issue.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: A clear and concise description of the security vulnerability.
+      placeholder: Describe the security issue.
+    validations:
+      required: true
+
+  - type: textarea
+    id: poc
+    attributes:
+      label: Proof of Concept
+      description: Steps or a script to reproduce the vulnerability.
+      placeholder: |
+        1. Setup a specific configuration...
+        2. Run a command...
+        3. Explain how the vulnerability is triggered...
+    validations:
+      required: true
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact
+      description: What is the potential security impact? (e.g. arbitrary code execution, file overwrite, etc.)
+      placeholder: Describe the impact of this vulnerability.
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: CLI version
+      description: The ghwm CLI version you are running.
+      placeholder: "e.g. v0.1.0"
+
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Environment
+      options:
+        - Linux
+        - macOS
+        - Windows
+        - CI runner
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Any other context, screenshots, or logs.

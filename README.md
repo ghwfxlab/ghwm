@@ -152,12 +152,16 @@ ghwm audit
 
 If the linter is not installed locally, `ghwm` will attempt to execute it dynamically using `uvx zizmor`.
 
-`ghwm audit` calculates a **Security Score** out of 100 based on the severity of the findings:
+`ghwm audit` calculates a **Security Score** out of 100 on a logarithmic scale (exponential decay) to ensure the score never goes negative:
 
-- **High severity**: Deducts 20 points
-- **Medium severity**: Deducts 10 points
-- **Low severity**: Deducts 5 points
-- **Informational**: Deducts 1 point
+$$\text{Score} = \text{round}\left(100 \times e^{-\text{Deductions} / 100}\right)$$
+
+where total Deductions are calculated from:
+
+- **High severity**: 20 points
+- **Medium severity**: 10 points
+- **Low severity**: 5 points
+- **Informational**: 1 point
 
 If any High or Medium severity vulnerabilities are detected, `ghwm audit` exits with code `1`, making it ideal for integration into CI pipelines.
 

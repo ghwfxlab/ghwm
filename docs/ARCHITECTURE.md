@@ -251,11 +251,13 @@ The lockfile is deleted automatically when all packages are removed.
 2. Filter the tracked files to locate only workflow files (targets under `.github/workflows/`).
 3. Run [zizmor](https://docs.zizmor.sh) (locally or via `uvx zizmor`) on all detected files.
 4. Parse the resulting security findings, ignoring any marked as `ignored`.
-5. Calculate a **Security Score** starting at 100/100, deducting points based on findings:
-   - **High severity**: Deducts 20 points
-   - **Medium severity**: Deducts 10 points
-   - **Low severity**: Deducts 5 points
-   - **Informational**: Deducts 1 point
+5. Calculate a **Security Score** starting at 100/100, using a logarithmic scale (exponential decay) to ensure the score never goes negative:
+   $$\text{Score} = \text{round}\left(100 \times e^{-\text{Deductions} / 100}\right)$$
+   where the total Deductions are calculated based on the severity of the findings:
+   - **High severity**: 20 points
+   - **Medium severity**: 10 points
+   - **Low severity**: 5 points
+   - **Informational**: 1 point
 6. If any High or Medium severity findings are present, exit with code `1` to fail CI builds.
 
 ## CLI command flow
