@@ -15,6 +15,15 @@ The core lifecycle is:
 
 Read `docs/ARCHITECTURE.md` before making structural changes.
 
+## Agent skills
+
+To guide automated developer agents, this repository provides pre-configured workspace skills under `.agents/skills/`:
+
+- [python-coding-standards](.agents/skills/python-coding-standards/SKILL.md): Reusable Python coding standards for implementation, refactoring, and code review (typing, error handling, subprocess safety, etc.).
+- [testing-standards](.agents/skills/testing-standards/SKILL.md): Reusable test-writing and test-review guidance (Arrange/Act/Assert, mock isolation, naming conventions).
+
+Agents should read and follow these standards for all contributions.
+
 ## Repository layout
 
 - `src/ghwm/cli.py` - argparse entry point and user-facing command flow
@@ -115,6 +124,16 @@ When changing code, preserve these unless the task explicitly changes them:
 - Each tracked file stores `target`, `source_hash`, and optional `overwrite`.
 - Older lockfiles are rejected with a regenerate message; do not preserve legacy tarball compatibility.
 - Delete the lockfile when no packages remain.
+
+### Auditing
+
+- `audit` command runs static security analysis using `zizmor` on managed workflows.
+- It scans only workflow targets under `.github/workflows/` (non-workflow files or custom config targets are skipped).
+- It reads `ghwm.lock` to find managed files; if the lockfile is missing, it exits with `1`.
+- If no managed workflows are found in the lockfile, it prints a message and exits with `0`.
+- Ignored findings are excluded from the results.
+- The Security Score is calculated on a logarithmic scale (exponential decay) to ensure the score never goes negative: `round(100 * exp(-deductions / 100))`, where deductions are High (20), Medium (10), Low (5), Informational (1).
+- It exits with code `1` if any High or Medium findings are reported, or if the tool fails to run.
 
 ## Testing guidance
 

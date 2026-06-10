@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import subprocess
 import sys
 import tarfile
@@ -161,12 +162,13 @@ def _get_findings(res: subprocess.CompletedProcess[str]) -> list[dict[str, Any]]
 
 
 def _get_score_from_findings(severity_counts: dict[str, int]) -> int:
-    score = 100
-    score -= severity_counts.get("High", 0) * HIGH_DEDUCTION
-    score -= severity_counts.get("Medium", 0) * MEDIUM_DEDUCTION
-    score -= severity_counts.get("Low", 0) * LOW_DEDUCTION
-    score -= severity_counts.get("Informational", 0) * INFORMATIONAL_DEDUCTION
-    return max(0, score)
+    deductions = (
+        severity_counts.get("High", 0) * HIGH_DEDUCTION
+        + severity_counts.get("Medium", 0) * MEDIUM_DEDUCTION
+        + severity_counts.get("Low", 0) * LOW_DEDUCTION
+        + severity_counts.get("Informational", 0) * INFORMATIONAL_DEDUCTION
+    )
+    return round(100 * math.exp(-deductions / 100))
 
 
 def _print_findings(

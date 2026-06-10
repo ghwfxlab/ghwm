@@ -138,7 +138,7 @@ Authentication priority:
 1. `GH_TOKEN` / `GITHUB_TOKEN` environment variable.
 2. `gh auth token` — used when the `gh` CLI is on `PATH` and the env vars are absent.
 
-Tokens must have `read:packages` scope.
+Tokens must have `read:packages` scope. For public marketplaces, packages must be public on GitHub Packages to allow anonymous downloads (otherwise resulting in 404 or 401 HTTP errors).
 
 **Local development mode** (`--local`) skips the network entirely and reads
 `workflows/<name>/workflow.yml` plus the files it declares directly from a
@@ -154,8 +154,8 @@ categories:
 
 1. Decode the source content as UTF-8.
 2. On update, preserve the existing `on:` block unless `update-triggers` is enabled.
-3. Normalise the body (strip trailing whitespace, ensure trailing newline).
-4. Compute `sha256` of the normalised body — this is the **source hash**.
+3. Normalize the body (strip trailing whitespace, ensure trailing newline).
+4. Compute `sha256` of the normalized body — this is the **source hash**.
 5. Prepend a four-line managed header (name@version, source path, hash, refresh hint).
 6. Write if content changed; skip otherwise.
 
@@ -236,12 +236,29 @@ Per-file fields:
 | Field         | Description                                                       |
 | ------------- | ----------------------------------------------------------------- |
 | `target`      | Relative path of the installed file in the consumer repository    |
-| `source_hash` | `sha256:<hex>` of the normalised body written to disk             |
+| `source_hash` | `sha256:<hex>` of the normalized body written to disk             |
 | `overwrite`   | `false` for config files that should not be overwritten on update |
 
 Old lockfiles (version ≠ 1) are rejected; delete and re-run `ghwm install`.
 
 The lockfile is deleted automatically when all packages are removed.
+
+### 6 — Security auditing (`cli.py`)
+
+`run_audit()` performs static security analysis on the managed workflow files:
+
+1. Read `ghwm.lock` to find all currently managed files.
+2. Filter the tracked files to locate only workflow files (targets under `.github/workflows/`).
+3. Run [zizmor](https://docs.zizmor.sh) (locally or via `uvx zizmor`) on all detected files.
+4. Parse the resulting security findings, ignoring any marked as `ignored`.
+5. Calculate a **Security Score** starting at 100/100, using a logarithmic scale (exponential decay) to ensure the score never goes negative:
+   $$\text{Score} = \text{round}\left(100 \times e^{-\text{Deductions} / 100}\right)$$
+   where the total Deductions are calculated based on the severity of the findings:
+   - **High severity**: 20 points
+   - **Medium severity**: 10 points
+   - **Low severity**: 5 points
+   - **Informational**: 1 point
+6. If any High or Medium severity findings are present, exit with code `1` to fail CI builds.
 
 ## CLI command flow
 

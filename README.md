@@ -10,7 +10,7 @@
 
 > Install managed GitHub workflow files from a central marketplace repository.
 
-Workflows are sourced from [owner/ghwm-marketplace](https://github.com/owner/ghwm-marketplace).
+Workflows can be sourced from the official [pljanicki/ghwm-marketplace](https://github.com/pljanicki/ghwm-marketplace) or custom marketplace repositories, which can be created using the [pljanicki/ghwm-marketplace-template](https://github.com/pljanicki/ghwm-marketplace-template) repository template.
 
 ## Install
 
@@ -152,12 +152,16 @@ ghwm audit
 
 If the linter is not installed locally, `ghwm` will attempt to execute it dynamically using `uvx zizmor`.
 
-`ghwm audit` calculates a **Security Score** out of 100 based on the severity of the findings:
+`ghwm audit` calculates a **Security Score** out of 100 on a logarithmic scale (exponential decay) to ensure the score never goes negative:
 
-- **High severity**: Deducts 20 points
-- **Medium severity**: Deducts 10 points
-- **Low severity**: Deducts 5 points
-- **Informational**: Deducts 1 point
+$$\text{Score} = \text{round}\left(100 \times e^{-\text{Deductions} / 100}\right)$$
+
+where total Deductions are calculated from:
+
+- **High severity**: 20 points
+- **Medium severity**: 10 points
+- **Low severity**: 5 points
+- **Informational**: 1 point
 
 If any High or Medium severity vulnerabilities are detected, `ghwm audit` exits with code `1`, making it ideal for integration into CI pipelines.
 
@@ -192,6 +196,9 @@ The CLI needs read access to GitHub Packages and the marketplace repository. The
 1. Active `gh` CLI credentials (using the output of `gh auth token`)
 2. `GH_TOKEN` environment variable
 3. `GITHUB_TOKEN` environment variable
+
+> [!IMPORTANT]
+> When setting up a public marketplace repository, ensure that the visibility of the published packages on GitHub Packages is explicitly changed from **Private** to **Public**. If they remain private, external consumers running `ghwm install` will fail with `404 Not Found` or `401 Unauthorized` errors.
 
 For example, you can set an environment variable:
 

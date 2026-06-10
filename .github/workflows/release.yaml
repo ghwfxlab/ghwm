@@ -8,7 +8,7 @@ on: # yamllint disable-line rule:truthy
     paths:
       - "src/**"
       - "pyproject.toml"
-      - ".github/workflows/tag.yaml"
+      - ".github/workflows/release.yaml"
 
 permissions: {}
 
