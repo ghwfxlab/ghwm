@@ -78,7 +78,8 @@ packages = ["src/ghwm"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "--cov=ghwm --cov-report=term-missing"
+addopts = "--cov=ghwm --cov-report=term-missing --cov-report=xml --junitxml=junit.xml"
+junit_family = "legacy"
 
 [tool.ruff]
 target-version = "py312"
