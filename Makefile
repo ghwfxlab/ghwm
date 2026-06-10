@@ -66,7 +66,7 @@ type-check: install
 
 clean:
 	@echo "[clean] Removing build/test artifacts..."
-	@rm -rf dist/ .pytest_cache/ .mypy_cache/ .ruff_cache/ .test-workspace/
+	@rm -rf dist/ .pytest_cache/ .mypy_cache/ .ruff_cache/ .test-workspace/ .coverage coverage.xml pytest-coverage.txt junit.xml
 	@find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
 	@find . -type d -name '*.egg-info' -exec rm -rf {} + 2>/dev/null || true
 
