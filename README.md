@@ -10,7 +10,7 @@
 
 > Install managed GitHub workflow files from a central marketplace repository.
 
-Workflows are sourced from [owner/ghwm-marketplace](https://github.com/owner/ghwm-marketplace).
+Workflows can be sourced from the official [pljanicki/ghwm-marketplace](https://github.com/pljanicki/ghwm-marketplace) or custom marketplace repositories, which can be created using the [pljanicki/ghwm-marketplace-template](https://github.com/pljanicki/ghwm-marketplace-template) repository template.
 
 ## Install
 
