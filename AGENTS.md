@@ -3,7 +3,7 @@
 ## Purpose
 
 `ghwm` is a Python CLI that installs managed GitHub Actions workflow packages
-from a marketplace repository into a consumer repository.
+from a registry repository into a consumer repository.
 
 The core lifecycle is:
 
@@ -85,13 +85,13 @@ When changing code, preserve these unless the task explicitly changes them:
 - A `/` in the suffix after `@` means it is treated as part of the name, not as a version.
 - Remote installs must specify an explicit version in `ghwm.yml`.
 - `source` must be in `owner/repository` form, and the owner becomes the npm scope
-  (`owner/ghwm-marketplace` -> `@owner/ghwm-<name>`).
+  (`owner/ghwm-registry` -> `@owner/ghwm-<name>`).
 - `update-triggers` and `update-config-files` are per-workflow booleans.
 - There is no registry switch and no legacy archive-mode manifest behavior.
 
 ### Downloading
 
-- `--local` bypasses network download and reads from a local marketplace checkout.
+- `--local` bypasses network download and reads from a local registry checkout.
 - Remote download uses GitHub Packages npm tarballs, not repository archives.
 - Auth lookup order is: `gh auth token` -> `GH_TOKEN` -> `GITHUB_TOKEN`.
 - A package must contain `package/workflow.yml`, and that manifest must contain a `files` list.
@@ -140,7 +140,7 @@ When changing code, preserve these unless the task explicitly changes them:
 - Add or update tests in the module-aligned file under `tests/`.
 - Structure tests with the Arrange / Act / Assert pattern.
 - Name tests as `test_<feature>_should_<expected_behavior>_when_<state_under_test>`.
-- Prefer `tmp_path` fixtures and local fake marketplace trees over real network access.
+- Prefer `tmp_path` fixtures and local fake registry trees over real network access.
 - Mock `gh`/HTTP download edges instead of hitting GitHub.
 - Add negative-path coverage when changing package parsing, file extraction, or prune behavior.
 - Cover both the happy path and meaningful edge cases for trigger preservation and config overwrite behavior.
@@ -162,7 +162,7 @@ When changing code, preserve these unless the task explicitly changes them:
 For install-flow changes, a good manual check is:
 
 ```sh
-ghwm install --local ../ghwm-marketplace
+ghwm install --local ../ghwm-registry
 ```
 
 Run it from a consumer repository that has a versioned `ghwm.yml` manifest.

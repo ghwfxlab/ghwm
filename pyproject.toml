@@ -58,8 +58,8 @@ exclude-newer = "7 days"
 ghwm = "ghwm.cli:main"
 
 [project.urls]
-Repository = "https://github.com/pljanicki/ghwm"
-Issues = "https://github.com/pljanicki/ghwm/issues"
+Repository = "https://github.com/ghwfxlab/ghwm"
+Issues = "https://github.com/ghwfxlab/ghwm/issues"
 "Pawel's GitHub" = "https://github.com/pljanicki"
 "Peter's GitHub" = "https://github.com/petermefrandsen"
 

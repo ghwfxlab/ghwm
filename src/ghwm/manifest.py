@@ -11,7 +11,7 @@ import yaml
 from ghwm.package_names import scoped_package_name
 
 DEFAULT_MANIFEST = "ghwm.yml"
-DEFAULT_SOURCE = "owner/ghwm-marketplace"
+DEFAULT_SOURCE = "owner/ghwm-registry"
 DEFAULT_REF = "main"
 
 

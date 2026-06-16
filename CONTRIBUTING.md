@@ -48,7 +48,7 @@ To build and run `ghwm` locally, ensure you have the following tools installed:
 1. **Clone the Repository**:
 
    ```sh
-   git clone https://github.com/pljanicki/ghwm.git
+   git clone https://github.com/ghwfxlab/ghwm.git
    cd ghwm
    ```
 

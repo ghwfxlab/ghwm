@@ -1,29 +1,29 @@
 # GitHub Workflow Manager CLI
 
-[![Lint Code Base](https://github.com/pljanicki/ghwm/actions/workflows/linter.yaml/badge.svg)](https://github.com/pljanicki/ghwm/actions/workflows/linter.yaml)
-[![version](https://img.shields.io/github/v/release/pljanicki/ghwm)](https://github.com/pljanicki/ghwm/releases/latest)
-[![codecov](https://codecov.io/gh/pljanicki/ghwm/graph/badge.svg)](https://codecov.io/gh/pljanicki/ghwm)
+[![Lint Code Base](https://github.com/ghwfxlab/ghwm/actions/workflows/linter.yaml/badge.svg)](https://github.com/ghwfxlab/ghwm/actions/workflows/linter.yaml)
+[![version](https://img.shields.io/github/v/release/ghwfxlab/ghwm)](https://github.com/ghwfxlab/ghwm/releases/latest)
+[![codecov](https://codecov.io/gh/ghwfxlab/ghwm/graph/badge.svg)](https://codecov.io/gh/ghwfxlab/ghwm)
 [![Python](https://img.shields.io/badge/python-3.12-blue?logo=python&logoColor=white)](https://www.python.org/)
 
-| ![ghwm CLI](.github/static/readme_header.png) |
+| ![ghwm CLI](.github/static/readme_header.jpg) |
 | :-------------------------------------------: |
 
 > Install managed GitHub workflow files from a central marketplace repository.
 
-Workflows can be sourced from the official [pljanicki/ghwm-marketplace](https://github.com/pljanicki/ghwm-marketplace) or custom marketplace repositories, which can be created using the [pljanicki/ghwm-marketplace-template](https://github.com/pljanicki/ghwm-marketplace-template) repository template.
+Workflows can be sourced from the official [ghwfxlab/ghwm-registry](https://github.com/ghwfxlab/ghwm-registry) or custom registry repositories, which can be created using the [ghwfxlab/ghwm-registry-template](https://github.com/ghwfxlab/ghwm-registry-template) repository template.
 
 ## Install
 
 The recommended way to install `ghwm` is using [uv](https://docs.astral.sh/uv/) (a fast Python package manager):
 
 ```sh
-uv tool install git+https://github.com/pljanicki/ghwm.git
+uv tool install git+https://github.com/ghwfxlab/ghwm.git
 ```
 
 Or pin to a specific version tag:
 
 ```sh
-uv tool install git+https://github.com/pljanicki/ghwm.git@vX.Y.Z
+uv tool install git+https://github.com/ghwfxlab/ghwm.git@vX.Y.Z
 ```
 
 ### Alternatives
@@ -31,13 +31,13 @@ uv tool install git+https://github.com/pljanicki/ghwm.git@vX.Y.Z
 If you prefer to install using [pipx](https://github.com/pypa/pipx):
 
 ```sh
-pipx install git+https://github.com/pljanicki/ghwm.git
+pipx install git+https://github.com/ghwfxlab/ghwm.git
 ```
 
 Or via standard `pip` (into an active virtual environment):
 
 ```sh
-pip install git+https://github.com/pljanicki/ghwm.git
+pip install git+https://github.com/ghwfxlab/ghwm.git
 ```
 
 ## Usage
@@ -45,7 +45,7 @@ pip install git+https://github.com/pljanicki/ghwm.git
 ### 1. Create `ghwm.yml` in your repository root
 
 ```yaml
-source: owner/ghwm-marketplace
+source: owner/ghwm-registry
 
 workflows:
   - name: linter
@@ -144,7 +144,7 @@ workflow package set. Old tarball-era lockfiles are rejected and must be regener
 
 ## Auditing Workflows (Security Scoring)
 
-Since workflows are imported from shared marketplace repositories, keeping them secure is critical. The `ghwm audit` command runs static security analysis on all your installed/managed workflows using [zizmor](https://docs.zizmor.sh) (a fast security linter for GitHub Actions).
+Since workflows are imported from shared registry repositories, keeping them secure is critical. The `ghwm audit` command runs static security analysis on all your installed/managed workflows using [zizmor](https://docs.zizmor.sh) (a fast security linter for GitHub Actions).
 
 ```sh
 ghwm audit
@@ -187,7 +187,7 @@ Add the following `regexManagers` configuration to your `renovate.json` or `reno
 }
 ```
 
-_Note: Replace `@owner` with the GitHub organization or username where your marketplace packages are published._
+_Note: Replace `@owner` with the GitHub organization or username where your registry packages are published._
 
 ### Authentication
 
@@ -198,7 +198,7 @@ The CLI needs read access to GitHub Packages and the marketplace repository. The
 3. `GITHUB_TOKEN` environment variable
 
 > [!IMPORTANT]
-> When setting up a public marketplace repository, ensure that the visibility of the published packages on GitHub Packages is explicitly changed from **Private** to **Public**. If they remain private, external consumers running `ghwm install` will fail with `404 Not Found` or `401 Unauthorized` errors.
+> When setting up a public registry repository, ensure that the visibility of the published packages on GitHub Packages is explicitly changed from **Private** to **Public**. If they remain private, external consumers running `ghwm install` will fail with `404 Not Found` or `401 Unauthorized` errors.
 
 For example, you can set an environment variable:
 
@@ -216,10 +216,10 @@ gh auth refresh -s read:packages
 
 ### Local Development
 
-Point at a local checkout of the marketplace for testing:
+Point at a local checkout of the registry for testing:
 
 ```sh
-ghwm install --local ../ghwm-marketplace
+ghwm install --local ../ghwm-registry
 ```
 
 With `--local`, the CLI reads `workflows/<name>/workflow.yml` directly from the checkout instead of

@@ -1,4 +1,4 @@
-"""Download workflow packages from GitHub Packages or a local marketplace checkout."""
+"""Download workflow packages from GitHub Packages or a local registry checkout."""
 
 from __future__ import annotations
 
