@@ -243,7 +243,7 @@ class TestInstallWorkflows:
         _write_marketplace_package(marketplace, LINTER, "name: v1\njobs:\n  review:\n    runs-on: ubuntu-latest\n")
         manifest = parse_manifest(
             {
-                "source": "owner/ghwm-marketplace",
+                "source": "owner/ghwm-registry",
                 "workflows": [{"name": LINTER, "version": VERSION_1}],
             }
         )
@@ -270,7 +270,7 @@ class TestInstallWorkflows:
         )
         manifest = parse_manifest(
             {
-                "source": "owner/ghwm-marketplace",
+                "source": "owner/ghwm-registry",
                 "workflows": [{"name": LINTER, "version": VERSION_1, "update-triggers": True}],
             }
         )
@@ -300,7 +300,7 @@ class TestInstallWorkflows:
         )
         manifest = parse_manifest(
             {
-                "source": "owner/ghwm-marketplace",
+                "source": "owner/ghwm-registry",
                 "workflows": [{"name": LINTER, "version": VERSION_1}],
             }
         )
@@ -332,7 +332,7 @@ class TestInstallWorkflows:
         )
         manifest = parse_manifest(
             {
-                "source": "owner/ghwm-marketplace",
+                "source": "owner/ghwm-registry",
                 "workflows": [{"name": AUTO_ASSIGN_PR, "version": VERSION_1}],
             }
         )
@@ -356,7 +356,7 @@ class TestInstallWorkflows:
         _write_marketplace_package(marketplace, AUTO_ASSIGN_PR, "name: v1\non: pull_request\n")
         manifest = parse_manifest(
             {
-                "source": "owner/ghwm-marketplace",
+                "source": "owner/ghwm-registry",
                 "workflows": [{"name": AUTO_ASSIGN_PR, "version": VERSION_1}],
             }
         )
@@ -386,13 +386,13 @@ class TestInstallWorkflows:
         )
         install_manifest = parse_manifest(
             {
-                "source": "owner/ghwm-marketplace",
+                "source": "owner/ghwm-registry",
                 "workflows": [{"name": AUTO_ASSIGN_PR, "version": VERSION_1}],
             }
         )
         update_manifest = parse_manifest(
             {
-                "source": "owner/ghwm-marketplace",
+                "source": "owner/ghwm-registry",
                 "workflows": [
                     {
                         "name": "auto-assign-pr",
@@ -426,7 +426,7 @@ class TestInstallWorkflows:
         _write_marketplace_package(marketplace, LINTER, "name: linter\non: push\n")
         install_manifest = parse_manifest(
             {
-                "source": "owner/ghwm-marketplace",
+                "source": "owner/ghwm-registry",
                 "workflows": [{"name": LINTER, "version": VERSION_1}],
             }
         )
@@ -447,7 +447,7 @@ class TestInstallWorkflows:
         _write_marketplace_package(marketplace, LINTER, "name: linter\non: push\n")
         install_manifest = parse_manifest(
             {
-                "source": "owner/ghwm-marketplace",
+                "source": "owner/ghwm-registry",
                 "workflows": [{"name": LINTER, "version": VERSION_1}],
             }
         )
@@ -475,7 +475,7 @@ class TestInstallWorkflows:
         )
         manifest = parse_manifest(
             {
-                "source": "owner/ghwm-marketplace",
+                "source": "owner/ghwm-registry",
                 "workflows": [{"name": AUTO_ASSIGN_PR, "version": VERSION_1}],
             }
         )
@@ -502,7 +502,7 @@ class TestInstallWorkflows:
         )
         manifest = parse_manifest(
             {
-                "source": "owner/ghwm-marketplace",
+                "source": "owner/ghwm-registry",
                 "workflows": [{"name": AUTO_ASSIGN_PR, "version": VERSION_1}],
             }
         )
@@ -522,7 +522,7 @@ class TestInstallWorkflows:
         _write_marketplace_package(marketplace, LINTER, "name: linter\non: push\n")
         manifest = parse_manifest(
             {
-                "source": "owner/ghwm-marketplace",
+                "source": "owner/ghwm-registry",
                 "workflows": [{"name": LINTER, "version": VERSION_1}],
             }
         )
@@ -546,7 +546,7 @@ class TestInstallWorkflows:
         _write_marketplace_package(marketplace, LINTER, "name: linter\non: push\n")
         manifest = parse_manifest(
             {
-                "source": "owner/ghwm-marketplace",
+                "source": "owner/ghwm-registry",
                 "workflows": [{"name": LINTER, "version": VERSION_1}],
             }
         )

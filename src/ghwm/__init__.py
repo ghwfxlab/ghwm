@@ -1,4 +1,4 @@
-"""ghwm — Install GitHub workflow files from a marketplace repository."""
+"""ghwm — Install GitHub workflow files from a registry repository."""
 
 from importlib.metadata import PackageNotFoundError, version
 

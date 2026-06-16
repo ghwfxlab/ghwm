@@ -7,7 +7,7 @@ from pathlib import Path
 LINTER = "linter"
 AUTO_ASSIGN_PR = "auto-assign-pr"
 DEFAULT_MANIFEST_PATH = "ghwm.yml"
-MARKETPLACE_SOURCE = "owner/ghwm-marketplace"
+MARKETPLACE_SOURCE = "owner/ghwm-registry"
 WORKFLOWS_DIR = Path(".github") / "workflows"
 
 VERSION_1 = "1.0.0"

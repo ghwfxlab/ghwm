@@ -3,7 +3,7 @@
 ## Overview
 
 `ghwm` is a command-line tool that installs GitHub Actions workflow
-files from a central marketplace repository into a consumer repository. It
+files from a central registry repository into a consumer repository. It
 follows a **manifest → download → install → lock** lifecycle, analogous to a
 package manager.
 
@@ -110,7 +110,7 @@ carries:
 - **update-config-files** (optional) — overwrite packaged config files on update when `true`.
 
 The manifest also declares a **source** in `owner/repository` form. The owner
-becomes the npm scope: `owner/ghwm-marketplace` →
+becomes the npm scope: `owner/ghwm-registry` →
 `@owner/ghwm-<name>`.
 
 Version resolution produces a `resolved_ref` string used directly as the npm
@@ -138,11 +138,11 @@ Authentication priority:
 1. `GH_TOKEN` / `GITHUB_TOKEN` environment variable.
 2. `gh auth token` — used when the `gh` CLI is on `PATH` and the env vars are absent.
 
-Tokens must have `read:packages` scope. For public marketplaces, packages must be public on GitHub Packages to allow anonymous downloads (otherwise resulting in 404 or 401 HTTP errors).
+Tokens must have `read:packages` scope. For public registries, packages must be public on GitHub Packages to allow anonymous downloads (otherwise resulting in 404 or 401 HTTP errors).
 
 **Local development mode** (`--local`) skips the network entirely and reads
 `workflows/<name>/workflow.yml` plus the files it declares directly from a
-local marketplace checkout. The same `InstalledFile` abstraction is used for
+local registry checkout. The same `InstalledFile` abstraction is used for
 both paths.
 
 ### 3 — File sync (`managed_files.py`)
@@ -297,4 +297,4 @@ workflows.
 ## Planned features
 
 - **`remove` command** — remove a single managed workflow and its lock entry.
-- **Auto-update** — renovate-style PRs when new marketplace versions are tagged.
+- **Auto-update** — renovate-style PRs when new registry versions are tagged.

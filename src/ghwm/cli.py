@@ -24,7 +24,7 @@ DEFAULT_CWD = "."
 MANIFEST_HELP = "Path to manifest file."
 CWD_HELP = "Consumer repository root."
 FORCE_HELP = "Overwrite unmanaged or modified files."
-LOCAL_HELP = "Path to local marketplace checkout."
+LOCAL_HELP = "Path to local registry checkout."
 UPDATE_TRIGGERS_HELP = "Replace workflow triggers with the packaged version during updates."
 
 
@@ -75,7 +75,7 @@ def add_audit_cmd_to_parser(subcommands: argparse._SubParsersAction[argparse.Arg
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="ghwm",
-        description="Install GitHub workflow files from a marketplace repository.",
+        description="Install GitHub workflow files from a registry repository.",
     )
     parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
 
