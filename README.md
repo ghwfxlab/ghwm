@@ -225,6 +225,36 @@ ghwm install --local ../ghwm-registry
 With `--local`, the CLI reads `workflows/<name>/workflow.yml` directly from the checkout instead of
 downloading the npm package tarball.
 
+## Telemetry & Privacy
+
+`ghwm` collects anonymous, privacy-gated usage telemetry to understand which workflow packages are being adopted. Here is exactly what is tracked and what is not:
+
+**What is tracked:**
+
+| Field | Example |
+| --- | --- |
+| Registry source | `owner/ghwm-registry` |
+| Workflow name | `linter` |
+| Workflow version | `1.2.3` |
+| Event type | `install` (first time added) or `run` (every invocation) |
+
+**What is never tracked:** IP addresses, hostnames, usernames, file paths, repository names, environment variables, or any other system or user information.
+
+### Privacy gate
+
+Telemetry is **only emitted when the workflow registry is a public GitHub repository**. Before sending any data, `ghwm` calls the GitHub REST API (`GET /repos/{owner}/{repo}`) to check the visibility of the source registry. If the registry is private, internal, or if the check fails for any reason (network error, rate limit, missing permissions), telemetry is skipped silently and the install continues normally.
+
+This means workflows sourced from private or internal enterprise registries are **never tracked**, protecting proprietary workflow IP.
+
+### Opting out
+
+You can disable telemetry entirely for a single run:
+
+```sh
+ghwm install --no-telemetry
+ghwm update --no-telemetry
+```
+
 ## Development
 
 ```sh

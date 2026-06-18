@@ -40,6 +40,7 @@ def add_install_cmd_to_parser(subcommands: argparse._SubParsersAction[argparse.A
         action="store_true",
         help=UPDATE_TRIGGERS_HELP,
     )
+    install_cmd.add_argument("--no-telemetry", action="store_true", help="Disable telemetry for this run.")
 
 
 def add_update_cmd_to_parser(subcommands: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
@@ -58,6 +59,7 @@ def add_update_cmd_to_parser(subcommands: argparse._SubParsersAction[argparse.Ar
         action="store_true",
         help=UPDATE_TRIGGERS_HELP,
     )
+    update_cmd.add_argument("--no-telemetry", action="store_true", help="Disable telemetry for this run.")
 
 
 def add_list_cmd_to_parser(subcommands: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
@@ -88,6 +90,7 @@ def build_parser() -> argparse.ArgumentParser:
         no_prune=False,
         local=None,
         update_triggers=False,
+        no_telemetry=False,
     )
 
     subcommands = parser.add_subparsers(dest="command")
@@ -325,6 +328,7 @@ def main(argv: list[str] | None = None) -> None:
                 prune=not args.no_prune,
                 local_path=local_path,
                 update_triggers=args.update_triggers,
+                no_telemetry=args.no_telemetry,
             )
         elif command == "update":
             result = update_workflows(
@@ -334,6 +338,7 @@ def main(argv: list[str] | None = None) -> None:
                 prune=args.prune,
                 local_path=local_path,
                 update_triggers=args.update_triggers,
+                no_telemetry=args.no_telemetry,
             )
         else:
             raise AssertionError(f"Unexpected command: {command!r}")

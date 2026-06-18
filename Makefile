@@ -52,6 +52,9 @@ test: install
 	@echo "[test] Running pytest..."
 	@$(UV) run pytest
 
+test-integration: install
+	@echo "[test-integration] Running pytest including integration tests..."
+	@$(UV) run pytest -m "integration" --no-header -rN
 lint: install
 	@echo "[lint] Running ruff check..."
 	@$(UV) run ruff check src/ tests/

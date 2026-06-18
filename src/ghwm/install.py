@@ -16,6 +16,7 @@ from ghwm.managed_files import (
     _WorkflowBlockedError,
 )
 from ghwm.manifest import Manifest, WorkflowEntry
+from ghwm.telemetry import is_public_repository, track_installation
 
 
 @dataclass
@@ -34,6 +35,7 @@ def install_workflows(
     prune: bool = True,
     local_path: Path | None = None,
     update_triggers: bool = False,
+    no_telemetry: bool = False,
 ) -> InstallResult:
     """Full install: download, write, and prune stale workflows."""
     lockfile = read_lockfile(cwd)
@@ -60,6 +62,9 @@ def install_workflows(
     if prune:
         _prune_stale(cwd, manifest, lockfile, result, force=force)
 
+    if not no_telemetry:
+        _emit_telemetry(manifest.source, manifest, result)
+
     write_lockfile(cwd, lockfile)
     return result
 
@@ -72,6 +77,7 @@ def update_workflows(
     prune: bool = False,
     local_path: Path | None = None,
     update_triggers: bool = False,
+    no_telemetry: bool = False,
 ) -> InstallResult:
     """Re-download and re-install all workflows, optionally pruning stale ones."""
     return install_workflows(
@@ -81,7 +87,33 @@ def update_workflows(
         prune=prune,
         local_path=local_path,
         update_triggers=update_triggers,
+        no_telemetry=no_telemetry,
     )
+
+
+def _emit_telemetry(source: str, manifest: Manifest, result: InstallResult) -> None:
+    """Emit telemetry events for installs and runs if the source registry is public."""
+    owner, repo = source.split("/", 1)
+    if not is_public_repository(owner, repo):
+        return
+
+    version_by_name = {entry.name: entry.version for entry in manifest.workflows}
+
+    for name in result.installed:
+        track_installation(
+            source=source,
+            workflow_name=name,
+            version=version_by_name.get(name),
+            event_type="install",
+        )
+
+    for name in result.installed + result.updated:
+        track_installation(
+            source=source,
+            workflow_name=name,
+            version=version_by_name.get(name),
+            event_type="run",
+        )
 
 
 def _install_one(
