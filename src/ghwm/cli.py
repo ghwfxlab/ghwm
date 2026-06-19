@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import os
 import subprocess
 import sys
 import tarfile
@@ -40,7 +41,11 @@ def add_install_cmd_to_parser(subcommands: argparse._SubParsersAction[argparse.A
         action="store_true",
         help=UPDATE_TRIGGERS_HELP,
     )
-    install_cmd.add_argument("--no-telemetry", action="store_true", help="Disable telemetry for this run.")
+    install_cmd.add_argument(
+        "--no-telemetry",
+        action="store_true",
+        help="Disable telemetry for this run. Also honoured via DO_NOT_TRACK=1.",
+    )
 
 
 def add_update_cmd_to_parser(subcommands: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
@@ -59,7 +64,11 @@ def add_update_cmd_to_parser(subcommands: argparse._SubParsersAction[argparse.Ar
         action="store_true",
         help=UPDATE_TRIGGERS_HELP,
     )
-    update_cmd.add_argument("--no-telemetry", action="store_true", help="Disable telemetry for this run.")
+    update_cmd.add_argument(
+        "--no-telemetry",
+        action="store_true",
+        help="Disable telemetry for this run. Also honoured via DO_NOT_TRACK=1.",
+    )
 
 
 def add_list_cmd_to_parser(subcommands: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
@@ -321,6 +330,7 @@ def main(argv: list[str] | None = None) -> None:
         print(f"Found {len(manifest.workflows)} workflow(s) in {manifest_path}")
 
         if command == "install":
+            no_telemetry = args.no_telemetry or os.environ.get("DO_NOT_TRACK") == "1"
             result = install_workflows(
                 cwd,
                 manifest,
@@ -328,9 +338,10 @@ def main(argv: list[str] | None = None) -> None:
                 prune=not args.no_prune,
                 local_path=local_path,
                 update_triggers=args.update_triggers,
-                no_telemetry=args.no_telemetry,
+                no_telemetry=no_telemetry,
             )
         elif command == "update":
+            no_telemetry = args.no_telemetry or os.environ.get("DO_NOT_TRACK") == "1"
             result = update_workflows(
                 cwd,
                 manifest,
@@ -338,7 +349,7 @@ def main(argv: list[str] | None = None) -> None:
                 prune=args.prune,
                 local_path=local_path,
                 update_triggers=args.update_triggers,
-                no_telemetry=args.no_telemetry,
+                no_telemetry=no_telemetry,
             )
         else:
             raise AssertionError(f"Unexpected command: {command!r}")
