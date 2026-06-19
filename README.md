@@ -248,11 +248,17 @@ This means workflows sourced from private or internal enterprise registries are 
 
 ### Opting out
 
-You can disable telemetry entirely for a single run:
+You can disable telemetry for a single run with the `--no-telemetry` flag:
 
 ```sh
 ghwm install --no-telemetry
 ghwm update --no-telemetry
+```
+
+To opt out permanently — for example in CI/CD pipelines or a global shell config — set the `DO_NOT_TRACK=1` environment variable ([consoledonottrack.com](https://consoledonottrack.com/)):
+
+```sh
+export DO_NOT_TRACK=1
 ```
 
 ## Development
