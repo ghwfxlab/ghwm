@@ -37,8 +37,8 @@ def track_installation(
 ) -> None:
     """Emit a telemetry event for a workflow installation.
 
-    ``event_type`` is either ``"install"`` (first lock-file entry) or
-    ``"run"`` (every invocation of install/update).
+    ``event_type`` is ``"install"`` (first lock-file entry) or
+    ``"updated"`` (subsequent installs where the workflow changed).
 
     This is a stub. Only called when the registry repository is confirmed public.
     """

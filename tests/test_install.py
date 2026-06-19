@@ -569,7 +569,7 @@ class TestInstallWorkflows:
 
 
 class TestTelemetry:
-    def test_install_workflows_should_emit_install_and_run_events_when_registry_is_public(self, tmp_path: Path) -> None:
+    def test_install_workflows_should_emit_install_event_when_registry_is_public(self, tmp_path: Path) -> None:
         # Arrange
         marketplace = tmp_path / "marketplace"
         consumer = tmp_path / "consumer"
@@ -587,7 +587,7 @@ class TestTelemetry:
         # Assert
         calls = [(c.kwargs["event_type"], c.kwargs["workflow_name"]) for c in mock_track.call_args_list]
         assert ("install", LINTER) in calls
-        assert ("run", LINTER) in calls
+        assert len(mock_track.call_args_list) == 1
 
     def test_install_workflows_should_not_emit_telemetry_when_registry_is_private(self, tmp_path: Path) -> None:
         # Arrange
@@ -626,7 +626,28 @@ class TestTelemetry:
         mock_check.assert_not_called()
         mock_track.assert_not_called()
 
-    def test_install_workflows_should_emit_only_run_event_when_workflow_is_already_up_to_date(
+    def test_install_workflows_should_not_emit_telemetry_when_source_has_no_slash(self, tmp_path: Path) -> None:
+        # Arrange
+        marketplace = tmp_path / "marketplace"
+        consumer = tmp_path / "consumer"
+        consumer.mkdir()
+        _write_marketplace_package(marketplace, LINTER, "name: linter\non: push\n")
+        manifest = _marketplace_manifest([{"name": LINTER, "version": VERSION_1_2_3}])
+
+        # Act: call _emit_telemetry directly with a malformed source (no slash)
+        from ghwm.install import InstallResult, _emit_telemetry
+
+        with (
+            patch("ghwm.install.is_public_repository") as mock_check,
+            patch("ghwm.install.track_installation") as mock_track,
+        ):
+            _emit_telemetry("noslash", manifest, InstallResult(installed=[LINTER], updated=[], pruned=[], skipped=[]))
+
+        # Assert: guard returns early without calling anything
+        mock_check.assert_not_called()
+        mock_track.assert_not_called()
+
+    def test_install_workflows_should_not_emit_any_telemetry_when_workflow_is_already_up_to_date(
         self, tmp_path: Path
     ) -> None:
         # Arrange
@@ -651,7 +672,7 @@ class TestTelemetry:
         assert "install" not in event_types
         assert "run" not in event_types
 
-    def test_update_workflows_should_emit_run_event_but_not_install_event_when_workflow_is_updated(
+    def test_update_workflows_should_emit_updated_event_but_not_install_event_when_workflow_is_updated(
         self, tmp_path: Path
     ) -> None:
         # Arrange
@@ -683,7 +704,7 @@ class TestTelemetry:
 
         # Assert
         event_types = [c.kwargs["event_type"] for c in mock_track.call_args_list]
-        assert "run" in event_types
+        assert "updated" in event_types
         assert "install" not in event_types
 
     def test_install_workflows_should_include_version_in_telemetry_event(self, tmp_path: Path) -> None:

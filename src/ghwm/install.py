@@ -92,8 +92,11 @@ def update_workflows(
 
 
 def _emit_telemetry(source: str, manifest: Manifest, result: InstallResult) -> None:
-    """Emit telemetry events for installs and runs if the source registry is public."""
-    owner, repo = source.split("/", 1)
+    """Emit telemetry events for installs and updates if the source registry is public."""
+    try:
+        owner, repo = source.split("/", 1)
+    except ValueError:
+        return
     if not is_public_repository(owner, repo):
         return
 
@@ -107,12 +110,12 @@ def _emit_telemetry(source: str, manifest: Manifest, result: InstallResult) -> N
             event_type="install",
         )
 
-    for name in result.installed + result.updated:
+    for name in result.updated:
         track_installation(
             source=source,
             workflow_name=name,
             version=version_by_name.get(name),
-            event_type="run",
+            event_type="updated",
         )
 
 
