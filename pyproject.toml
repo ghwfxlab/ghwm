@@ -78,8 +78,9 @@ packages = ["src/ghwm"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "--cov=ghwm --cov-report=term-missing --cov-report=xml --junitxml=junit.xml"
+addopts = "--cov=ghwm --cov-report=term-missing --cov-report=xml --junitxml=junit.xml -m 'not integration'"
 junit_family = "legacy"
+markers = ["integration: marks tests that call the real GitHub API (run with: make test-integration)"]
 
 [tool.ruff]
 target-version = "py312"
@@ -89,7 +90,7 @@ line-length = 120
 select = ["E", "F", "I", "W", "B", "S", "UP", "RUF", "N"]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/*" = ["S101", "S105", "S108"]
+"tests/*" = ["S101", "S105", "S106", "S108"]
 
 [tool.isort]
 profile = "black"

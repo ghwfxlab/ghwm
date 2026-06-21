@@ -892,3 +892,123 @@ class TestMainList:
         # Assert
         assert exc.value.code == 1
         assert "Security Score: 14/100" in output
+
+
+class TestNoTelemetryFlag:
+    def test_build_parser_should_set_no_telemetry_false_by_default_when_install_command_is_used(self) -> None:
+        # Arrange
+        parser = build_parser()
+
+        # Act
+        parsed_args = parser.parse_args(["install"])
+
+        # Assert
+        assert parsed_args.no_telemetry is False
+
+    def test_build_parser_should_set_no_telemetry_true_when_install_no_telemetry_flag_is_used(self) -> None:
+        # Arrange
+        parser = build_parser()
+
+        # Act
+        parsed_args = parser.parse_args(["install", "--no-telemetry"])
+
+        # Assert
+        assert parsed_args.no_telemetry is True
+
+    def test_build_parser_should_set_no_telemetry_false_by_default_when_update_command_is_used(self) -> None:
+        # Arrange
+        parser = build_parser()
+
+        # Act
+        parsed_args = parser.parse_args(["update"])
+
+        # Assert
+        assert parsed_args.no_telemetry is False
+
+    def test_build_parser_should_set_no_telemetry_true_when_update_no_telemetry_flag_is_used(self) -> None:
+        # Arrange
+        parser = build_parser()
+
+        # Act
+        parsed_args = parser.parse_args(["update", "--no-telemetry"])
+
+        # Assert
+        assert parsed_args.no_telemetry is True
+
+    def test_main_should_pass_no_telemetry_true_to_install_when_flag_is_used(self, tmp_path: Path) -> None:
+        from unittest.mock import patch
+
+        # Arrange
+        marketplace = tmp_path / "marketplace"
+        consumer = tmp_path / "consumer"
+        consumer.mkdir()
+        _setup_marketplace(marketplace, LINTER)
+        _write_manifest(consumer, [LINTER])
+
+        # Act
+        with patch("ghwm.install.is_public_repository") as mock_check:
+            main(["install", "--no-telemetry", "--cwd", str(consumer), "--local", str(marketplace)])
+
+        # Assert: visibility check must not be called when --no-telemetry is set
+        mock_check.assert_not_called()
+
+    def test_main_should_skip_telemetry_when_do_not_track_env_var_is_set_for_install(self, tmp_path: Path) -> None:
+        import os
+        from unittest.mock import patch
+
+        # Arrange
+        marketplace = tmp_path / "marketplace"
+        consumer = tmp_path / "consumer"
+        consumer.mkdir()
+        _setup_marketplace(marketplace, LINTER)
+        _write_manifest(consumer, [LINTER])
+
+        # Act
+        with (
+            patch.dict(os.environ, {"DO_NOT_TRACK": "1"}),
+            patch("ghwm.install.is_public_repository") as mock_check,
+        ):
+            main(["install", "--cwd", str(consumer), "--local", str(marketplace)])
+
+        # Assert: visibility check must not be called when DO_NOT_TRACK=1
+        mock_check.assert_not_called()
+
+    def test_main_should_pass_no_telemetry_true_to_update_when_flag_is_used(self, tmp_path: Path) -> None:
+        from unittest.mock import patch
+
+        # Arrange
+        marketplace = tmp_path / "marketplace"
+        consumer = tmp_path / "consumer"
+        consumer.mkdir()
+        _setup_marketplace(marketplace, LINTER)
+        _write_manifest(consumer, [LINTER])
+        main(["install", "--no-telemetry", "--cwd", str(consumer), "--local", str(marketplace)])
+
+        # Act
+        with patch("ghwm.install.is_public_repository") as mock_check:
+            main(["update", "--no-telemetry", "--cwd", str(consumer), "--local", str(marketplace)])
+
+        # Assert
+        mock_check.assert_not_called()
+
+    def test_main_should_skip_telemetry_when_do_not_track_env_var_is_set_for_update(self, tmp_path: Path) -> None:
+        import os
+        from unittest.mock import patch
+
+        # Arrange
+        marketplace = tmp_path / "marketplace"
+        consumer = tmp_path / "consumer"
+        consumer.mkdir()
+        _setup_marketplace(marketplace, LINTER)
+        _write_manifest(consumer, [LINTER])
+        main(["install", "--no-telemetry", "--cwd", str(consumer), "--local", str(marketplace)])
+
+        # Act
+        with (
+            patch.dict(os.environ, {"DO_NOT_TRACK": "1"}),
+            patch("ghwm.install.is_public_repository") as mock_check,
+        ):
+            main(["update", "--cwd", str(consumer), "--local", str(marketplace)])
+
+        # Assert: visibility check must not be called when DO_NOT_TRACK=1
+        mock_check.assert_not_called()

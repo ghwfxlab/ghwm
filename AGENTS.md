@@ -33,6 +33,7 @@ Agents should read and follow these standards for all contributions.
 - `src/ghwm/install.py` - install/update/prune orchestration
 - `src/ghwm/managed_files.py` - low-level workflow/config sync, trigger merge, and prune checks
 - `src/ghwm/lock.py` - lockfile read/write and in-memory lockfile operations
+- `src/ghwm/telemetry.py` - privacy-gated telemetry: public-repo check and installation event emission
 - `src/ghwm/__main__.py` - `python -m ghwm` entry point
 - `tests/` - module-aligned pytest suite
 - `docs/ARCHITECTURE.md` - architecture and lifecycle notes
@@ -115,6 +116,16 @@ When changing code, preserve these unless the task explicitly changes them:
 - Modified managed workflow files are not pruned unless `--force`.
 - Hashes for managed workflow files must be computed from the normalized content that is
   actually written to disk.
+
+### Telemetry
+
+- Telemetry is emitted only when the source registry repository is confirmed publicly visible.
+- Public visibility is checked by calling `GET /repos/{owner}/{repo}` without authentication; any error is treated as private.
+- Telemetry must never break the install: `_emit_telemetry` must not propagate exceptions.
+- `install` emits an `"install"` event for each newly installed workflow.
+- `update` (and install that detects a change) emits an `"updated"` event for each changed workflow.
+- Already-up-to-date (skipped) workflows emit no telemetry events.
+- `--no-telemetry` skips both the public-repo check and all event emission.
 
 ### Lockfile
 
