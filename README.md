@@ -236,7 +236,7 @@ downloading the npm package tarball.
 | Registry source | `owner/ghwm-registry` |
 | Workflow name | `linter` |
 | Workflow version | `1.2.3` |
-| Event type | `install` (first time added) or `run` (every invocation) |
+| Event type | `install` (first time added) or `updated` (workflow changed on re-install) |
 
 **What is never tracked:** IP addresses, hostnames, usernames, file paths, repository names, environment variables, or any other system or user information.
 
