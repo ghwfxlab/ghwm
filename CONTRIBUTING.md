@@ -187,6 +187,24 @@ All tests are placed in the [tests/](tests) directory and follow these rules:
 
 ## Pull Request Process
 
+We welcome pull requests from everyone. If you are an external contributor, you must fork this repository before contributing:
+
+1. **Fork the Repository**: Click the **Fork** button at the top of the [ghwfxlab/ghwm](https://github.com/ghwfxlab/ghwm) repository to create a copy under your personal account.
+2. **Clone Your Fork**: Clone your personal fork to your machine:
+
+   ```sh
+   git clone https://github.com/YOUR_USERNAME/ghwm.git
+   cd ghwm
+   ```
+
+3. **Add Upstream Remote**:
+
+   ```sh
+   git remote add upstream https://github.com/ghwfxlab/ghwm.git
+   ```
+
+4. **Push & Pull Request**: Push changes to your fork, then open a Pull Request from your fork back to the `main` branch of the `ghwfxlab/ghwm` repository.
+
 ### Branching Conventions
 
 Name your branches to indicate the purpose of your changes:
