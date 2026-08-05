@@ -235,7 +235,7 @@ Before submitting a Pull Request, run this script to ensure all local checks pas
 
 ```sh
 # Run python tests, linting, and type-checks
-make test && make lint && make type-check
+make test && make lint && make type-check && make super-linter
 
 # Run documentation style checks
 make lang
@@ -246,5 +246,6 @@ Verify that:
 1. All unit tests pass.
 2. Mypy reports no strict type-checking issues.
 3. Ruff reports no linting or formatting violations.
-4. No textlint issues remain in Markdown files.
-5. `git status` lists only the intended files.
+4. Super-linter reports no issues.
+5. No textlint issues remain in Markdown files.
+6. `git status` lists only the intended files.
