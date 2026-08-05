@@ -29,6 +29,7 @@ LOCAL_HELP = "Path to local registry checkout."
 UPDATE_TRIGGERS_HELP = "Replace workflow triggers with the packaged version during updates."
 UPDATE_ENVS_HELP = "Replace workflow env variables with the packaged version during updates."
 
+
 def add_install_cmd_to_parser(subcommands: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
     install_cmd = subcommands.add_parser("install", help="Sync workflows to match the manifest (default).")
     install_cmd.add_argument("--manifest", default=DEFAULT_MANIFEST_PATH, help=MANIFEST_HELP)
