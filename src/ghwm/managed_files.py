@@ -109,6 +109,24 @@ def _preserve_existing_triggers(existing_content: str, new_content: str) -> str:
     return yaml.safe_dump(new_data, sort_keys=False)
 
 
+def _preserve_existing_envs(existing_content: str, new_content: str) -> str:
+    existing_data = _load_workflow_yaml(_extract_body(existing_content))
+    new_data = _load_workflow_yaml(new_content)
+
+    if not isinstance(existing_data, dict) or not isinstance(new_data, dict):
+        raise ValueError("Workflow YAML must be a mapping to preserve env configuration.")
+
+    if "env" not in existing_data:
+        return new_content
+
+    if new_data.get("env") == existing_data["env"]:
+        return new_content
+
+    new_data["env"] = existing_data["env"]
+
+    return yaml.safe_dump(new_data, sort_keys=False)
+
+
 def _resolve_target(cwd: Path, entry: WorkflowEntry, installed_file: InstalledFile) -> str:
     if _is_workflow_target(installed_file.target) and entry.target:
         raw_target = f".github/workflows/{entry.target}"
@@ -127,6 +145,7 @@ def _sync_workflow_file(
     force: bool,
     is_update: bool,
     update_triggers: bool,
+    update_envs: bool,
 ) -> _InstalledFileResult:
     target = _resolve_target(cwd, entry, installed_file)
     target_path = cwd / target
@@ -136,8 +155,11 @@ def _sync_workflow_file(
         raise _WorkflowBlockedError("unmanaged file exists")
 
     workflow_body = installed_file.content.decode("utf-8")
-    if existing_content is not None and is_update and not (entry.update_triggers or update_triggers):
-        workflow_body = _preserve_existing_triggers(existing_content, workflow_body)
+    if existing_content is not None and is_update:
+        if not (entry.update_triggers or update_triggers):
+            workflow_body = _preserve_existing_triggers(existing_content, workflow_body)
+        if not (entry.update_envs or update_envs):
+            workflow_body = _preserve_existing_envs(existing_content, workflow_body)
 
     normalized_body = _normalize_workflow_body(workflow_body)
     source_hash = _sha256(normalized_body)

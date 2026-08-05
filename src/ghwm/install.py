@@ -35,6 +35,7 @@ def install_workflows(
     prune: bool = True,
     local_path: Path | None = None,
     update_triggers: bool = False,
+    update_envs: bool = False,
     no_telemetry: bool = False,
 ) -> InstallResult:
     """Full install: download, write, and prune stale workflows."""
@@ -57,6 +58,7 @@ def install_workflows(
             result,
             force=force,
             update_triggers=update_triggers,
+            update_envs=update_envs,
         )
 
     if prune:
@@ -77,6 +79,7 @@ def update_workflows(
     prune: bool = False,
     local_path: Path | None = None,
     update_triggers: bool = False,
+    update_envs: bool = False,
     no_telemetry: bool = False,
 ) -> InstallResult:
     """Re-download and re-install all workflows, optionally pruning stale ones."""
@@ -87,6 +90,7 @@ def update_workflows(
         prune=prune,
         local_path=local_path,
         update_triggers=update_triggers,
+        update_envs=update_envs,
         no_telemetry=no_telemetry,
     )
 
@@ -128,6 +132,7 @@ def _install_one(
     *,
     force: bool,
     update_triggers: bool,
+    update_envs: bool,
 ) -> None:
     existing_lock = lockfile.find(entry.name)
     is_update = existing_lock is not None
@@ -153,6 +158,7 @@ def _install_one(
                     force=force,
                     is_update=is_update,
                     update_triggers=update_triggers,
+                    update_envs=update_envs,
                 )
             else:
                 file_result = _sync_config_file(

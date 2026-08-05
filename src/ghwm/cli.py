@@ -27,7 +27,7 @@ CWD_HELP = "Consumer repository root."
 FORCE_HELP = "Overwrite unmanaged or modified files."
 LOCAL_HELP = "Path to local registry checkout."
 UPDATE_TRIGGERS_HELP = "Replace workflow triggers with the packaged version during updates."
-
+UPDATE_ENVS_HELP = "Replace workflow env variables with the packaged version during updates."
 
 def add_install_cmd_to_parser(subcommands: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
     install_cmd = subcommands.add_parser("install", help="Sync workflows to match the manifest (default).")
@@ -40,6 +40,11 @@ def add_install_cmd_to_parser(subcommands: argparse._SubParsersAction[argparse.A
         "--update-triggers",
         action="store_true",
         help=UPDATE_TRIGGERS_HELP,
+    )
+    install_cmd.add_argument(
+        "--update-envs",
+        action="store_true",
+        help=UPDATE_ENVS_HELP,
     )
     install_cmd.add_argument(
         "--no-telemetry",
@@ -63,6 +68,11 @@ def add_update_cmd_to_parser(subcommands: argparse._SubParsersAction[argparse.Ar
         "--update-triggers",
         action="store_true",
         help=UPDATE_TRIGGERS_HELP,
+    )
+    update_cmd.add_argument(
+        "--update-envs",
+        action="store_true",
+        help=UPDATE_ENVS_HELP,
     )
     update_cmd.add_argument(
         "--no-telemetry",
@@ -99,6 +109,7 @@ def build_parser() -> argparse.ArgumentParser:
         no_prune=False,
         local=None,
         update_triggers=False,
+        update_envs=False,
         no_telemetry=False,
     )
 
@@ -338,6 +349,7 @@ def main(argv: list[str] | None = None) -> None:
                 prune=not args.no_prune,
                 local_path=local_path,
                 update_triggers=args.update_triggers,
+                update_envs=args.update_envs,
                 no_telemetry=no_telemetry,
             )
         elif command == "update":
@@ -349,6 +361,7 @@ def main(argv: list[str] | None = None) -> None:
                 prune=args.prune,
                 local_path=local_path,
                 update_triggers=args.update_triggers,
+                update_envs=args.update_envs,
                 no_telemetry=no_telemetry,
             )
         else:

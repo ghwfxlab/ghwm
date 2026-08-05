@@ -33,6 +33,7 @@ class TestParseManifest:
                         "name": AUTO_ASSIGN_PR,
                         "version": VERSION_1,
                         "update-triggers": True,
+                        "update-envs": True,
                         "update-config-files": True,
                     }
                 ],
@@ -43,6 +44,7 @@ class TestParseManifest:
         assert entry.name == AUTO_ASSIGN_PR
         assert entry.version == VERSION_1
         assert entry.update_triggers is True
+        assert entry.update_envs is True
         assert entry.update_config_files is True
 
     def test_parse_manifest_should_set_target_when_entry_includes_target_override(self) -> None:
@@ -80,6 +82,12 @@ class TestParseManifest:
             parse_manifest({"workflows": [{"name": LINTER, "version": VERSION_1, "update-triggers": "yes"}]})
 
         assert "update-triggers" in str(exc_info.value)
+
+    def test_parse_manifest_should_raise_value_error_when_update_envs_is_not_boolean(self) -> None:
+        with pytest.raises(ValueError) as exc_info:
+            parse_manifest({"workflows": [{"name": LINTER, "version": VERSION_1, "update-envs": "yes"}]})
+
+        assert "update-envs" in str(exc_info.value)
 
     def test_parse_manifest_should_raise_value_error_when_update_config_files_is_not_boolean(self) -> None:
         with pytest.raises(ValueError) as exc_info:
