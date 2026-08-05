@@ -203,7 +203,13 @@ We welcome pull requests from everyone. If you are an external contributor, you 
    git remote add upstream https://github.com/ghwfxlab/ghwm.git
    ```
 
-4. **Push & Pull Request**: Push changes to your fork, then open a Pull Request from your fork back to the `main` branch of the `ghwfxlab/ghwm` repository.
+4. **Create a Branch**: Create a new branch for your changes following the conventions below:
+
+   ```sh
+   git checkout -b type/description
+   ```
+
+5. **Push & Pull Request**: Push your branch to your fork, then open a Pull Request from your fork back to the `main` branch of the `ghwfxlab/ghwm` repository.
 
 ### Branching Conventions
 
