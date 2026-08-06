@@ -452,3 +452,15 @@ class TestResolveLatestVersion:
         mock_urlopen.return_value = mock_response
         with pytest.raises(RuntimeError, match="missing gitHead"):
             resolve_latest_version("owner", "linter", "token")
+
+    @patch("ghwm.download_npm.urlopen")
+    def test_should_raise_error_when_http_401(self, mock_urlopen: MagicMock) -> None:
+        mock_urlopen.side_effect = HTTPError("url", HTTPStatus.UNAUTHORIZED, "Unauthorized", Message(), None)
+        with pytest.raises(RuntimeError):
+            resolve_latest_version("owner", "linter", "token")
+
+    @patch("ghwm.download_npm.urlopen")
+    def test_should_raise_error_when_http_500(self, mock_urlopen: MagicMock) -> None:
+        mock_urlopen.side_effect = HTTPError("url", HTTPStatus.INTERNAL_SERVER_ERROR, "Server Error", Message(), None)
+        with pytest.raises(HTTPError):
+            resolve_latest_version("owner", "linter", "token")

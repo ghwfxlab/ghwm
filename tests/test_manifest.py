@@ -193,3 +193,15 @@ class TestRewriteManifestVersions:
         updated = manifest_file.read_text(encoding="utf-8")
         assert 'version: "sha1" # v1.1' in updated
         assert 'version: "sha2" # v2.2' in updated
+
+    def test_rewrite_manifest_versions_with_other_keys(self, tmp_path: Path) -> None:
+        manifest_content = "workflows:\n  - name: linter\n    update-triggers: true\n    version: old\n"
+        manifest_file = tmp_path / "ghwm.yml"
+        manifest_file.write_text(manifest_content, encoding="utf-8")
+
+        rewrite_manifest_versions(tmp_path, "ghwm.yml", {"linter": ("1.2.3", "abcdef")})
+
+        updated = manifest_file.read_text(encoding="utf-8")
+        assert 'version: "abcdef" # v1.2.3' in updated
+        assert 'version: old' not in updated
+        assert 'update-triggers: true' in updated
