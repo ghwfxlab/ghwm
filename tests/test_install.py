@@ -319,6 +319,95 @@ class TestInstallWorkflows:
         body = cast(dict[str, object], _load_workflow_yaml(_extract_body(installed_path.read_text())))
         assert body["on"] == {"pull_request": None}
 
+    def test_update_workflows_should_preserve_existing_envs_when_updating_by_default(self, tmp_path: Path) -> None:
+        marketplace = tmp_path / "marketplace"
+        consumer = tmp_path / "consumer"
+        consumer.mkdir()
+        _write_marketplace_package(
+            marketplace,
+            "linter",
+            "name: v1\nenv:\n  MY_VAR: old\n",
+        )
+        manifest = parse_manifest(
+            {
+                "source": "owner/ghwm-registry",
+                "workflows": [{"name": LINTER, "version": VERSION_1}],
+            }
+        )
+        install_workflows(consumer, manifest, local_path=marketplace)
+
+        installed_path = consumer / ".github" / "workflows" / "linter.yaml"
+        installed_path.write_text(
+            installed_path.read_text().replace("MY_VAR: old", "MY_VAR: consumer_changed"),
+            encoding="utf-8",
+        )
+        _write_marketplace_package(marketplace, LINTER, "name: v2\nenv:\n  MY_VAR: new\n")
+
+        update_workflows(consumer, manifest, local_path=marketplace)
+
+        body = cast(dict[str, object], _load_workflow_yaml(_extract_body(installed_path.read_text())))
+        assert body["name"] == "v2"
+        assert body["env"] == {"MY_VAR": "consumer_changed"}
+
+    def test_update_workflows_should_replace_envs_when_manifest_requests_override(self, tmp_path: Path) -> None:
+        marketplace = tmp_path / "marketplace"
+        consumer = tmp_path / "consumer"
+        consumer.mkdir()
+        _write_marketplace_package(
+            marketplace,
+            "linter",
+            "name: v1\nenv:\n  MY_VAR: old\n",
+        )
+        manifest = parse_manifest(
+            {
+                "source": "owner/ghwm-registry",
+                "workflows": [{"name": LINTER, "version": VERSION_1, "update-envs": True}],
+            }
+        )
+        install_workflows(consumer, manifest, local_path=marketplace)
+
+        installed_path = consumer / ".github" / "workflows" / "linter.yaml"
+        installed_path.write_text(
+            installed_path.read_text().replace("MY_VAR: old", "MY_VAR: consumer_changed"),
+            encoding="utf-8",
+        )
+        _write_marketplace_package(marketplace, LINTER, "name: v2\nenv:\n  MY_VAR: new\n")
+
+        update_workflows(consumer, manifest, local_path=marketplace)
+
+        body = cast(dict[str, object], _load_workflow_yaml(_extract_body(installed_path.read_text())))
+        assert body["name"] == "v2"
+        assert body["env"] == {"MY_VAR": "new"}
+
+    def test_update_workflows_should_replace_envs_when_run_requests_global_override(self, tmp_path: Path) -> None:
+        marketplace = tmp_path / "marketplace"
+        consumer = tmp_path / "consumer"
+        consumer.mkdir()
+        _write_marketplace_package(
+            marketplace,
+            "linter",
+            "name: v1\nenv:\n  MY_VAR: old\n",
+        )
+        manifest = parse_manifest(
+            {
+                "source": "owner/ghwm-registry",
+                "workflows": [{"name": LINTER, "version": VERSION_1}],
+            }
+        )
+        install_workflows(consumer, manifest, local_path=marketplace)
+
+        installed_path = consumer / ".github" / "workflows" / "linter.yaml"
+        installed_path.write_text(
+            installed_path.read_text().replace("MY_VAR: old", "MY_VAR: consumer_changed"),
+            encoding="utf-8",
+        )
+        _write_marketplace_package(marketplace, LINTER, "name: v2\nenv:\n  MY_VAR: new\n")
+
+        update_workflows(consumer, manifest, local_path=marketplace, update_envs=True)
+
+        body = cast(dict[str, object], _load_workflow_yaml(_extract_body(installed_path.read_text())))
+        assert body["env"] == {"MY_VAR": "new"}
+
     def test_update_workflows_should_leave_config_file_untouched_when_update_config_files_is_false(
         self, tmp_path: Path
     ) -> None:

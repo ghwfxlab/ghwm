@@ -53,6 +53,7 @@ workflows:
   - name: auto-assign-pr
     version: "1.0.0"
     update-triggers: true
+    update-envs: true
     update-config-files: true
 ```
 
@@ -69,9 +70,11 @@ ghwm install            # installs workflows listed in ghwm.yml
 ghwm install --force    # overwrites even if files were modified locally
 ghwm install --no-prune # skip removal of stale workflows
 ghwm install --update-triggers # replace workflow triggers with the packaged version
+ghwm install --update-envs # replace workflow env variables with the packaged version
 ghwm update             # re-downloads all workflows (respects versions)
 ghwm update --prune     # also removes managed workflows no longer in ghwm.yml
 ghwm update --update-triggers # replace workflow triggers with the packaged version
+ghwm update --update-envs # replace workflow env variables with the packaged version
 ghwm list               # shows workflows declared in ghwm.yml
 ghwm audit              # audits managed workflows for security vulnerabilities
 ```
@@ -103,6 +106,8 @@ The CLI uses this header to:
   overwritten without `--force`).
 - Preserve existing `on:` rules during updates unless `update-triggers: true`
   or `--update-triggers` is used.
+- Preserve existing `env:` variables during updates unless `update-envs: true`
+  or `--update-envs` is used.
 - Prune stale workflow files that were removed from the manifest.
 
 Config files do not get a managed header and are never removed during prune.

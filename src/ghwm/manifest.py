@@ -31,6 +31,7 @@ class WorkflowEntry:
     version: str | None = None
     target: str | None = None
     update_triggers: bool = False
+    update_envs: bool = False
     update_config_files: bool = False
 
     @property
@@ -78,6 +79,11 @@ def _parse_entry(raw: Any, index: int) -> WorkflowEntry:
             field_name="update-triggers",
             index=index,
         )
+        update_envs = _parse_optional_bool(
+            raw.get("update-envs"),
+            field_name="update-envs",
+            index=index,
+        )
         update_config_files = _parse_optional_bool(
             raw.get("update-config-files"),
             field_name="update-config-files",
@@ -88,6 +94,7 @@ def _parse_entry(raw: Any, index: int) -> WorkflowEntry:
             version=version,
             target=target,
             update_triggers=update_triggers,
+            update_envs=update_envs,
             update_config_files=update_config_files,
         )
 

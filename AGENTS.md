@@ -81,13 +81,13 @@ When changing code, preserve these unless the task explicitly changes them:
 ### Manifest parsing
 
 - `ghwm.yml` must be a YAML mapping with a `workflows` list.
-- Workflow entries may be strings (`linter@1.2.3`) or objects (`{name, version, target, update-triggers, update-config-files}`).
+- Workflow entries may be strings (`linter@1.2.3`) or objects (`{name, version, target, update-triggers, update-envs, update-config-files}`).
 - Duplicate workflow names are rejected.
 - A `/` in the suffix after `@` means it is treated as part of the name, not as a version.
 - Remote installs must specify an explicit version in `ghwm.yml`.
 - `source` must be in `owner/repository` form, and the owner becomes the npm scope
   (`owner/ghwm-registry` -> `@owner/ghwm-<name>`).
-- `update-triggers` and `update-config-files` are per-workflow booleans.
+- `update-triggers`, `update-envs`, and `update-config-files` are per-workflow booleans.
 - There is no registry switch and no legacy archive-mode manifest behavior.
 
 ### Downloading
@@ -107,6 +107,7 @@ When changing code, preserve these unless the task explicitly changes them:
 - Already up-to-date managed files are skipped.
 - On workflow update, preserve the existing `on:` section by default.
 - `update-triggers: true` or `--update-triggers` replaces the existing `on:` section with the packaged one.
+- `update-envs: true` or `--update-envs` replaces the existing `env:` section with the packaged one.
 - On first install, config files are created only when missing.
 - On update, `update-config-files: false` leaves config files untouched.
 - On update, `update-config-files: true` overwrites packaged config files.

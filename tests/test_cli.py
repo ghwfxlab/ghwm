@@ -152,6 +152,16 @@ class TestBuildParser:
         # Assert
         assert parsed_args.update_triggers is True
 
+    def test_build_parser_should_enable_update_envs_when_flag_is_used(self) -> None:
+        # Arrange
+        parser = build_parser()
+
+        # Act
+        parsed_args = parser.parse_args(["update", "--update-envs"])
+
+        # Assert
+        assert parsed_args.update_envs is True
+
     def test_build_parser_should_enable_prune_when_update_prune_flag_is_used(self) -> None:
         # Arrange
         parser = build_parser()
