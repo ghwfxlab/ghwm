@@ -1045,3 +1045,16 @@ class TestCliUpgrade:
 
         # Verify update_workflows was called
         mock_update_workflows.assert_called_once()
+
+    @patch("ghwm.cli.update_workflows")
+    @patch("ghwm.cli.resolve_latest_version")
+    def test_upgrade_fails_when_resolve_fails(self, mock_resolve, mock_update, tmp_path):
+        manifest_file = tmp_path / "ghwm.yml"
+        manifest_file.write_text("source: owner/repo\nworkflows:\n  - name: linter", encoding="utf-8")
+
+        mock_resolve.side_effect = RuntimeError("Network error")
+
+        with pytest.raises(SystemExit) as exc:
+            main(["upgrade", "--cwd", str(tmp_path)])
+
+        assert exc.value.code == 1

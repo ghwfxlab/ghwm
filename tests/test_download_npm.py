@@ -399,3 +399,56 @@ class TestResolveLatestVersion:
         semver, githead = resolve_latest_version("owner", "linter", "token")
         assert semver == "1.2.3"
         assert githead == "abcdef"
+
+    @patch("ghwm.download_npm.urlopen")
+    def test_should_raise_error_when_http_fails(self, mock_urlopen: MagicMock) -> None:
+        mock_urlopen.side_effect = HTTPError("url", HTTPStatus.NOT_FOUND, "Not Found", {}, None)
+        with pytest.raises(FileNotFoundError, match="not found in GitHub Packages"):
+            resolve_latest_version("owner", "linter", "token")
+
+    @patch("ghwm.download_npm.urlopen")
+    def test_should_raise_error_when_dist_tags_missing(self, mock_urlopen: MagicMock) -> None:
+        mock_response = MagicMock()
+        mock_response.__enter__.return_value = mock_response
+        mock_response.read.return_value = json.dumps({"versions": {}}).encode("utf-8")
+        mock_urlopen.return_value = mock_response
+        with pytest.raises(RuntimeError, match="missing 'dist-tags' map"):
+            resolve_latest_version("owner", "linter", "token")
+
+    @patch("ghwm.download_npm.urlopen")
+    def test_should_raise_error_when_latest_missing(self, mock_urlopen: MagicMock) -> None:
+        mock_response = MagicMock()
+        mock_response.__enter__.return_value = mock_response
+        mock_response.read.return_value = json.dumps({"dist-tags": {}}).encode("utf-8")
+        mock_urlopen.return_value = mock_response
+        with pytest.raises(RuntimeError, match=r"missing dist-tags\.latest"):
+            resolve_latest_version("owner", "linter", "token")
+
+    @patch("ghwm.download_npm.urlopen")
+    def test_should_raise_error_when_versions_missing(self, mock_urlopen: MagicMock) -> None:
+        mock_response = MagicMock()
+        mock_response.__enter__.return_value = mock_response
+        mock_response.read.return_value = json.dumps({"dist-tags": {"latest": "1.0.0"}}).encode("utf-8")
+        mock_urlopen.return_value = mock_response
+        with pytest.raises(RuntimeError, match="missing 'versions' map"):
+            resolve_latest_version("owner", "linter", "token")
+
+    @patch("ghwm.download_npm.urlopen")
+    def test_should_raise_error_when_package_version_missing(self, mock_urlopen: MagicMock) -> None:
+        mock_response = MagicMock()
+        mock_response.__enter__.return_value = mock_response
+        mock_response.read.return_value = json.dumps({"dist-tags": {"latest": "1.0.0"}, "versions": {}}).encode("utf-8")
+        mock_urlopen.return_value = mock_response
+        with pytest.raises(FileNotFoundError, match="Workflow package version not found"):
+            resolve_latest_version("owner", "linter", "token")
+
+    @patch("ghwm.download_npm.urlopen")
+    def test_should_raise_error_when_githead_missing(self, mock_urlopen: MagicMock) -> None:
+        mock_response = MagicMock()
+        mock_response.__enter__.return_value = mock_response
+        mock_response.read.return_value = json.dumps(
+            {"dist-tags": {"latest": "1.0.0"}, "versions": {"1.0.0": {}}}
+        ).encode("utf-8")
+        mock_urlopen.return_value = mock_response
+        with pytest.raises(RuntimeError, match="missing gitHead"):
+            resolve_latest_version("owner", "linter", "token")
