@@ -402,7 +402,7 @@ class TestResolveLatestVersion:
 
     @patch("ghwm.download_npm.urlopen")
     def test_should_raise_error_when_http_fails(self, mock_urlopen: MagicMock) -> None:
-        mock_urlopen.side_effect = HTTPError("url", HTTPStatus.NOT_FOUND, "Not Found", {}, None)
+        mock_urlopen.side_effect = HTTPError("url", HTTPStatus.NOT_FOUND, "Not Found", Message(), None)
         with pytest.raises(FileNotFoundError, match="not found in GitHub Packages"):
             resolve_latest_version("owner", "linter", "token")
 
