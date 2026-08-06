@@ -52,12 +52,13 @@ workflows:
     version: "1.0.0"
   - name: auto-assign-pr
     version: "1.0.0"
+    source: other-owner/other-registry # (Optional) Override the global registry source
     update-triggers: true
     update-envs: true
     update-config-files: true
 ```
 
-`version` is required for registry installs. The CLI resolves each workflow to a GitHub Packages npm
+`version` is required for registry installs. By default, workflows are resolved from the global `source`. You can override this on a per-workflow basis using the `source` property. The CLI resolves each workflow to a GitHub Packages npm
 package named `@<source owner>/<name>`.
 
 If you want to override the generated workflow filename, add `target: my-review.yml` to the

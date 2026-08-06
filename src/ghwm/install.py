@@ -40,10 +40,7 @@ def install_workflows(
 ) -> InstallResult:
     """Full install: download, write, and prune stale workflows."""
     lockfile = read_lockfile(cwd)
-    workflow_refs = {workflow_entry.name: workflow_entry.resolved_ref for workflow_entry in manifest.workflows}
-    workflow_names = [workflow_entry.name for workflow_entry in manifest.workflows]
-
-    sources = download_workflows(manifest.source, workflow_names, workflow_refs, local_path=local_path)
+    sources = download_workflows(manifest, local_path=local_path)
     workflow_sources_by_name = {workflow_source.name: workflow_source for workflow_source in sources}
 
     result = InstallResult(installed=[], updated=[], pruned=[], skipped=[])

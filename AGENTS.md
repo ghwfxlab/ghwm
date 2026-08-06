@@ -85,6 +85,7 @@ When changing code, preserve these unless the task explicitly changes them:
 - Duplicate workflow names are rejected.
 - A `/` in the suffix after `@` means it is treated as part of the name, not as a version.
 - Remote installs must specify an explicit version in `ghwm.yml`.
+- Workflow objects may optionally include a `source` to override the global registry source.
 - `source` must be in `owner/repository` form, and the owner becomes the npm scope
   (`owner/ghwm-registry` -> `@owner/<name>`).
 - `update-triggers`, `update-envs`, and `update-config-files` are per-workflow booleans.

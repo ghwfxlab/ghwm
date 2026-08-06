@@ -21,6 +21,7 @@ from ghwm.download_npm import (
 )
 from ghwm.package_names import scoped_package_name
 from ghwm.paths import safe_resolve_path
+from ghwm.manifest import Manifest, WorkflowEntry
 
 
 @dataclass(frozen=True)
@@ -59,33 +60,33 @@ def github_token() -> str | None:
 
 
 def download_workflows(
-    source: str,
-    workflow_names: list[str],
-    workflow_refs: dict[str, str],
+    manifest: Manifest,
     *,
     local_path: Path | None = None,
 ) -> list[WorkflowSource]:
     """Download one or more workflow packages."""
     if local_path:
-        return read_local(local_path, source, workflow_names)
+        return read_local(local_path, manifest)
 
-    owner, _ = source.split("/", 1)
     token = github_token()
     results: list[WorkflowSource] = []
 
-    for name in workflow_names:
-        version = workflow_refs.get(name)
+    for entry in manifest.workflows:
+        version = entry.resolved_ref
         if not version or version == "main":
-            raise ValueError(f"Workflow '{name}' must specify a version in ghwm.yml.")
+            raise ValueError(f"Workflow '{entry.name}' must specify a version in ghwm.yml.")
+
+        entry_source = entry.source or manifest.source
+        owner, _ = entry_source.split("/", 1)
 
         with tempfile.TemporaryDirectory() as tmpdir:
             temp_dir = Path(tmpdir)
-            tarball_path = download_npm_tarball(owner, name, version, temp_dir, token)
+            tarball_path = download_npm_tarball(owner, entry.name, version, temp_dir, token)
             manifest_data = read_workflow_manifest(tarball_path)
             results.append(
                 WorkflowSource(
-                    name=name,
-                    package_name=scoped_package_name(owner, name),
+                    name=entry.name,
+                    package_name=scoped_package_name(owner, entry.name),
                     files=extract_npm_package(tarball_path, manifest_data),
                 )
             )
@@ -93,18 +94,20 @@ def download_workflows(
     return results
 
 
-def read_local(local_path: Path, source: str, workflow_names: list[str]) -> list[WorkflowSource]:
+def read_local(local_path: Path, manifest: Manifest) -> list[WorkflowSource]:
     """Read workflow packages from a local checkout."""
-    return read_from_tree(local_path, source, workflow_names)
+    return read_from_tree(local_path, manifest)
 
 
-def read_from_tree(repo_root: Path, source: str, workflow_names: list[str]) -> list[WorkflowSource]:
+def read_from_tree(repo_root: Path, manifest: Manifest) -> list[WorkflowSource]:
     """Read workflow packages from a local repository tree."""
-    owner, _ = source.split("/", 1)
     workflows_dir = repo_root / "workflows"
     results: list[WorkflowSource] = []
 
-    for name in workflow_names:
+    for entry in manifest.workflows:
+        entry_source = entry.source or manifest.source
+        owner, _ = entry_source.split("/", 1)
+        name = entry.name
         workflow_dir = workflows_dir / name
         if not workflow_dir.is_dir():
             raise FileNotFoundError(f"Workflow directory not found: workflows/{name}")

@@ -33,6 +33,7 @@ class WorkflowEntry:
     update_triggers: bool = False
     update_envs: bool = False
     update_config_files: bool = False
+    source: str | None = None
 
     @property
     def resolved_ref(self) -> str:
@@ -89,6 +90,10 @@ def _parse_entry(raw: Any, index: int) -> WorkflowEntry:
             field_name="update-config-files",
             index=index,
         )
+        source = raw.get("source")
+        if source is not None:
+            source = str(source).strip()
+
         return WorkflowEntry(
             name=parsed_name,
             version=version,
@@ -96,6 +101,7 @@ def _parse_entry(raw: Any, index: int) -> WorkflowEntry:
             update_triggers=update_triggers,
             update_envs=update_envs,
             update_config_files=update_config_files,
+            source=source,
         )
 
     raise ValueError(f"Invalid entry at workflows[{index}]: expected a string or {{name: ...}}.")
