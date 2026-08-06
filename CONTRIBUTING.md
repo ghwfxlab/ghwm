@@ -134,6 +134,8 @@ make lang-fix
 
 ### Pre-commit Hooks
 
+We use `pre-commit` to run `super-linter` on all files before each commit. This ensures code quality and catches issues early.
+
 To run the full suite of pre-commit hooks manually against all files:
 
 ```sh
