@@ -58,7 +58,7 @@ workflows:
 ```
 
 `version` is required for registry installs. The CLI resolves each workflow to a GitHub Packages npm
-package named `@<source owner>/ghwm-<name>`.
+package named `@<source owner>/<name>`.
 
 If you want to override the generated workflow filename, add `target: my-review.yml` to the
 workflow entry.
@@ -95,7 +95,7 @@ Every installed workflow file starts with a header that marks it as managed:
 
 ```yaml
 # Managed by ghwm (linter@0.1.4)
-# Source: @owner/ghwm-linter:linter.yml
+# Source: @owner/linter:linter.yml
 # Hash: sha256:...
 # Re-run `ghwm install` to refresh this file.
 ```
@@ -127,7 +127,7 @@ Use `ghwm update --prune` when you want one command to refresh workflows that ar
     {
       "name": "auto-assign-pr",
       "version": "2.0.0",
-      "source": "@owner/ghwm-auto-assign-pr",
+      "source": "@owner/auto-assign-pr",
       "files": [
         {
           "target": ".github/workflows/auto-assign-pr.yaml",
@@ -172,7 +172,7 @@ If any High or Medium severity vulnerabilities are detected, `ghwm audit` exits 
 
 ## Keep Workflows Updated (Renovate Integration)
 
-Since `ghwm` resolves workflows to npm packages (e.g., `@owner/ghwm-<name>`) published to GitHub Packages, you can use **Renovate** to automatically detect updates and open pull requests to update the versions in your `ghwm.yml`.
+Since `ghwm` resolves workflows to npm packages (e.g., `@owner/<name>`) published to GitHub Packages, you can use **Renovate** to automatically detect updates and open pull requests to update the versions in your `ghwm.yml`.
 
 Add the following `regexManagers` configuration to your `renovate.json` or `renovate.json5` file:
 
@@ -185,7 +185,7 @@ Add the following `regexManagers` configuration to your `renovate.json` or `reno
         "name:\\s+(?<depName>\\S+)\\s+version:\\s+[\"']?(?<currentValue>[^\"'\\s]+)[\"']?"
       ],
       "datasourceTemplate": "npm",
-      "depNameTemplate": "@owner/ghwm-{{depName}}",
+      "depNameTemplate": "@owner/{{depName}}",
       "registryUrlTemplates": ["https://npm.pkg.github.com"]
     }
   ]

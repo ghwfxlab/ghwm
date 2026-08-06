@@ -11,7 +11,7 @@ from ghwm.lock import LockEntry, Lockfile, LockFileEntry, read_lockfile, write_l
 from tests.shared import AUTO_ASSIGN_PR, AUTO_ASSIGN_PR_PACKAGE_SOURCE, VERSION_1, VERSION_2
 
 TEST_NAME_A = "a"
-TEST_SOURCE_A = "@owner/ghwm-a"
+TEST_SOURCE_A = "@owner/a"
 TEST_TARGET_A = ".github/workflows/a.yml"
 
 
@@ -62,7 +62,7 @@ class TestLockfile:
     def test_lockfile_should_sort_packages_when_upsert_adds_multiple_entries(self) -> None:
         lockfile = Lockfile()
 
-        lockfile.upsert(LockEntry("c", None, "@owner/ghwm-c", []))
+        lockfile.upsert(LockEntry("c", None, "@owner/c", []))
         lockfile.upsert(LockEntry(TEST_NAME_A, None, TEST_SOURCE_A, []))
 
         assert [package_entry.name for package_entry in lockfile.packages] == [TEST_NAME_A, "c"]
@@ -146,7 +146,7 @@ class TestReadLockfile:
             json.dumps(
                 {
                     "lockfileVersion": 1,
-                    "packages": [{"name": "a", "source": "@owner/ghwm-a"}],
+                    "packages": [{"name": "a", "source": "@owner/a"}],
                 }
             )
         )
@@ -188,7 +188,7 @@ class TestReadLockfile:
                     "lockfileVersion": 1,
                     "packages": [
                         {
-                            "source": "@owner/ghwm-a",
+                            "source": "@owner/a",
                             "files": [],
                         }
                     ],
@@ -225,7 +225,7 @@ class TestReadLockfile:
                     "packages": [
                         {
                             "name": "a",
-                            "source": "@owner/ghwm-a",
+                            "source": "@owner/a",
                             "files": ["not_a_dict"],
                         }
                     ],
@@ -244,7 +244,7 @@ class TestReadLockfile:
                     "packages": [
                         {
                             "name": "a",
-                            "source": "@owner/ghwm-a",
+                            "source": "@owner/a",
                             "files": [{"source_hash": "sha256:hash"}],
                         }
                     ],
@@ -263,7 +263,7 @@ class TestReadLockfile:
                     "packages": [
                         {
                             "name": "a",
-                            "source": "@owner/ghwm-a",
+                            "source": "@owner/a",
                             "files": [{"target": "wf.yml"}],
                         }
                     ],
@@ -282,7 +282,7 @@ class TestReadLockfile:
                     "packages": [
                         {
                             "name": "a",
-                            "source": "@owner/ghwm-a",
+                            "source": "@owner/a",
                             "files": [
                                 {
                                     "target": "wf.yml",

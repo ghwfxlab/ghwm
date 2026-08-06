@@ -118,7 +118,7 @@ class TestManifest:
         manifest = Manifest(source=MARKETPLACE_SOURCE)
 
         assert manifest.npm_org == "owner"
-        assert manifest.package_name(LINTER) == f"@owner/ghwm-{LINTER}"
+        assert manifest.package_name(LINTER) == f"@owner/{LINTER}"
 
 
 class TestReadManifest:
