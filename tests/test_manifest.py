@@ -59,6 +59,17 @@ class TestParseManifest:
 
         assert [entry.name for entry in manifest.workflows] == [LINTER, "deploy"]
 
+    def test_parse_manifest_should_parse_source_when_provided_in_workflow_entry(self) -> None:
+        manifest = parse_manifest(
+            {
+                "workflows": [
+                    {"name": LINTER, "source": "other-owner/other-registry"},
+                ]
+            }
+        )
+
+        assert manifest.workflows[0].source == "other-owner/other-registry"
+
     def test_parse_manifest_should_raise_value_error_when_workflows_key_is_missing(self) -> None:
         with pytest.raises(ValueError) as exc_info:
             parse_manifest({})

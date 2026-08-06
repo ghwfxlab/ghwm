@@ -8,6 +8,7 @@ from unittest.mock import ANY, MagicMock, patch
 import pytest
 
 from ghwm.download import WorkflowSource, download_workflows, gh_cli_available, github_token, read_from_tree
+from ghwm.manifest import Manifest, WorkflowEntry
 from ghwm.download_npm import InstalledFile
 from tests.shared import (
     AUTO_ASSIGN_PR,
@@ -102,7 +103,9 @@ class TestReadFromTree:
     ) -> None:
         self._setup_marketplace(tmp_path)
 
-        results = read_from_tree(tmp_path, MARKETPLACE_SOURCE, [AUTO_ASSIGN_PR])
+        results = read_from_tree(
+            tmp_path, Manifest(source=MARKETPLACE_SOURCE, workflows=[WorkflowEntry(name=AUTO_ASSIGN_PR)])
+        )
 
         assert len(results) == 1
         assert results[0].name == AUTO_ASSIGN_PR
@@ -116,7 +119,7 @@ class TestReadFromTree:
         workflow_dir.mkdir(parents=True)
 
         with pytest.raises(FileNotFoundError) as exc_info:
-            read_from_tree(tmp_path, MARKETPLACE_SOURCE, [LINTER])
+            read_from_tree(tmp_path, Manifest(source=MARKETPLACE_SOURCE, workflows=[WorkflowEntry(name=LINTER)]))
 
         assert "workflow.yml" in str(exc_info.value)
 
@@ -131,9 +134,7 @@ class TestDownloadWorkflowsLocal:
         (workflow_dir / f"{LINTER}.yml").write_text(f"name: {LINTER}\n")
 
         results = download_workflows(
-            MARKETPLACE_SOURCE,
-            [LINTER],
-            {LINTER: VERSION_1},
+            Manifest(source=MARKETPLACE_SOURCE, workflows=[WorkflowEntry(name=LINTER, version=VERSION_1)]),
             local_path=tmp_path / "marketplace",
         )
 
@@ -161,9 +162,7 @@ class TestDownloadWorkflowsRemote:
             patch("ghwm.download.extract_npm_package", return_value=installed_files),
         ):
             results = download_workflows(
-                MARKETPLACE_SOURCE,
-                [LINTER],
-                {LINTER: VERSION_1},
+                Manifest(source=MARKETPLACE_SOURCE, workflows=[WorkflowEntry(name=LINTER, version=VERSION_1)])
             )
 
         assert results[0].package_name == LINTER_PACKAGE_SOURCE
@@ -171,6 +170,6 @@ class TestDownloadWorkflowsRemote:
 
     def test_download_workflows_should_raise_when_version_is_missing_for_remote_download(self) -> None:
         with pytest.raises(ValueError) as exc_info:
-            download_workflows(MARKETPLACE_SOURCE, [LINTER], {})
+            download_workflows(Manifest(source=MARKETPLACE_SOURCE, workflows=[WorkflowEntry(name=LINTER)]))
 
         assert "must specify a version" in str(exc_info.value)
