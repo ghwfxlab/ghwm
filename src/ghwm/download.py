@@ -21,7 +21,7 @@ from ghwm.download_npm import (
 )
 from ghwm.package_names import scoped_package_name
 from ghwm.paths import safe_resolve_path
-from ghwm.manifest import Manifest, WorkflowEntry
+from ghwm.manifest import Manifest
 
 
 @dataclass(frozen=True)
