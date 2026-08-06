@@ -8,8 +8,8 @@ from unittest.mock import ANY, MagicMock, patch
 import pytest
 
 from ghwm.download import WorkflowSource, download_workflows, gh_cli_available, github_token, read_from_tree
-from ghwm.manifest import Manifest, WorkflowEntry
 from ghwm.download_npm import InstalledFile
+from ghwm.manifest import Manifest, WorkflowEntry
 from tests.shared import (
     AUTO_ASSIGN_PR,
     AUTO_ASSIGN_PR_PACKAGE_SOURCE,
@@ -168,8 +168,8 @@ class TestDownloadWorkflowsRemote:
         assert results[0].package_name == LINTER_PACKAGE_SOURCE
         mock_download.assert_called_once_with("owner", LINTER, VERSION_1, ANY, "token")
 
-    def test_download_workflows_should_raise_when_version_is_missing_for_remote_download(self) -> None:
-        with pytest.raises(ValueError) as exc_info:
+    def test_download_workflows_with_missing_version_defaults_to_latest(self) -> None:
+        # Since it defaults to latest, it will attempt to download from the registry.
+        # We expect a FileNotFoundError because the dummy package @owner/linter doesn't exist.
+        with pytest.raises(FileNotFoundError):
             download_workflows(Manifest(source=MARKETPLACE_SOURCE, workflows=[WorkflowEntry(name=LINTER)]))
-
-        assert "must specify a version" in str(exc_info.value)

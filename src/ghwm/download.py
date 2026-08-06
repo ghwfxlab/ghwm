@@ -19,9 +19,9 @@ from ghwm.download_npm import (
     parse_workflow_manifest_data,
     read_workflow_manifest,
 )
+from ghwm.manifest import Manifest
 from ghwm.package_names import scoped_package_name
 from ghwm.paths import safe_resolve_path
-from ghwm.manifest import Manifest
 
 
 @dataclass(frozen=True)

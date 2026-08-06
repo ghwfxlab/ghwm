@@ -6,7 +6,7 @@ import json
 import subprocess
 import sys
 from pathlib import Path
-from unittest.mock import MagicMock
+from unittest.mock import ANY, MagicMock, patch
 
 import pytest
 
@@ -1022,3 +1022,26 @@ class TestNoTelemetryFlag:
 
         # Assert: visibility check must not be called when DO_NOT_TRACK=1
         mock_check.assert_not_called()
+
+
+class TestCliUpgrade:
+    @patch("ghwm.cli.update_workflows")
+    @patch("ghwm.cli.resolve_latest_version")
+    @patch("ghwm.cli.rewrite_manifest_versions")
+    def test_upgrade_resolves_and_updates_manifest(self, mock_rewrite, mock_resolve, mock_update_workflows, tmp_path):
+        manifest_file = tmp_path / "ghwm.yml"
+        manifest_file.write_text("source: owner/repo\nworkflows:\n  - name: linter", encoding="utf-8")
+
+        mock_resolve.return_value = ("1.2.3", "abcdef")
+
+        # Call upgrade
+        main(["upgrade", "--cwd", str(tmp_path)])
+
+        # Verify resolution was attempted
+        mock_resolve.assert_called_once_with("owner", "linter", ANY)
+
+        # Verify manifest was rewritten
+        mock_rewrite.assert_called_once()
+
+        # Verify update_workflows was called
+        mock_update_workflows.assert_called_once()

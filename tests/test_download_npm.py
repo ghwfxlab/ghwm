@@ -23,6 +23,7 @@ from ghwm.download_npm import (
     npm_tarball_url,
     parse_workflow_manifest_data,
     read_workflow_manifest,
+    resolve_latest_version,
 )
 from tests.shared import AUTO_ASSIGN_PR, LINTER
 
@@ -383,3 +384,18 @@ class TestExtractNpmPackage:
         with patch("ghwm.download_npm.tarfile.open", return_value=tar_context):
             with pytest.raises(FileNotFoundError, match=MANIFEST_PATH):
                 read_workflow_manifest(tarball_path)
+
+
+class TestResolveLatestVersion:
+    @patch("ghwm.download_npm.urlopen")
+    def test_should_resolve_latest_version(self, mock_urlopen: MagicMock) -> None:
+        mock_response = MagicMock()
+        mock_response.__enter__.return_value = mock_response
+        mock_response.read.return_value = json.dumps(
+            {"dist-tags": {"latest": "1.2.3"}, "versions": {"1.2.3": {"gitHead": "abcdef"}}}
+        ).encode("utf-8")
+        mock_urlopen.return_value = mock_response
+
+        semver, githead = resolve_latest_version("owner", "linter", "token")
+        assert semver == "1.2.3"
+        assert githead == "abcdef"
