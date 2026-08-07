@@ -168,8 +168,14 @@ class TestRewriteManifestVersions:
         assert 'version: "abcdef" # v1.2.3' in updated_content
 
     def test_rewrite_manifest_versions_skips_missing_file(self, tmp_path: Path) -> None:
-        # Should return silently
-        rewrite_manifest_versions(tmp_path, "ghwm.yml", {"linter": ("1.0", "sha")})
+        # Arrange
+        resolved = {"linter": ("1.0", "sha")}
+
+        # Act
+        rewrite_manifest_versions(tmp_path, "ghwm.yml", resolved)
+
+        # Assert
+        assert not (tmp_path / "ghwm.yml").exists()
 
     def test_rewrite_manifest_versions_existing_version(self, tmp_path: Path) -> None:
         manifest_content = "workflows:\n  - name: linter\n    version: old\n"
@@ -203,5 +209,5 @@ class TestRewriteManifestVersions:
 
         updated = manifest_file.read_text(encoding="utf-8")
         assert 'version: "abcdef" # v1.2.3' in updated
-        assert 'version: old' not in updated
-        assert 'update-triggers: true' in updated
+        assert "version: old" not in updated
+        assert "update-triggers: true" in updated

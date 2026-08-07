@@ -1063,7 +1063,9 @@ class TestCliUpgrade:
     @patch("ghwm.cli.resolve_latest_version")
     def test_install_skips_resolution_for_pinned_version(self, mock_resolve, mock_install, tmp_path):
         manifest_file = tmp_path / "ghwm.yml"
-        manifest_file.write_text("source: owner/repo\nworkflows:\n  - name: linter\n    version: 1.2.3", encoding="utf-8")
+        manifest_file.write_text(
+            "source: owner/repo\nworkflows:\n  - name: linter\n    version: 1.2.3", encoding="utf-8"
+        )
 
         # Call install
         main(["install", "--cwd", str(tmp_path)])
