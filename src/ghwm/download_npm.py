@@ -49,6 +49,49 @@ def _github_packages_auth_error() -> RuntimeError:
     )
 
 
+def resolve_latest_version(org: str, name: str, token: str | None) -> tuple[str, str]:
+    """Return (latest_semver, git_head_sha) for a workflow package."""
+    package_name = scoped_package_name(org, name)
+    request = Request(  # noqa: S310
+        npm_package_metadata_url(org, name),
+        headers=_github_packages_headers(token, accept="application/vnd.npm.install-v1+json"),
+    )
+
+    try:
+        with urlopen(request) as metadata_response:  # noqa: S310
+            metadata = json.load(metadata_response)
+    except HTTPError as exc:
+        if exc.code in {HTTPStatus.UNAUTHORIZED.value, HTTPStatus.FORBIDDEN.value}:
+            raise _github_packages_auth_error() from exc
+        if exc.code == HTTPStatus.NOT_FOUND.value:
+            raise FileNotFoundError(f"Workflow package not found in GitHub Packages: {package_name}") from exc
+        raise
+
+    dist_tags = metadata.get("dist-tags")
+    if not isinstance(dist_tags, dict):
+        raise RuntimeError(f"Unexpected npm metadata response for {package_name}: missing 'dist-tags' map.")
+
+    latest_semver = dist_tags.get("latest")
+    if not isinstance(latest_semver, str) or not latest_semver:
+        raise RuntimeError(f"Unexpected npm metadata response for {package_name}: missing dist-tags.latest.")
+
+    versions = metadata.get("versions")
+    if not isinstance(versions, dict):
+        raise RuntimeError(f"Unexpected npm metadata response for {package_name}: missing 'versions' map.")
+
+    package_version = versions.get(latest_semver)
+    if not isinstance(package_version, dict):
+        raise FileNotFoundError(
+            f"Workflow package version not found in GitHub Packages: {package_name}@{latest_semver}"
+        )
+
+    git_head = package_version.get("gitHead")
+    if not isinstance(git_head, str) or not git_head:
+        raise RuntimeError(f"Unexpected npm metadata response for {package_name}@{latest_semver}: missing gitHead.")
+
+    return latest_semver, git_head
+
+
 def npm_tarball_url(org: str, name: str, version: str, token: str | None) -> str:
     """Return the resolved GitHub Packages tarball URL for a workflow package version."""
     package_name = scoped_package_name(org, name)

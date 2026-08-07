@@ -72,6 +72,7 @@ ghwm install --force    # overwrites even if files were modified locally
 ghwm install --no-prune # skip removal of stale workflows
 ghwm install --update-triggers # replace workflow triggers with the packaged version
 ghwm install --update-envs # replace workflow env variables with the packaged version
+ghwm upgrade            # automatically resolve, pin, and install latest versions
 ghwm update             # re-downloads all workflows (respects versions)
 ghwm update --prune     # also removes managed workflows no longer in ghwm.yml
 ghwm update --update-triggers # replace workflow triggers with the packaged version
@@ -259,6 +260,7 @@ You can disable telemetry for a single run with the `--no-telemetry` flag:
 ```sh
 ghwm install --no-telemetry
 ghwm update --no-telemetry
+ghwm upgrade --no-telemetry
 ```
 
 To opt out permanently — for example in CI/CD pipelines or a global shell config — set the `DO_NOT_TRACK=1` environment variable ([consoledonottrack.com](https://consoledonottrack.com/)):

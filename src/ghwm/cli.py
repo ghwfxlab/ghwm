@@ -9,6 +9,7 @@ import os
 import subprocess
 import sys
 import tarfile
+from dataclasses import replace
 from pathlib import Path
 from typing import Any, cast
 from urllib.error import HTTPError, URLError
@@ -16,8 +17,10 @@ from urllib.error import HTTPError, URLError
 import yaml
 
 from ghwm import __version__
+from ghwm.download import github_token
+from ghwm.download_npm import resolve_latest_version
 from ghwm.install import InstallResult, install_workflows, update_workflows
-from ghwm.manifest import read_manifest
+from ghwm.manifest import read_manifest, rewrite_manifest_versions
 
 DEFAULT_COMMAND = "install"
 DEFAULT_MANIFEST_PATH = "ghwm.yml"
@@ -64,6 +67,7 @@ def add_update_cmd_to_parser(subcommands: argparse._SubParsersAction[argparse.Ar
         action="store_true",
         help="Remove managed workflows that are no longer listed in the manifest.",
     )
+
     update_cmd.add_argument("--local", default=None, help=LOCAL_HELP)
     update_cmd.add_argument(
         "--update-triggers",
@@ -76,6 +80,36 @@ def add_update_cmd_to_parser(subcommands: argparse._SubParsersAction[argparse.Ar
         help=UPDATE_ENVS_HELP,
     )
     update_cmd.add_argument(
+        "--no-telemetry",
+        action="store_true",
+        help="Disable telemetry for this run. Also honoured via DO_NOT_TRACK=1.",
+    )
+
+
+def add_upgrade_cmd_to_parser(subcommands: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
+    upgrade_cmd = subcommands.add_parser(
+        "upgrade", help="Automatically upgrade all workflows to their newest published versions."
+    )
+    upgrade_cmd.add_argument("--manifest", default=DEFAULT_MANIFEST_PATH, help=MANIFEST_HELP)
+    upgrade_cmd.add_argument("--cwd", default=DEFAULT_CWD, help=CWD_HELP)
+    upgrade_cmd.add_argument("--force", action="store_true", help=FORCE_HELP)
+    upgrade_cmd.add_argument(
+        "--prune",
+        action="store_true",
+        help="Remove managed workflows that are no longer listed in the manifest.",
+    )
+    upgrade_cmd.add_argument("--local", default=None, help=LOCAL_HELP)
+    upgrade_cmd.add_argument(
+        "--update-triggers",
+        action="store_true",
+        help=UPDATE_TRIGGERS_HELP,
+    )
+    upgrade_cmd.add_argument(
+        "--update-envs",
+        action="store_true",
+        help=UPDATE_ENVS_HELP,
+    )
+    upgrade_cmd.add_argument(
         "--no-telemetry",
         action="store_true",
         help="Disable telemetry for this run. Also honoured via DO_NOT_TRACK=1.",
@@ -118,6 +152,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     add_install_cmd_to_parser(subcommands)
     add_update_cmd_to_parser(subcommands)
+    add_upgrade_cmd_to_parser(subcommands)
     add_list_cmd_to_parser(subcommands)
     add_audit_cmd_to_parser(subcommands)
 
@@ -328,6 +363,26 @@ def main(argv: list[str] | None = None) -> None:
 
         manifest = read_manifest(cwd, manifest_path)
 
+        latest_flag = command == "upgrade"
+        if command in ("install", "update", "upgrade") and not local_path:
+            token = github_token()
+            resolved = {}
+            new_workflows = []
+            for entry in manifest.workflows:
+                if latest_flag or not entry.version or entry.version == "latest":
+                    entry_source = entry.source or manifest.source
+                    owner, _ = entry_source.split("/", 1)
+                    print(f"Resolving latest version for {entry.name}...")
+                    semver, githead = resolve_latest_version(owner, entry.name, token)
+                    resolved[entry.name] = (semver, githead)
+                    new_workflows.append(replace(entry, version=githead))
+                else:
+                    new_workflows.append(entry)
+
+            if resolved:
+                rewrite_manifest_versions(cwd, manifest_path, resolved)
+                manifest = replace(manifest, workflows=new_workflows)
+
         if command == "list":
             print(f"Source: {manifest.source}")
             print(f"\nWorkflows ({len(manifest.workflows)}):")
@@ -353,7 +408,7 @@ def main(argv: list[str] | None = None) -> None:
                 update_envs=args.update_envs,
                 no_telemetry=no_telemetry,
             )
-        elif command == "update":
+        elif command in ("update", "upgrade"):
             no_telemetry = args.no_telemetry or os.environ.get("DO_NOT_TRACK") == "1"
             result = update_workflows(
                 cwd,

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -12,7 +13,6 @@ from ghwm.package_names import scoped_package_name
 
 DEFAULT_MANIFEST = "ghwm.yml"
 DEFAULT_SOURCE = "owner/ghwm-registry"
-DEFAULT_REF = "main"
 
 
 def _parse_optional_bool(raw: Any, *, field_name: str, index: int, default: bool = False) -> bool:
@@ -37,8 +37,8 @@ class WorkflowEntry:
 
     @property
     def resolved_ref(self) -> str:
-        """Return the package version to fetch, or the local-dev default."""
-        return self.version or DEFAULT_REF
+        """Return the package version to fetch, or latest default."""
+        return self.version or "latest"
 
     @property
     def install_spec(self) -> str:
@@ -165,3 +165,49 @@ def read_manifest(cwd: Path, manifest_path: str | None = None) -> Manifest:
 
     data = yaml.safe_load(file_path.read_text(encoding="utf-8"))
     return parse_manifest(data)
+
+
+def rewrite_manifest_versions(cwd: Path, manifest_path: str, resolved: dict[str, tuple[str, str]]) -> None:
+    """Update ghwm.yml with resolved SHAs and semantic versions as comments."""
+    file_path = cwd / (manifest_path or DEFAULT_MANIFEST)
+    if not file_path.is_file():
+        return
+
+    content = file_path.read_text(encoding="utf-8")
+    lines = content.splitlines()
+    out_lines = []
+
+    current_workflow = None
+    name_indent = ""
+
+    for line in lines:
+        m_name = re.match(r'^(\s*)-\s*name:\s*([\'"]?)([\w-]+)([\'"]?)', line)
+        if m_name:
+            if current_workflow and current_workflow in resolved:
+                # Inject missing version before adding the new name line
+                semver, githead = resolved[current_workflow]
+                out_lines.append(f'{name_indent}  version: "{githead}" # v{semver}')
+                del resolved[current_workflow]
+
+            current_workflow = m_name.group(3)
+            name_indent = m_name.group(1)
+            out_lines.append(line)
+            continue
+
+        if current_workflow and current_workflow in resolved:
+            m_ver = re.match(r"^(\s*version:\s*).*$", line)
+            if m_ver:
+                prefix = m_ver.group(1)
+                semver, githead = resolved[current_workflow]
+                out_lines.append(f'{prefix}"{githead}" # v{semver}')
+                del resolved[current_workflow]
+                current_workflow = None
+                continue
+
+        out_lines.append(line)
+
+    if current_workflow and current_workflow in resolved:
+        semver, githead = resolved[current_workflow]
+        out_lines.append(f'{name_indent}  version: "{githead}" # v{semver}')
+
+    file_path.write_text("\n".join(out_lines) + "\n", encoding="utf-8")

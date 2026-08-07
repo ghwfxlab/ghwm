@@ -6,7 +6,14 @@ from pathlib import Path
 
 import pytest
 
-from ghwm.manifest import Manifest, WorkflowEntry, parse_manifest, parse_spec, read_manifest
+from ghwm.manifest import (
+    Manifest,
+    WorkflowEntry,
+    parse_manifest,
+    parse_spec,
+    read_manifest,
+    rewrite_manifest_versions,
+)
 from tests.shared import AUTO_ASSIGN_PR, LINTER, MARKETPLACE_SOURCE, VERSION_1, VERSION_2
 
 
@@ -113,10 +120,10 @@ class TestWorkflowEntry:
 
         assert workflow_entry.resolved_ref == VERSION_1
 
-    def test_workflow_entry_should_default_resolved_ref_to_main_when_version_is_missing(self) -> None:
+    def test_workflow_entry_should_default_resolved_ref_to_latest_when_version_is_missing(self) -> None:
         workflow_entry = WorkflowEntry(name="x")
 
-        assert workflow_entry.resolved_ref == "main"
+        assert workflow_entry.resolved_ref == "latest"
 
     def test_workflow_entry_should_include_version_in_install_spec_when_version_is_present(self) -> None:
         workflow_entry = WorkflowEntry(name=LINTER, version=VERSION_1)
@@ -146,3 +153,61 @@ class TestReadManifest:
             read_manifest(tmp_path)
 
         assert "Manifest not found" in str(exc_info.value)
+
+
+class TestRewriteManifestVersions:
+    def test_rewrite_manifest_versions(self, tmp_path: Path) -> None:
+        manifest_content = "workflows:\n  - name: linter\n"
+        manifest_file = tmp_path / "ghwm.yml"
+        manifest_file.write_text(manifest_content, encoding="utf-8")
+
+        resolved = {"linter": ("1.2.3", "abcdef")}
+        rewrite_manifest_versions(tmp_path, "ghwm.yml", resolved)
+
+        updated_content = manifest_file.read_text(encoding="utf-8")
+        assert 'version: "abcdef" # v1.2.3' in updated_content
+
+    def test_rewrite_manifest_versions_skips_missing_file(self, tmp_path: Path) -> None:
+        # Arrange
+        resolved = {"linter": ("1.0", "sha")}
+
+        # Act
+        rewrite_manifest_versions(tmp_path, "ghwm.yml", resolved)
+
+        # Assert
+        assert not (tmp_path / "ghwm.yml").exists()
+
+    def test_rewrite_manifest_versions_existing_version(self, tmp_path: Path) -> None:
+        manifest_content = "workflows:\n  - name: linter\n    version: old\n"
+        manifest_file = tmp_path / "ghwm.yml"
+        manifest_file.write_text(manifest_content, encoding="utf-8")
+
+        rewrite_manifest_versions(tmp_path, "ghwm.yml", {"linter": ("1.2.3", "abcdef")})
+
+        updated = manifest_file.read_text(encoding="utf-8")
+        assert 'version: "abcdef" # v1.2.3' in updated
+        assert "version: old" not in updated
+
+    def test_rewrite_manifest_versions_multiple_and_eof(self, tmp_path: Path) -> None:
+        manifest_content = "workflows:\n  - name: linter1\n  - name: linter2"
+        manifest_file = tmp_path / "ghwm.yml"
+        manifest_file.write_text(manifest_content, encoding="utf-8")
+
+        resolved = {"linter1": ("1.1", "sha1"), "linter2": ("2.2", "sha2")}
+        rewrite_manifest_versions(tmp_path, "ghwm.yml", resolved)
+
+        updated = manifest_file.read_text(encoding="utf-8")
+        assert 'version: "sha1" # v1.1' in updated
+        assert 'version: "sha2" # v2.2' in updated
+
+    def test_rewrite_manifest_versions_with_other_keys(self, tmp_path: Path) -> None:
+        manifest_content = "workflows:\n  - name: linter\n    update-triggers: true\n    version: old\n"
+        manifest_file = tmp_path / "ghwm.yml"
+        manifest_file.write_text(manifest_content, encoding="utf-8")
+
+        rewrite_manifest_versions(tmp_path, "ghwm.yml", {"linter": ("1.2.3", "abcdef")})
+
+        updated = manifest_file.read_text(encoding="utf-8")
+        assert 'version: "abcdef" # v1.2.3' in updated
+        assert "version: old" not in updated
+        assert "update-triggers: true" in updated

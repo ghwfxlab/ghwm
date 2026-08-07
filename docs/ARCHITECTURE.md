@@ -299,3 +299,7 @@ workflows.
 
 - **`remove` command** — remove a single managed workflow and its lock entry.
 - **Auto-update** — renovate-style PRs when new registry versions are tagged.
+
+## Upgrading Workflows
+
+The `ghwm upgrade` command resolves the latest SemVer tags to full-length SHAs from the GitHub Packages API. It updates `ghwm.yml` by pinning the SHAs with the semantic versions as comments, then hands off to the standard install flow.
