@@ -375,7 +375,7 @@ def main(argv: list[str] | None = None) -> None:
                     print(f"Resolving latest version for {entry.name}...")
                     semver, githead = resolve_latest_version(owner, entry.name, token)
                     resolved[entry.name] = (semver, githead)
-                    new_workflows.append(replace(entry, version=githead))
+                    new_workflows.append(replace(entry, version=semver))
                 else:
                     new_workflows.append(entry)
 
