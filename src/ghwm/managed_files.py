@@ -37,6 +37,11 @@ _GitHubActionsLoader.add_implicit_resolver(
     list("tTfF"),
 )  # type: ignore[no-untyped-call]
 
+_TOP_LEVEL_MAPPING_KEY = re.compile(
+    r"""^(?P<key>[A-Za-z0-9_-]+|"[^"]+"|'[^']+')\s*:(?:[ \t]|$)""",
+    re.MULTILINE,
+)
+
 
 @dataclass
 class _InstalledFileResult:
@@ -91,40 +96,66 @@ def _load_workflow_yaml(content: str) -> object:
     return yaml.load(content, Loader=_GitHubActionsLoader)  # noqa: S506
 
 
-def _preserve_existing_triggers(existing_content: str, new_content: str) -> str:
+def _find_top_level_section(content: str, key: str) -> tuple[int, int] | None:
+    matches = list(_TOP_LEVEL_MAPPING_KEY.finditer(content))
+    for index, match in enumerate(matches):
+        raw_key = match.group("key")
+        if raw_key not in {key, f'"{key}"', f"'{key}'"}:
+            continue
+        end = matches[index + 1].start() if index + 1 < len(matches) else len(content)
+        return match.start(), end
+    return None
+
+
+def _preserve_existing_top_level_value(
+    existing_content: str,
+    new_content: str,
+    *,
+    key: str,
+    description: str,
+) -> str:
     existing_data = _load_workflow_yaml(_extract_body(existing_content))
     new_data = _load_workflow_yaml(new_content)
 
     if not isinstance(existing_data, dict) or not isinstance(new_data, dict):
-        raise ValueError("Workflow YAML must be a mapping to preserve trigger configuration.")
+        raise ValueError(f"Workflow YAML must be a mapping to preserve {description} configuration.")
 
-    if "on" not in existing_data:
+    if key not in existing_data:
         return new_content
 
-    if new_data.get("on") == existing_data["on"]:
+    if new_data.get(key) == existing_data[key]:
         return new_content
 
-    new_data["on"] = existing_data["on"]
+    existing_body = _extract_body(existing_content)
+    existing_section = _find_top_level_section(existing_body, key)
+    if existing_section is None:
+        raise ValueError(f"Could not find the existing {description} section in the workflow YAML.")
 
-    return yaml.safe_dump(new_data, sort_keys=False)
+    new_section = _find_top_level_section(new_content, key)
+    preserved_section = existing_body[existing_section[0] : existing_section[1]]
+
+    if new_section is None:
+        return f"{new_content.rstrip()}\n{preserved_section}"
+
+    return f"{new_content[: new_section[0]]}{preserved_section}{new_content[new_section[1] :]}"
+
+
+def _preserve_existing_triggers(existing_content: str, new_content: str) -> str:
+    return _preserve_existing_top_level_value(
+        existing_content,
+        new_content,
+        key="on",
+        description="trigger",
+    )
 
 
 def _preserve_existing_envs(existing_content: str, new_content: str) -> str:
-    existing_data = _load_workflow_yaml(_extract_body(existing_content))
-    new_data = _load_workflow_yaml(new_content)
-
-    if not isinstance(existing_data, dict) or not isinstance(new_data, dict):
-        raise ValueError("Workflow YAML must be a mapping to preserve env configuration.")
-
-    if "env" not in existing_data:
-        return new_content
-
-    if new_data.get("env") == existing_data["env"]:
-        return new_content
-
-    new_data["env"] = existing_data["env"]
-
-    return yaml.safe_dump(new_data, sort_keys=False)
+    return _preserve_existing_top_level_value(
+        existing_content,
+        new_content,
+        key="env",
+        description="env",
+    )
 
 
 def _resolve_target(cwd: Path, entry: WorkflowEntry, installed_file: InstalledFile) -> str:
