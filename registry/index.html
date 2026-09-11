@@ -1,0 +1,470 @@
+<!DOCTYPE html><html class="dark" lang="en"><head><meta charset="utf-8"><link rel="icon" type="image/svg+xml" href="/ghwm/favicon.svg"><link rel="icon" href="/ghwm/favicon.ico"><meta name="viewport" content="width=device-width"><meta name="generator" content="Astro v7.0.6"><title>Registry Catalog - GHWM</title><!-- Design System Fonts (Inter & JetBrains Mono) --><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Fira+Sans:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Source+Code+Pro:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><!-- Material Symbols Outlined for UI Icons --><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"><link rel="stylesheet" href="/ghwm/_astro/usage.BJu9DpMp.css"></head><body class="font-body-lg text-body-lg min-h-screen flex flex-col bg-background text-on-background antialiased"><!-- Shared Top Menu Bar Component --><header class="bg-surface w-full top-0 sticky border-b border-outline-variant z-50"><div class="flex justify-between items-center px-lg py-md max-w-7xl mx-auto w-full"><!-- Brand Logo --><div class="flex items-center gap-lg"><a href="/ghwm/" class="font-headline-md text-headline-md font-bold text-primary flex items-center gap-sm hover:opacity-90 transition-opacity"><span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">terminal</span><span>GHWM</span></a><!-- Desktop Navigation --><nav class="hidden font-body-lg md:flex gap-md items-center"><a class="font-body-sm text-body-sm transition-colors px-sm py-xs rounded duration-100 active:scale-95 text-on-surface-variant hover:text-primary hover:bg-surface-container" href="/ghwm/">Explore</a><a class="font-body-sm text-body-sm transition-colors px-sm py-xs rounded duration-100 active:scale-95 text-primary border-b-2 border-primary rounded-none pb-1 font-semibold" href="/ghwm/registry">Registry</a><a class="font-body-sm text-body-sm transition-colors px-sm py-xs rounded duration-100 active:scale-95 text-on-surface-variant hover:text-primary hover:bg-surface-container" href="/ghwm/official">Official</a><a class="font-body-sm text-body-sm transition-colors px-sm py-xs rounded duration-100 active:scale-95 text-on-surface-variant hover:text-primary hover:bg-surface-container" href="https://github.com/ghwfxlab/ghwm" target="_blank" rel="noopener noreferrer">Docs</a></nav></div><!-- Search Bar & Controls --><div class="flex items-center gap-md"><form action="/ghwm/registry" method="GET" class="hidden md:flex items-center bg-surface-container-low rounded-default border border-outline-variant px-sm py-xs input-focus"><span class="material-symbols-outlined text-outline text-[18px] mr-2">search</span><input id="menu-search-input" name="q" type="text" class="menu-search-input bg-transparent border-none outline-none text-body-sm font-body-sm text-on-surface w-48 focus:ring-0 p-0 placeholder-outline" placeholder="Search workflows..." autocomplete="off"></form><!-- Mobile Menu Toggle Button (For high-fidelity responsiveness) --><button id="mobile-menu-toggle" class="md:hidden flex items-center justify-center p-sm rounded-default text-on-surface-variant hover:text-primary hover:bg-surface-container transition-colors active:scale-95" aria-label="Toggle Navigation Menu"><span class="material-symbols-outlined text-[24px]">menu</span></button></div></div><!-- Mobile Drawer Menu (Hidden by default, toggled via script below) --><div id="mobile-menu" class="hidden md:hidden w-full border-t border-outline-variant bg-surface px-lg py-md flex flex-col gap-sm"><a class="block py-xs px-sm rounded text-body-sm font-body-sm text-on-surface-variant" href="/ghwm/">Explore</a><a class="block py-xs px-sm rounded text-body-sm font-body-sm text-primary bg-surface-container font-semibold" href="/ghwm/registry">Registry</a><a class="block py-xs px-sm rounded text-body-sm font-body-sm text-on-surface-variant" href="/ghwm/official">Official</a><a class="block py-xs px-sm rounded text-body-sm font-body-sm text-on-surface-variant" href="https://github.com/ghwfxlab/ghwm" target="_blank" rel="noopener noreferrer">Docs</a><!-- Mobile Search --><form action="/ghwm/registry" method="GET" class="flex items-center bg-surface-container-low rounded-default border border-outline-variant px-sm py-xs input-focus mt-xs"><span class="material-symbols-outlined text-outline text-[18px] mr-2">search</span><input id="mobile-search-input" name="q" type="text" class="menu-search-input bg-transparent border-none outline-none text-body-sm font-body-sm text-on-surface w-full focus:ring-0 p-0 placeholder-outline" placeholder="Search workflows..." autocomplete="off"></form></div></header><script type="module">try{let e=new URLSearchParams(window.location.search).get(`q`);e&&document.querySelectorAll(`.menu-search-input`).forEach(t=>{t.value=e})}catch{}var e=document.getElementById(`mobile-menu-toggle`),t=document.getElementById(`mobile-menu`);e&&t&&e.addEventListener(`click`,()=>{t.classList.contains(`hidden`)?(t.classList.remove(`hidden`),e.querySelector(`span`).textContent=`close`):(t.classList.add(`hidden`),e.querySelector(`span`).textContent=`menu`)});</script><!-- Content Slot --><main class="flex-grow w-full max-w-7xl mx-auto px-margin md:px-lg py-xl flex flex-col gap-xl"><!-- Header & Breadcrumb --><div class="flex flex-col gap-sm"><div class="flex items-center gap-xs text-on-surface-variant font-body-sm text-body-sm"><a href="/ghwm/" class="hover:text-primary transition-colors flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">arrow_back</span>Home</a><span>/</span><span class="text-on-surface">Registry</span></div><div class="flex flex-col md:flex-row md:items-center justify-between gap-md border-b border-outline-variant pb-md mt-xs"><div><h1 class="font-headline-lg text-headline-lg font-bold text-on-surface flex items-center gap-sm"><span class="material-symbols-outlined text-primary text-[32px]">dataset</span>Workflow Registry Catalog</h1><p class="font-body-md text-body-md text-on-surface-variant mt-1">Browse, filter, and inspect curated GitHub Actions workflows published in this registry.</p></div><div class="flex items-center gap-sm shrink-0"><span class="font-code-sm text-[12px] text-secondary bg-surface-container-low border border-secondary border-opacity-35 px-3 py-1 rounded flex items-center gap-2" title="Target API: https://ghwm-deployment-prd.ghwfxlab.workers.dev"><span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span><span>test API connected (1 total installs)</span></span></div></div></div><!-- Filter & Control Toolbar --><div class="card-surface rounded-lg p-md flex flex-col md:flex-row gap-md items-stretch md:items-center justify-between"><!-- Search Input --><div class="relative flex-1 min-w-[240px]"><span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[18px]">search</span><input type="text" id="catalog-search" placeholder="Search by name, package, or description..." class="w-full bg-surface-container-lowest border border-outline-variant rounded-default pl-10 pr-8 py-2 text-body-sm text-on-surface placeholder-outline focus:outline-none focus:border-primary transition-colors"><button id="clear-search-btn" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface text-xs cursor-pointer" title="Clear search"><span class="material-symbols-outlined text-[16px]">close</span></button></div><!-- Tag Filter & Sort Controls --><div class="flex flex-wrap items-center gap-sm"><!-- Tag Filter --><div class="flex items-center gap-1.5 text-body-sm text-on-surface-variant"><label for="catalog-tag-filter" class="font-code-sm text-[12px] text-outline">Tag:</label><select id="catalog-tag-filter" class="bg-surface-container-lowest border border-outline-variant rounded-default px-2.5 py-1.5 text-body-sm text-on-surface focus:outline-none focus:border-primary cursor-pointer"><option value="">All Tags</option><option value="actions">actions</option><option value="automation">automation</option><option value="lint">lint</option><option value="pr">pr</option><option value="pre-commit">pre-commit</option><option value="review">review</option></select></div><!-- Sort Column & Direction --><div class="flex items-center gap-1.5 text-body-sm text-on-surface-variant"><label for="catalog-sort" class="font-code-sm text-[12px] text-outline">Sort:</label><select id="catalog-sort" class="bg-surface-container-lowest border border-outline-variant rounded-default px-2.5 py-1.5 text-body-sm text-on-surface focus:outline-none focus:border-primary cursor-pointer"><option value="installs_desc">Installs (High to Low)</option><option value="installs_asc">Installs (Low to High)</option><option value="added_desc">Date Added (Newest)</option><option value="added_asc">Date Added (Oldest)</option><option value="name_asc">Name (A &rarr; Z)</option><option value="name_desc">Name (Z &rarr; A)</option><option value="updates_desc">Updates (High to Low)</option><option value="date_desc">Recently Active</option></select></div><!-- Items Per Page --><div class="flex items-center gap-1.5 text-body-sm text-on-surface-variant"><label for="catalog-page-size" class="font-code-sm text-[12px] text-outline">Show:</label><select id="catalog-page-size" class="bg-surface-container-lowest border border-outline-variant rounded-default px-2 py-1.5 text-body-sm text-on-surface focus:outline-none focus:border-primary cursor-pointer"><option value="10">10</option><option value="25">25</option><option value="50">50</option></select></div></div></div><!-- Catalog Table Card --><div class="card-surface rounded-lg border border-outline-variant overflow-hidden"><div class="overflow-x-auto"><table class="w-full text-left border-collapse" id="catalog-table"><thead><tr class="border-b border-outline-variant bg-surface-container text-on-surface font-code-sm text-[12px] uppercase tracking-wider"><th scope="col" class="py-sm px-md cursor-pointer hover:text-primary transition-colors select-none" data-sort-key="name"><div class="flex items-center gap-1"><span>Workflow</span><span class="sort-icon text-[10px] text-outline">↕</span></div></th><th scope="col" class="py-sm px-md">Tags</th><th scope="col" class="py-sm px-md">Version</th><th scope="col" class="py-sm px-md cursor-pointer hover:text-primary transition-colors select-none" data-sort-key="installs"><div class="flex items-center gap-1"><span>Installs</span><span class="sort-icon text-[10px] text-secondary">▼</span></div></th><th scope="col" class="py-sm px-md cursor-pointer hover:text-primary transition-colors select-none" data-sort-key="updates"><div class="flex items-center gap-1"><span>Updates</span><span class="sort-icon text-[10px] text-outline">↕</span></div></th><th scope="col" class="py-sm px-md cursor-pointer hover:text-primary transition-colors select-none" data-sort-key="added"><div class="flex items-center gap-1"><span>Date Added</span><span class="sort-icon text-[10px] text-outline">↕</span></div></th><th scope="col" class="py-sm px-md cursor-pointer hover:text-primary transition-colors select-none" data-sort-key="date"><div class="flex items-center gap-1"><span>Last Active</span><span class="sort-icon text-[10px] text-outline">↕</span></div></th><th scope="col" class="py-sm px-md text-right">Details</th></tr></thead><tbody id="catalog-tbody" class="divide-y divide-outline-variant text-body-sm text-on-surface"><!-- Populated via client-side state machine for instantaneous sorting & pagination --></tbody></table></div><!-- Empty State --><div id="catalog-empty-state" class="hidden py-2xl px-md text-center flex-col items-center justify-center gap-md"><span class="material-symbols-outlined text-outline text-[48px]">search_off</span><div class="flex flex-col gap-xs"><p class="font-headline-md text-headline-md font-semibold text-on-surface">No workflows found</p><p class="font-body-sm text-body-sm text-on-surface-variant max-w-md">No published workflows matched your search filters. Try clearing your search query or selecting a different tag.</p></div><button id="reset-filters-btn" class="btn-secondary px-md py-1.5 rounded-default text-body-sm font-semibold cursor-pointer hover:border-primary transition-colors">Reset Filters</button></div><!-- Pagination Footer --><div class="border-t border-outline-variant px-md py-sm bg-surface flex flex-col sm:flex-row items-center justify-between gap-sm text-body-sm text-on-surface-variant"><span id="catalog-pagination-summary" class="font-code-sm text-[12px]">Showing 1 to 2 of 2 workflows</span><div class="flex items-center gap-xs" id="catalog-pagination-nav"><button id="prev-page-btn" class="px-2.5 py-1 rounded border border-outline-variant text-on-surface hover:bg-surface-container disabled:opacity-40 disabled:cursor-not-allowed transition-colors font-code-sm text-xs cursor-pointer" disabled>&larr; Prev</button><div id="page-numbers" class="flex items-center gap-1"><!-- Dynamic page pills --></div><button id="next-page-btn" class="px-2.5 py-1 rounded border border-outline-variant text-on-surface hover:bg-surface-container disabled:opacity-40 disabled:cursor-not-allowed transition-colors font-code-sm text-xs cursor-pointer" disabled>Next &rarr;</button></div></div></div></main><!-- Shared Footer Component --><footer class="bg-surface border-t border-outline-variant mt-2xl w-full"><div class="max-w-7xl mx-auto px-lg py-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-md"><!-- Left Logo and Green Copyright --><div class="flex flex-col"><div class="font-code-sm text-code-sm text-secondary mt-1">&copy; 2026 GHWM Registry. Built for the open source community.</div></div><!-- Right Navigation Links --><div class="flex flex-wrap gap-md md:gap-lg font-code-sm text-code-sm text-on-surface-variant"><a href="https://github.com/ghwfxlab/ghwm" class="hover:text-primary transition-colors" target="_blank" rel="noopener noreferrer">Documentation</a><a href="https://github.com/ghwfxlab/ghwm#telemetry--privacy" class="hover:text-primary transition-colors" target="_blank" rel="noopener noreferrer">Privacy</a></div></div></footer></body></html><script>(function(){const initialWorkflows = [{"name":"super-linter","title":"Super-Linter","packageName":"@ghwfxlab/ghwm-super-linter","description":"Code linting workflow using Super-Linter and pre-commit hooks for comprehensive multi-language code quality.","version":"1.0.0","tags":["lint","actions","pre-commit"],"icon":"fact_check","installs":1,"updates":0,"total":1,"createdAt":"2026-09-01T10:00:00.000Z","addedFormatted":"Sep 1, 2026","lastInstalledAt":"2026-09-11T14:46:54.367Z","lastActiveFormatted":"Sep 11, 2026","owner":"ghwfxlab"},{"name":"auto-assign-pr","title":"Auto Assign PR","packageName":"@ghwfxlab/ghwm-auto-assign-pr","description":"Automatically add pull request reviewers and assignees to streamline pull request triage and reviews.","version":"1.0.0","tags":["automation","pr","review"],"icon":"person_add","installs":0,"updates":0,"total":0,"createdAt":"2026-09-08T12:00:00.000Z","addedFormatted":"Sep 8, 2026","lastInstalledAt":null,"lastActiveFormatted":"None recorded","owner":"ghwfxlab"}];
+const baseUrl = "/ghwm";
+
+  // Interactive State Machine for Registry Catalog
+  let allWorkflows = Array.isArray(initialWorkflows) ? initialWorkflows : [];
+  let filteredWorkflows = [...allWorkflows];
+
+  let currentSearch = '';
+  let currentTag = '';
+  let currentSort = 'installs_desc';
+  let currentPage = 1;
+  let pageSize = 10;
+
+  // DOM Elements
+  const searchInput = document.getElementById('catalog-search');
+  const clearSearchBtn = document.getElementById('clear-search-btn');
+  const menuSearchInputs = document.querySelectorAll('.menu-search-input');
+  const tagSelect = document.getElementById('catalog-tag-filter');
+  const sortSelect = document.getElementById('catalog-sort');
+  const pageSizeSelect = document.getElementById('catalog-page-size');
+  const tbody = document.getElementById('catalog-tbody');
+  const emptyState = document.getElementById('catalog-empty-state');
+  const table = document.getElementById('catalog-table');
+  const paginationSummary = document.getElementById('catalog-pagination-summary');
+  const prevBtn = document.getElementById('prev-page-btn');
+  const nextBtn = document.getElementById('next-page-btn');
+  const pageNumbersContainer = document.getElementById('page-numbers');
+  const resetBtn = document.getElementById('reset-filters-btn');
+  const columnHeaders = document.querySelectorAll('th[data-sort-key]');
+
+  // Initialize from URL search params if present
+  function initFromUrl() {
+    const params = new URLSearchParams(window.location.search);
+    if (params.has('q')) {
+      currentSearch = params.get('q') || '';
+      if (searchInput) searchInput.value = currentSearch;
+      menuSearchInputs.forEach((input) => {
+        input.value = currentSearch;
+      });
+      if (clearSearchBtn && currentSearch) {
+        clearSearchBtn.classList.remove('hidden');
+      }
+    }
+    if (params.has('tag')) {
+      currentTag = params.get('tag') || '';
+      if (tagSelect) tagSelect.value = currentTag;
+    }
+    if (params.has('sort')) {
+      currentSort = params.get('sort') || currentSort;
+      if (sortSelect) sortSelect.value = currentSort;
+    }
+    if (params.has('page')) {
+      const pageParam = parseInt(params.get('page') || '1', 10);
+      if (!isNaN(pageParam) && pageParam > 0) currentPage = pageParam;
+    }
+  }
+
+  // Sync state to URL search params
+  function syncToUrl() {
+    const params = new URLSearchParams();
+    if (currentSearch) params.set('q', currentSearch);
+    if (currentTag) params.set('tag', currentTag);
+    if (currentSort !== 'installs_desc') params.set('sort', currentSort);
+    if (currentPage > 1) params.set('page', String(currentPage));
+
+    const newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
+    window.history.replaceState({}, '', newUrl);
+  }
+
+  // Filter & Sort Engine
+  function applyFilterAndSort() {
+    const query = currentSearch.toLowerCase().trim();
+
+    filteredWorkflows = allWorkflows.filter((w) => {
+      const matchesQuery =
+        !query ||
+        w.name.toLowerCase().includes(query) ||
+        w.title.toLowerCase().includes(query) ||
+        w.packageName.toLowerCase().includes(query) ||
+        w.description.toLowerCase().includes(query) ||
+        w.tags.some((t) => t.toLowerCase().includes(query));
+
+      const matchesTag = !currentTag || w.tags.includes(currentTag);
+      return matchesQuery && matchesTag;
+    });
+
+    // Apply Sorting
+    filteredWorkflows.sort((a, b) => {
+      switch (currentSort) {
+        case 'installs_desc':
+          return b.installs - a.installs;
+        case 'installs_asc':
+          return a.installs - b.installs;
+        case 'name_asc':
+          return a.title.localeCompare(b.title);
+        case 'name_desc':
+          return b.title.localeCompare(a.title);
+        case 'updates_desc':
+          return b.updates - a.updates;
+        case 'added_desc': {
+          const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+          const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+          return dateB - dateA;
+        }
+        case 'added_asc': {
+          const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+          const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+          return dateA - dateB;
+        }
+        case 'date_desc': {
+          const dateA = a.lastInstalledAt ? new Date(a.lastInstalledAt).getTime() : 0;
+          const dateB = b.lastInstalledAt ? new Date(b.lastInstalledAt).getTime() : 0;
+          return dateB - dateA;
+        }
+        default:
+          return b.installs - a.installs;
+      }
+    });
+
+    // Ensure currentPage is in range
+    const maxPage = Math.max(1, Math.ceil(filteredWorkflows.length / pageSize));
+    if (currentPage > maxPage) {
+      currentPage = maxPage;
+    }
+
+    renderTable();
+    updateSortIcons();
+    syncToUrl();
+  }
+
+  // Update Table Header Sort Indicators
+  function updateSortIcons() {
+    columnHeaders.forEach((th) => {
+      const key = th.getAttribute('data-sort-key');
+      const icon = th.querySelector('.sort-icon');
+      if (!icon) return;
+
+      if (key === 'installs') {
+        if (currentSort === 'installs_desc') {
+          icon.textContent = '▼';
+          icon.className = 'sort-icon text-[10px] text-secondary';
+        } else if (currentSort === 'installs_asc') {
+          icon.textContent = '▲';
+          icon.className = 'sort-icon text-[10px] text-secondary';
+        } else {
+          icon.textContent = '↕';
+          icon.className = 'sort-icon text-[10px] text-outline';
+        }
+      } else if (key === 'name') {
+        if (currentSort === 'name_asc') {
+          icon.textContent = '▲';
+          icon.className = 'sort-icon text-[10px] text-primary';
+        } else if (currentSort === 'name_desc') {
+          icon.textContent = '▼';
+          icon.className = 'sort-icon text-[10px] text-primary';
+        } else {
+          icon.textContent = '↕';
+          icon.className = 'sort-icon text-[10px] text-outline';
+        }
+      } else if (key === 'updates') {
+        if (currentSort === 'updates_desc') {
+          icon.textContent = '▼';
+          icon.className = 'sort-icon text-[10px] text-primary';
+        } else {
+          icon.textContent = '↕';
+          icon.className = 'sort-icon text-[10px] text-outline';
+        }
+      } else if (key === 'added') {
+        if (currentSort === 'added_desc') {
+          icon.textContent = '▼';
+          icon.className = 'sort-icon text-[10px] text-primary';
+        } else if (currentSort === 'added_asc') {
+          icon.textContent = '▲';
+          icon.className = 'sort-icon text-[10px] text-primary';
+        } else {
+          icon.textContent = '↕';
+          icon.className = 'sort-icon text-[10px] text-outline';
+        }
+      } else if (key === 'date') {
+        if (currentSort === 'date_desc') {
+          icon.textContent = '▼';
+          icon.className = 'sort-icon text-[10px] text-primary';
+        } else {
+          icon.textContent = '↕';
+          icon.className = 'sort-icon text-[10px] text-outline';
+        }
+      }
+    });
+  }
+
+  // Render Table Rows
+  function renderTable() {
+    if (!tbody || !emptyState || !table) return;
+
+    if (filteredWorkflows.length === 0) {
+      tbody.innerHTML = '';
+      table.classList.add('hidden');
+      emptyState.classList.remove('hidden');
+      emptyState.classList.add('flex');
+      if (paginationSummary) {
+        paginationSummary.textContent = 'No workflows found';
+      }
+      if (prevBtn) prevBtn.disabled = true;
+      if (nextBtn) nextBtn.disabled = true;
+      if (pageNumbersContainer) pageNumbersContainer.innerHTML = '';
+      return;
+    }
+
+    table.classList.remove('hidden');
+    emptyState.classList.add('hidden');
+    emptyState.classList.remove('flex');
+
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = Math.min(startIndex + pageSize, filteredWorkflows.length);
+    const pageItems = filteredWorkflows.slice(startIndex, endIndex);
+
+    tbody.innerHTML = pageItems
+      .map(
+        (w) => `
+      <tr class="hover:bg-surface-container-high transition-colors cursor-pointer group" onclick="window.location.href='${baseUrl}/workflows/${w.name}'">
+        <td class="py-md px-md">
+          <div class="flex items-start gap-sm">
+            <div class="w-9 h-9 bg-surface-container border border-outline-variant rounded flex items-center justify-center shrink-0 mt-0.5">
+              <span class="material-symbols-outlined text-primary text-[20px]">${w.icon}</span>
+            </div>
+            <div class="flex flex-col">
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <a href="${baseUrl}/workflows/${w.name}" class="font-headline-md text-[14px] leading-[20px] font-semibold text-on-surface group-hover:text-primary transition-colors">
+                  ${w.title}
+                </a>
+                ${w.owner === 'ghwfxlab' ? `<a href="${baseUrl}/official" onclick="event.stopPropagation()" class="h-[20px] inline-flex items-center gap-1 font-code-sm text-[11px] text-on-surface bg-surface-container-high border border-outline-variant px-1.5 rounded hover:border-outline hover:text-primary transition-colors" title="Official provider: @ghwfxlab"><svg class="w-3 h-3 text-secondary shrink-0" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16Zm3.78-9.72a.75.75 0 0 0-1.06-1.06L6.75 9.19 5.28 7.72a.75.75 0 0 0-1.06 1.06l2 2a.75.75 0 0 0 1.06 0l4.5-4.5Z" clip-rule="evenodd" /></svg>Official</a>` : ''}
+              </div>
+              <span class="font-code-sm text-[12px] text-on-surface-variant">${w.packageName}</span>
+              <span class="font-body-sm text-[11px] text-on-surface-variant opacity-75 line-clamp-1 mt-0.5">${w.description}</span>
+            </div>
+          </div>
+        </td>
+        <td class="py-md px-md">
+          <div class="flex gap-xs flex-wrap">
+            ${w.tags
+              .map(
+                (t) =>
+                  `<span class="font-code-sm text-[10px] border border-outline-variant px-1.5 py-0.5 rounded text-outline bg-surface-container-lowest">${t}</span>`
+              )
+              .join('')}
+          </div>
+        </td>
+        <td class="py-md px-md whitespace-nowrap">
+          <span class="font-code-sm text-xs bg-surface-container border border-outline-variant px-2 py-0.5 rounded text-on-surface-variant font-mono">
+            v${w.version}
+          </span>
+        </td>
+        <td class="py-md px-md whitespace-nowrap">
+          <div class="font-code-sm text-xs bg-surface-container-low text-secondary border border-secondary border-opacity-35 px-2 py-0.5 rounded inline-flex items-center gap-1 font-mono">
+            <span class="material-symbols-outlined text-[12px]" style="font-variation-settings: 'FILL' 1;">download</span>
+            ${w.installs}
+          </div>
+        </td>
+        <td class="py-md px-md whitespace-nowrap font-code-sm text-xs font-mono text-on-surface-variant">
+          ${w.updates}
+        </td>
+        <td class="py-md px-md whitespace-nowrap font-code-sm text-[11px] text-on-surface-variant">
+          ${w.addedFormatted}
+        </td>
+        <td class="py-md px-md whitespace-nowrap font-code-sm text-[11px] text-on-surface-variant">
+          ${w.lastActiveFormatted}
+        </td>
+        <td class="py-md px-md text-right whitespace-nowrap">
+          <a
+            href="${baseUrl}/workflows/${w.name}"
+            class="font-body-sm text-xs text-primary group-hover:underline inline-flex items-center gap-0.5"
+          >
+            View &rarr;
+          </a>
+        </td>
+      </tr>
+    `
+      )
+      .join('');
+
+    // Update Pagination Summary
+    if (paginationSummary) {
+      paginationSummary.textContent = `Showing ${startIndex + 1} to ${endIndex} of ${filteredWorkflows.length} workflows`;
+    }
+
+    // Update Pagination Buttons
+    const totalPages = Math.ceil(filteredWorkflows.length / pageSize);
+    if (prevBtn) prevBtn.disabled = currentPage <= 1;
+    if (nextBtn) nextBtn.disabled = currentPage >= totalPages;
+
+    if (pageNumbersContainer) {
+      pageNumbersContainer.innerHTML = Array.from({ length: totalPages }, (_, i) => i + 1)
+        .map(
+          (p) => `
+        <button
+          class="page-num-btn px-2.5 py-1 rounded text-xs font-code-sm transition-colors cursor-pointer ${
+            p === currentPage
+              ? 'bg-primary text-on-primary font-bold'
+              : 'border border-outline-variant text-on-surface-variant hover:bg-surface-container'
+          }"
+          data-page="${p}"
+        >
+          ${p}
+        </button>
+      `
+        )
+        .join('');
+
+      // Add click listeners to dynamic page number buttons
+      pageNumbersContainer.querySelectorAll('.page-num-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const page = parseInt(btn.getAttribute('data-page') || '1', 10);
+          if (!isNaN(page)) {
+            currentPage = page;
+            renderTable();
+            syncToUrl();
+          }
+        });
+      });
+    }
+  }
+
+  // Event Listeners
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      currentSearch = e.target.value;
+      menuSearchInputs.forEach((input) => {
+        input.value = currentSearch;
+      });
+      if (clearSearchBtn) {
+        if (currentSearch) {
+          clearSearchBtn.classList.remove('hidden');
+        } else {
+          clearSearchBtn.classList.add('hidden');
+        }
+      }
+      currentPage = 1;
+      applyFilterAndSort();
+    });
+  }
+
+  if (clearSearchBtn) {
+    clearSearchBtn.addEventListener('click', () => {
+      if (searchInput) searchInput.value = '';
+      menuSearchInputs.forEach((input) => {
+        input.value = '';
+      });
+      currentSearch = '';
+      clearSearchBtn.classList.add('hidden');
+      currentPage = 1;
+      applyFilterAndSort();
+    });
+  }
+
+  // Synchronize Menu Bar Search inputs directly with registry catalog table
+  menuSearchInputs.forEach((menuInput) => {
+    menuInput.addEventListener('input', (e) => {
+      const val = e.target.value;
+      currentSearch = val;
+      if (searchInput) searchInput.value = val;
+      menuSearchInputs.forEach((other) => {
+        if (other !== menuInput) other.value = val;
+      });
+      if (clearSearchBtn) {
+        if (val) {
+          clearSearchBtn.classList.remove('hidden');
+        } else {
+          clearSearchBtn.classList.add('hidden');
+        }
+      }
+      currentPage = 1;
+      applyFilterAndSort();
+    });
+
+    const form = menuInput.closest('form');
+    if (form) {
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        syncToUrl();
+      });
+    }
+  });
+
+  if (tagSelect) {
+    tagSelect.addEventListener('change', (e) => {
+      currentTag = e.target.value;
+      currentPage = 1;
+      applyFilterAndSort();
+    });
+  }
+
+  if (sortSelect) {
+    sortSelect.addEventListener('change', (e) => {
+      currentSort = e.target.value;
+      currentPage = 1;
+      applyFilterAndSort();
+    });
+  }
+
+  if (pageSizeSelect) {
+    pageSizeSelect.addEventListener('change', (e) => {
+      pageSize = parseInt(e.target.value, 10) || 10;
+      currentPage = 1;
+      applyFilterAndSort();
+    });
+  }
+
+  if (prevBtn) {
+    prevBtn.addEventListener('click', () => {
+      if (currentPage > 1) {
+        currentPage--;
+        renderTable();
+        syncToUrl();
+      }
+    });
+  }
+
+  if (nextBtn) {
+    nextBtn.addEventListener('click', () => {
+      const totalPages = Math.ceil(filteredWorkflows.length / pageSize);
+      if (currentPage < totalPages) {
+        currentPage++;
+        renderTable();
+        syncToUrl();
+      }
+    });
+  }
+
+  if (resetBtn) {
+    resetBtn.addEventListener('click', () => {
+      currentSearch = '';
+      currentTag = '';
+      currentSort = 'installs_desc';
+      currentPage = 1;
+      if (searchInput) searchInput.value = '';
+      menuSearchInputs.forEach((input) => {
+        input.value = '';
+      });
+      if (tagSelect) tagSelect.value = '';
+      if (sortSelect) sortSelect.value = 'installs_desc';
+      if (clearSearchBtn) clearSearchBtn.classList.add('hidden');
+      applyFilterAndSort();
+    });
+  }
+
+  // Clickable column header sorting
+  columnHeaders.forEach((th) => {
+    th.addEventListener('click', () => {
+      const key = th.getAttribute('data-sort-key');
+      if (key === 'installs') {
+        currentSort = currentSort === 'installs_desc' ? 'installs_asc' : 'installs_desc';
+      } else if (key === 'name') {
+        currentSort = currentSort === 'name_asc' ? 'name_desc' : 'name_asc';
+      } else if (key === 'updates') {
+        currentSort = currentSort === 'updates_desc' ? 'name_asc' : 'updates_desc';
+      } else if (key === 'added') {
+        currentSort = currentSort === 'added_desc' ? 'added_asc' : 'added_desc';
+      } else if (key === 'date') {
+        currentSort = currentSort === 'date_desc' ? 'name_asc' : 'date_desc';
+      }
+      if (sortSelect) sortSelect.value = currentSort;
+      currentPage = 1;
+      applyFilterAndSort();
+    });
+  });
+
+  // Initial Load
+  initFromUrl();
+  applyFilterAndSort();
+})();</script>
