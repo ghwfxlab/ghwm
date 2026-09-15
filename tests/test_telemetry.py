@@ -8,7 +8,7 @@ from urllib.error import HTTPError, URLError
 
 import pytest
 
-from ghwm.telemetry import is_public_repository, track_installation
+from ghwm.telemetry import get_public_repository_info, is_public_repository, track_installation
 
 
 def _mock_http_response(body: bytes) -> MagicMock:
@@ -138,6 +138,46 @@ class TestIsPublicRepositoryIntegration:
         assert result is False
 
 
+class TestGetPublicRepositoryInfo:
+    def test_get_public_repository_info_should_return_true_and_data_when_repo_is_public(self) -> None:
+        # Arrange
+        data = {"private": False, "description": "Workflow registry", "topics": ["actions", "lint"]}
+        response_body = json.dumps(data).encode()
+
+        # Act
+        with patch("ghwm.telemetry.urlopen", return_value=_mock_http_response(response_body)):
+            is_pub, repo_data = get_public_repository_info("owner", "my-repo")
+
+        # Assert
+        assert is_pub is True
+        assert repo_data["description"] == "Workflow registry"
+        assert repo_data["topics"] == ["actions", "lint"]
+
+    def test_get_public_repository_info_should_return_false_and_empty_dict_when_repo_is_private(self) -> None:
+        # Arrange
+        response_body = json.dumps({"private": True, "name": "my-private-repo"}).encode()
+
+        # Act
+        with patch("ghwm.telemetry.urlopen", return_value=_mock_http_response(response_body)):
+            is_pub, repo_data = get_public_repository_info("owner", "my-private-repo")
+
+        # Assert
+        assert is_pub is False
+        assert repo_data == {}
+
+    def test_get_public_repository_info_should_return_false_on_http_error(self) -> None:
+        # Arrange
+        not_found = HTTPError(url=None, code=404, msg="Not Found", hdrs=None, fp=None)  # type: ignore[arg-type]
+
+        # Act
+        with patch("ghwm.telemetry.urlopen", side_effect=not_found):
+            is_pub, repo_data = get_public_repository_info("owner", "missing")
+
+        # Assert
+        assert is_pub is False
+        assert repo_data == {}
+
+
 class TestTrackInstallation:
     def test_track_installation_should_be_a_noop_stub(self) -> None:
         # Arrange / Act / Assert: must not raise regardless of inputs
@@ -152,4 +192,25 @@ class TestTrackInstallation:
             workflow_name="linter",
             version=None,
             event_type="run",
+        )
+
+    def test_track_installation_should_accept_enriched_metadata_dictionary(self) -> None:
+        # Arrange
+        metadata = {
+            "title": "Super-Linter",
+            "description": "Code linting",
+            "tags": ["lint", "ci"],
+            "icon": "fact_check",
+            "version": "1.0.1",
+            "owner": "ghwfxlab",
+            "source": "ghwfxlab/ghwm-registry",
+        }
+
+        # Act / Assert: must execute cleanly without error
+        track_installation(
+            source="ghwfxlab/ghwm-registry",
+            workflow_name="super-linter",
+            version="1.0.1",
+            event_type="install",
+            metadata=metadata,
         )
