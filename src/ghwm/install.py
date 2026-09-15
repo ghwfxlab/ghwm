@@ -16,6 +16,7 @@ from ghwm.managed_files import (
     _WorkflowBlockedError,
 )
 from ghwm.manifest import Manifest, WorkflowEntry
+from ghwm.metadata import extract_workflow_metadata
 from ghwm.telemetry import is_public_repository, track_installation
 
 
@@ -62,7 +63,7 @@ def install_workflows(
         _prune_stale(cwd, manifest, lockfile, result, force=force)
 
     if not no_telemetry:
-        _emit_telemetry(manifest.source, manifest, result)
+        _emit_telemetry(manifest.source, manifest, result, workflow_sources=workflow_sources_by_name)
 
     write_lockfile(cwd, lockfile)
     return result
@@ -92,32 +93,56 @@ def update_workflows(
     )
 
 
-def _emit_telemetry(source: str, manifest: Manifest, result: InstallResult) -> None:
-    """Emit telemetry events for installs and updates if the source registry is public."""
+def _emit_telemetry(
+    source: str,
+    manifest: Manifest,
+    result: InstallResult,
+    workflow_sources: dict[str, WorkflowSource] | None = None,
+) -> None:
+    """Emit telemetry events for installs and updates if the workflow source registry is public."""
     try:
-        owner, repo = source.split("/", 1)
-    except ValueError:
+        entry_by_name = {entry.name: entry for entry in manifest.workflows}
+        workflow_sources_map = workflow_sources or {}
+        public_cache: dict[tuple[str, str], bool] = {}
+
+        events = [(name, "install") for name in result.installed] + [(name, "updated") for name in result.updated]
+
+        for name, event_type in events:
+            entry = entry_by_name.get(name)
+            workflow_source_str = (entry.source if entry and entry.source else None) or source
+            try:
+                owner, repo = workflow_source_str.split("/", 1)
+            except (ValueError, AttributeError):
+                continue
+
+            if (owner, repo) not in public_cache:
+                public_cache[(owner, repo)] = is_public_repository(owner, repo)
+
+            if not public_cache[(owner, repo)]:
+                continue
+
+            version = entry.version if entry else None
+            ws = workflow_sources_map.get(name)
+            metadata = (
+                ws.metadata
+                if ws and ws.metadata is not None
+                else extract_workflow_metadata(
+                    workflow_name=name,
+                    source=workflow_source_str,
+                    version=version,
+                )
+            )
+
+            track_installation(
+                source=workflow_source_str,
+                workflow_name=name,
+                version=version,
+                event_type=event_type,
+                metadata=metadata,
+            )
+    except Exception:
+        # Telemetry failures must never break the install
         return
-    if not is_public_repository(owner, repo):
-        return
-
-    version_by_name = {entry.name: entry.version for entry in manifest.workflows}
-
-    for name in result.installed:
-        track_installation(
-            source=source,
-            workflow_name=name,
-            version=version_by_name.get(name),
-            event_type="install",
-        )
-
-    for name in result.updated:
-        track_installation(
-            source=source,
-            workflow_name=name,
-            version=version_by_name.get(name),
-            event_type="updated",
-        )
 
 
 def _install_one(

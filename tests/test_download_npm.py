@@ -18,6 +18,7 @@ from ghwm.download_npm import (
     build_installed_files,
     download_npm_tarball,
     extract_npm_package,
+    extract_tarball_metadata,
     manifest_files,
     npm_package_metadata_url,
     npm_tarball_url,
@@ -388,7 +389,10 @@ class TestExtractNpmPackage:
 
 class TestResolveLatestVersion:
     @patch("ghwm.download_npm.urlopen")
-    def test_should_resolve_latest_version(self, mock_urlopen: MagicMock) -> None:
+    def test_resolve_latest_version_should_return_version_and_githead_when_metadata_is_valid(
+        self, mock_urlopen: MagicMock
+    ) -> None:
+        # Arrange
         mock_response = MagicMock()
         mock_response.__enter__.return_value = mock_response
         mock_response.read.return_value = json.dumps(
@@ -396,69 +400,84 @@ class TestResolveLatestVersion:
         ).encode("utf-8")
         mock_urlopen.return_value = mock_response
 
+        # Act
         semver, githead = resolve_latest_version("owner", "linter", "token")
+
+        # Assert
         assert semver == "1.2.3"
         assert githead == "abcdef"
 
     @patch("ghwm.download_npm.urlopen")
-    def test_should_raise_error_when_http_fails(self, mock_urlopen: MagicMock) -> None:
+    def test_resolve_latest_version_should_raise_file_not_found_when_http_status_is_not_found(
+        self, mock_urlopen: MagicMock
+    ) -> None:
         # Arrange
         mock_urlopen.side_effect = HTTPError("url", HTTPStatus.NOT_FOUND, "Not Found", Message(), None)
 
-        # Act
+        # Act / Assert
         with pytest.raises(FileNotFoundError, match="not found in GitHub Packages"):
             resolve_latest_version("owner", "linter", "token")
 
     @patch("ghwm.download_npm.urlopen")
-    def test_should_raise_error_when_dist_tags_missing(self, mock_urlopen: MagicMock) -> None:
+    def test_resolve_latest_version_should_raise_runtime_error_when_dist_tags_map_is_missing(
+        self, mock_urlopen: MagicMock
+    ) -> None:
         # Arrange
         mock_response = MagicMock()
         mock_response.__enter__.return_value = mock_response
         mock_response.read.return_value = json.dumps({"versions": {}}).encode("utf-8")
         mock_urlopen.return_value = mock_response
 
-        # Act
+        # Act / Assert
         with pytest.raises(RuntimeError, match="missing 'dist-tags' map"):
             resolve_latest_version("owner", "linter", "token")
 
     @patch("ghwm.download_npm.urlopen")
-    def test_should_raise_error_when_latest_missing(self, mock_urlopen: MagicMock) -> None:
+    def test_resolve_latest_version_should_raise_runtime_error_when_latest_dist_tag_is_missing(
+        self, mock_urlopen: MagicMock
+    ) -> None:
         # Arrange
         mock_response = MagicMock()
         mock_response.__enter__.return_value = mock_response
         mock_response.read.return_value = json.dumps({"dist-tags": {}}).encode("utf-8")
         mock_urlopen.return_value = mock_response
 
-        # Act
+        # Act / Assert
         with pytest.raises(RuntimeError, match=r"missing dist-tags\.latest"):
             resolve_latest_version("owner", "linter", "token")
 
     @patch("ghwm.download_npm.urlopen")
-    def test_should_raise_error_when_versions_missing(self, mock_urlopen: MagicMock) -> None:
+    def test_resolve_latest_version_should_raise_runtime_error_when_versions_map_is_missing(
+        self, mock_urlopen: MagicMock
+    ) -> None:
         # Arrange
         mock_response = MagicMock()
         mock_response.__enter__.return_value = mock_response
         mock_response.read.return_value = json.dumps({"dist-tags": {"latest": "1.0.0"}}).encode("utf-8")
         mock_urlopen.return_value = mock_response
 
-        # Act
+        # Act / Assert
         with pytest.raises(RuntimeError, match="missing 'versions' map"):
             resolve_latest_version("owner", "linter", "token")
 
     @patch("ghwm.download_npm.urlopen")
-    def test_should_raise_error_when_package_version_missing(self, mock_urlopen: MagicMock) -> None:
+    def test_resolve_latest_version_should_raise_file_not_found_when_package_version_is_missing(
+        self, mock_urlopen: MagicMock
+    ) -> None:
         # Arrange
         mock_response = MagicMock()
         mock_response.__enter__.return_value = mock_response
         mock_response.read.return_value = json.dumps({"dist-tags": {"latest": "1.0.0"}, "versions": {}}).encode("utf-8")
         mock_urlopen.return_value = mock_response
 
-        # Act
+        # Act / Assert
         with pytest.raises(FileNotFoundError, match="Workflow package version not found"):
             resolve_latest_version("owner", "linter", "token")
 
     @patch("ghwm.download_npm.urlopen")
-    def test_should_raise_error_when_githead_missing(self, mock_urlopen: MagicMock) -> None:
+    def test_resolve_latest_version_should_raise_runtime_error_when_githead_is_missing(
+        self, mock_urlopen: MagicMock
+    ) -> None:
         # Arrange
         mock_response = MagicMock()
         mock_response.__enter__.return_value = mock_response
@@ -467,24 +486,141 @@ class TestResolveLatestVersion:
         ).encode("utf-8")
         mock_urlopen.return_value = mock_response
 
-        # Act
+        # Act / Assert
         with pytest.raises(RuntimeError, match="missing gitHead"):
             resolve_latest_version("owner", "linter", "token")
 
     @patch("ghwm.download_npm.urlopen")
-    def test_should_raise_error_when_http_401(self, mock_urlopen: MagicMock) -> None:
+    def test_resolve_latest_version_should_raise_runtime_error_when_http_status_is_unauthorized(
+        self, mock_urlopen: MagicMock
+    ) -> None:
         # Arrange
         mock_urlopen.side_effect = HTTPError("url", HTTPStatus.UNAUTHORIZED, "Unauthorized", Message(), None)
 
-        # Act
+        # Act / Assert
         with pytest.raises(RuntimeError):
             resolve_latest_version("owner", "linter", "token")
 
     @patch("ghwm.download_npm.urlopen")
-    def test_should_raise_error_when_http_500(self, mock_urlopen: MagicMock) -> None:
+    def test_resolve_latest_version_should_raise_http_error_when_http_status_is_server_error(
+        self, mock_urlopen: MagicMock
+    ) -> None:
         # Arrange
         mock_urlopen.side_effect = HTTPError("url", HTTPStatus.INTERNAL_SERVER_ERROR, "Server Error", Message(), None)
 
-        # Act
+        # Act / Assert
         with pytest.raises(HTTPError):
             resolve_latest_version("owner", "linter", "token")
+
+
+class TestExtractTarballMetadata:
+    def test_extract_tarball_metadata_should_extract_frontmatter_when_tarball_contains_manifest_and_frontmatter(
+        self, tmp_path: Path
+    ) -> None:
+        # Arrange
+        tarball_path = tmp_path / "package.tgz"
+        tarball_bytes = _make_tarball_bytes(
+            {
+                "package/workflow.yml": (
+                    "# ---\n"
+                    "# title: Super Linter\n"
+                    "# description: Lint all files\n"
+                    "# tags:\n"
+                    "#   - lint\n"
+                    "#   - ci\n"
+                    "# icon: fact_check\n"
+                    "# owner: ghwfxlab\n"
+                    "# ---\n"
+                    "name: linter\n"
+                    "files:\n"
+                    "  - source: linter.yaml\n"
+                    "    target: .github/workflows/linter.yaml\n"
+                ),
+                "package/package.json": '{"name": "@ghwfxlab/ghwm-linter", "version": "1.0.1"}',
+            }
+        )
+        tarball_path.write_bytes(tarball_bytes)
+
+        # Act
+        meta = extract_tarball_metadata(
+            tarball_path=tarball_path,
+            workflow_name="linter",
+            source="ghwfxlab/ghwm-registry",
+            version="1.0.1",
+            manifest_data={"files": [{"source": "linter.yaml", "target": ".github/workflows/linter.yaml"}]},
+        )
+
+        # Assert
+        assert meta["title"] == "Super Linter"
+        assert meta["description"] == "Lint all files"
+        assert meta["tags"] == ["lint", "ci"]
+        assert meta["icon"] == "fact_check"
+        assert meta["owner"] == "ghwfxlab"
+        assert meta["version"] == "1.0.1"
+
+    def test_extract_tarball_metadata_should_fallback_to_workflow_file_when_package_manifest_is_missing(
+        self, tmp_path: Path
+    ) -> None:
+        # Arrange: tarball with only a workflow target file, omitting workflow.yml and package.json
+        tarball_path = tmp_path / "minimal.tgz"
+        tarball_bytes = _make_tarball_bytes(
+            {
+                "package/custom.yaml": "# ---\n# title: Custom Flow\n# ---\nname: custom\n",
+            }
+        )
+        tarball_path.write_bytes(tarball_bytes)
+
+        # Act
+        meta = extract_tarball_metadata(
+            tarball_path=tarball_path,
+            workflow_name="custom",
+            source="owner/repo",
+            version="1.0.0",
+            manifest_data={
+                "files": [
+                    "not-a-dict",
+                    {"source": "config.json", "target": "config.json"},
+                    {"source": "custom.yaml", "target": ".github/workflows/custom.yaml"},
+                ]
+            },
+        )
+
+        # Assert
+        assert meta["title"] == "Custom Flow"
+
+    def test_extract_tarball_metadata_should_return_defaults_when_workflow_file_in_files_is_missing(
+        self, tmp_path: Path
+    ) -> None:
+        # Arrange: tarball where files has a non-existent source
+        tarball_path = tmp_path / "broken.tgz"
+        tarball_path.write_bytes(_make_tarball_bytes({}))
+
+        # Act
+        meta = extract_tarball_metadata(
+            tarball_path=tarball_path,
+            workflow_name="broken",
+            source="owner/repo",
+            version="1.0.0",
+            manifest_data={"files": [{"source": "does-not-exist.yaml", "target": ".github/workflows/broken.yaml"}]},
+        )
+
+        # Assert
+        assert meta["title"] is None
+
+    def test_extract_tarball_metadata_should_return_defaults_when_tarball_is_corrupted(self, tmp_path: Path) -> None:
+        # Arrange: invalid tarball file
+        corrupt_path = tmp_path / "corrupt.tgz"
+        corrupt_path.write_text("not a tarball")
+
+        # Act
+        meta = extract_tarball_metadata(
+            tarball_path=corrupt_path,
+            workflow_name="corrupt",
+            source="owner/repo",
+            version="1.0.0",
+            manifest_data={},
+        )
+
+        # Assert
+        assert meta["title"] is None
+        assert meta["source"] == "owner/repo"
