@@ -533,3 +533,42 @@ class TestExtractTarballMetadata:
         assert meta["icon"] == "fact_check"
         assert meta["owner"] == "ghwfxlab"
         assert meta["version"] == "1.0.1"
+
+    def test_extract_tarball_metadata_should_handle_missing_package_members(self, tmp_path: Path) -> None:
+        # Arrange: tarball with only a workflow target file, omitting workflow.yml and package.json
+        tarball_path = tmp_path / "minimal.tgz"
+        tarball_bytes = _make_tarball_bytes(
+            {
+                "package/custom.yaml": "# ---\n# title: Custom Flow\n# ---\nname: custom\n",
+            }
+        )
+        tarball_path.write_bytes(tarball_bytes)
+
+        # Act
+        meta = extract_tarball_metadata(
+            tarball_path=tarball_path,
+            workflow_name="custom",
+            source="owner/repo",
+            version="1.0.0",
+            manifest_data={"files": [{"source": "custom.yaml", "target": ".github/workflows/custom.yaml"}]},
+        )
+
+        # Assert
+        assert meta["title"] == "Custom Flow"
+
+    def test_extract_tarball_metadata_should_handle_missing_workflow_file_in_files(self, tmp_path: Path) -> None:
+        # Arrange: tarball where files has a non-existent source
+        tarball_path = tmp_path / "broken.tgz"
+        tarball_path.write_bytes(_make_tarball_bytes({}))
+
+        # Act
+        meta = extract_tarball_metadata(
+            tarball_path=tarball_path,
+            workflow_name="broken",
+            source="owner/repo",
+            version="1.0.0",
+            manifest_data={"files": [{"source": "does-not-exist.yaml", "target": ".github/workflows/broken.yaml"}]},
+        )
+
+        # Assert
+        assert meta["title"] is None

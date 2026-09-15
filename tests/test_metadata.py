@@ -60,6 +60,16 @@ class TestParseCommentedFrontmatter:
         # Assert
         assert result == {}
 
+    def test_parse_commented_frontmatter_should_extract_fields_when_delimiters_not_closed(self) -> None:
+        # Arrange
+        content = "# ---\n# title: Unclosed Frontmatter\n"
+
+        # Act
+        result = parse_commented_frontmatter(content)
+
+        # Assert
+        assert result["title"] == "Unclosed Frontmatter"
+
     def test_parse_commented_frontmatter_should_return_empty_dict_when_content_is_empty(self) -> None:
         # Arrange / Act / Assert
         assert parse_commented_frontmatter("") == {}
@@ -259,3 +269,13 @@ class TestExtractWorkflowMetadata:
         # Assert
         assert meta["description"] is None
 
+    def test_extract_workflow_metadata_should_ignore_package_json_when_not_a_dict(self) -> None:
+        # Arrange / Act
+        meta = extract_workflow_metadata(
+            workflow_name="flow",
+            source="owner/repo",
+            package_json_content='["item1", "item2"]',
+        )
+
+        # Assert
+        assert meta["description"] is None
