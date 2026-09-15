@@ -114,9 +114,7 @@ class TestReadFromTree:
         assert results[0].files[0].content == f"name: {AUTO_ASSIGN_PR}\n".encode()
         assert results[0].files[0].target == f".github/workflows/{AUTO_ASSIGN_PR}.yaml"
 
-    def test_read_from_tree_should_extract_metadata_when_package_contains_frontmatter(
-        self, tmp_path: Path
-    ) -> None:
+    def test_read_from_tree_should_extract_metadata_when_package_contains_frontmatter(self, tmp_path: Path) -> None:
         workflow_dir = tmp_path / "workflows" / LINTER
         workflow_dir.mkdir(parents=True)
         (workflow_dir / "workflow.yml").write_text(
@@ -135,9 +133,7 @@ class TestReadFromTree:
         (workflow_dir / "linter.yaml").write_text("name: linter\n")
         (workflow_dir / "package.json").write_text('{"version": "1.2.0"}')
 
-        results = read_from_tree(
-            tmp_path, Manifest(source=MARKETPLACE_SOURCE, workflows=[WorkflowEntry(name=LINTER)])
-        )
+        results = read_from_tree(tmp_path, Manifest(source=MARKETPLACE_SOURCE, workflows=[WorkflowEntry(name=LINTER)]))
 
         assert results[0].metadata is not None
         assert results[0].metadata["title"] == "Linter CI"
@@ -145,6 +141,23 @@ class TestReadFromTree:
         assert results[0].metadata["tags"] == ["lint"]
         assert results[0].metadata["icon"] == "task"
         assert results[0].metadata["version"] == "1.2.0"
+
+    def test_read_from_tree_should_extract_metadata_from_workflow_file_in_files_when_name_yaml_is_absent(
+        self, tmp_path: Path
+    ) -> None:
+        workflow_dir = tmp_path / "workflows" / "myflow"
+        workflow_dir.mkdir(parents=True)
+        (workflow_dir / "workflow.yml").write_text(
+            "name: myflow\nfiles:\n  - source: actions.yaml\n    target: .github/workflows/actions.yaml\n"
+        )
+        (workflow_dir / "actions.yaml").write_text("# ---\n# title: Action Flow\n# ---\nname: actions\n")
+
+        results = read_from_tree(
+            tmp_path, Manifest(source=MARKETPLACE_SOURCE, workflows=[WorkflowEntry(name="myflow")])
+        )
+
+        assert results[0].metadata is not None
+        assert results[0].metadata["title"] == "Action Flow"
 
     def test_read_from_tree_should_raise_when_workflow_manifest_is_missing(self, tmp_path: Path) -> None:
         workflow_dir = tmp_path / "workflows" / LINTER
@@ -198,6 +211,9 @@ class TestDownloadWorkflowsRemote:
             )
 
         assert results[0].package_name == LINTER_PACKAGE_SOURCE
+        assert results[0].metadata is not None
+        assert results[0].metadata["source"] == MARKETPLACE_SOURCE
+        assert results[0].metadata["version"] == VERSION_1
         mock_download.assert_called_once_with("owner", LINTER, VERSION_1, ANY, "token")
 
     def test_download_workflows_with_missing_version_defaults_to_latest(self) -> None:
