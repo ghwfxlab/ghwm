@@ -148,8 +148,14 @@ class TestReadFromTree:
         workflow_dir = tmp_path / "workflows" / "myflow"
         workflow_dir.mkdir(parents=True)
         (workflow_dir / "workflow.yml").write_text(
-            "name: myflow\nfiles:\n  - source: actions.yaml\n    target: .github/workflows/actions.yaml\n"
+            "name: myflow\n"
+            "files:\n"
+            "  - source: config.json\n"
+            "    target: config.json\n"
+            "  - source: actions.yaml\n"
+            "    target: .github/workflows/actions.yaml\n"
         )
+        (workflow_dir / "config.json").write_text("{}")
         (workflow_dir / "actions.yaml").write_text("# ---\n# title: Action Flow\n# ---\nname: actions\n")
 
         results = read_from_tree(
@@ -158,6 +164,21 @@ class TestReadFromTree:
 
         assert results[0].metadata is not None
         assert results[0].metadata["title"] == "Action Flow"
+
+    def test_read_from_tree_should_handle_package_with_no_workflow_target_files(self, tmp_path: Path) -> None:
+        workflow_dir = tmp_path / "workflows" / "onlyconfig"
+        workflow_dir.mkdir(parents=True)
+        (workflow_dir / "workflow.yml").write_text(
+            "name: onlyconfig\nfiles:\n  - source: config.json\n    target: config.json\n"
+        )
+        (workflow_dir / "config.json").write_text("{}")
+
+        results = read_from_tree(
+            tmp_path, Manifest(source=MARKETPLACE_SOURCE, workflows=[WorkflowEntry(name="onlyconfig")])
+        )
+
+        assert results[0].metadata is not None
+        assert results[0].metadata["title"] is None
 
     def test_read_from_tree_should_raise_when_workflow_manifest_is_missing(self, tmp_path: Path) -> None:
         workflow_dir = tmp_path / "workflows" / LINTER
