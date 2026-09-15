@@ -550,7 +550,13 @@ class TestExtractTarballMetadata:
             workflow_name="custom",
             source="owner/repo",
             version="1.0.0",
-            manifest_data={"files": [{"source": "custom.yaml", "target": ".github/workflows/custom.yaml"}]},
+            manifest_data={
+                "files": [
+                    "not-a-dict",
+                    {"source": "config.json", "target": "config.json"},
+                    {"source": "custom.yaml", "target": ".github/workflows/custom.yaml"},
+                ]
+            },
         )
 
         # Assert
@@ -572,3 +578,21 @@ class TestExtractTarballMetadata:
 
         # Assert
         assert meta["title"] is None
+
+    def test_extract_tarball_metadata_should_handle_corrupted_tarball(self, tmp_path: Path) -> None:
+        # Arrange: invalid tarball file
+        corrupt_path = tmp_path / "corrupt.tgz"
+        corrupt_path.write_text("not a tarball")
+
+        # Act
+        meta = extract_tarball_metadata(
+            tarball_path=corrupt_path,
+            workflow_name="corrupt",
+            source="owner/repo",
+            version="1.0.0",
+            manifest_data={},
+        )
+
+        # Assert
+        assert meta["title"] is None
+        assert meta["source"] == "owner/repo"

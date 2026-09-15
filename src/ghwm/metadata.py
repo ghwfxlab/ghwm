@@ -16,29 +16,25 @@ def parse_commented_frontmatter(content: str) -> dict[str, Any]:
     lines = content.splitlines()
     comment_lines: list[str] = []
     in_delimited_block = False
-    has_delimiters = False
 
     for line in lines:
         trimmed = line.strip()
         if trimmed == "# ---":
             if not in_delimited_block:
                 in_delimited_block = True
-                has_delimiters = True
                 continue
-            else:
-                break
+            break
 
         if in_delimited_block:
             comment_lines.append(line.removeprefix("# ").removeprefix("#"))
             continue
 
-        if not has_delimiters:
-            if trimmed.startswith("#"):
-                comment_lines.append(line.removeprefix("# ").removeprefix("#"))
-            elif trimmed == "":
-                continue
-            else:
-                break
+        if trimmed.startswith("#"):
+            comment_lines.append(line.removeprefix("# ").removeprefix("#"))
+        elif trimmed == "":
+            continue
+        else:
+            break
 
     if not comment_lines:
         return {}
@@ -102,7 +98,8 @@ def extract_workflow_metadata(
             if isinstance(parsed_pkg, dict):
                 pkg_data = parsed_pkg
         except (json.JSONDecodeError, UnicodeDecodeError):
-            pass
+            # Malformed or unreadable package.json is ignored; fallback to frontmatter/manifest
+            pkg_data = {}
 
     default_owner = source.split("/", 1)[0] if "/" in source else None
 

@@ -254,8 +254,10 @@ def extract_tarball_metadata(
                             )
                             break
                         except FileNotFoundError:
-                            pass
+                            # Primary workflow file might be missing or under a different name
+                            workflow_file_content = None
     except (tarfile.TarError, FileNotFoundError, OSError):
+        # Corrupted or unreadable tarball falls back to default metadata
         pass
 
     return extract_workflow_metadata(
