@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import cast
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -818,9 +818,7 @@ class TestTelemetry:
         assert install_call.kwargs["metadata"]["version"] == VERSION_1_2_3
         assert install_call.kwargs["metadata"]["source"] == MARKETPLACE_SOURCE
 
-    def test_install_workflows_should_include_enriched_metadata_from_package_frontmatter(
-        self, tmp_path: Path
-    ) -> None:
+    def test_install_workflows_should_include_enriched_metadata_from_package_frontmatter(self, tmp_path: Path) -> None:
         # Arrange
         marketplace = tmp_path / "marketplace"
         consumer = tmp_path / "consumer"
@@ -925,3 +923,13 @@ class TestTelemetry:
         assert len(mock_track.call_args_list) == 1
         assert mock_track.call_args_list[0].kwargs["source"] == custom_source
         assert mock_track.call_args_list[0].kwargs["metadata"]["source"] == custom_source
+
+    def test_emit_telemetry_should_suppress_unexpected_exceptions_when_failure_occurs(self) -> None:
+        # Arrange
+        from ghwm.install import InstallResult, _emit_telemetry
+
+        manifest = MagicMock()
+        manifest.workflows = None
+
+        # Act & Assert: should safely return without propagating exception
+        _emit_telemetry("owner/repo", manifest, InstallResult(installed=["test"], updated=[], pruned=[], skipped=[]))

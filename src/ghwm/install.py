@@ -105,16 +105,11 @@ def _emit_telemetry(
         workflow_sources_map = workflow_sources or {}
         public_cache: dict[tuple[str, str], bool] = {}
 
-        events = [(name, "install") for name in result.installed] + [
-            (name, "updated") for name in result.updated
-        ]
+        events = [(name, "install") for name in result.installed] + [(name, "updated") for name in result.updated]
 
         for name, event_type in events:
             entry = entry_by_name.get(name)
-            workflow_source_str = (
-                (entry.source if entry and entry.source else None)
-                or source
-            )
+            workflow_source_str = (entry.source if entry and entry.source else None) or source
             try:
                 owner, repo = workflow_source_str.split("/", 1)
             except (ValueError, AttributeError):

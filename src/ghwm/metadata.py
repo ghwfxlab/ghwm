@@ -29,22 +29,12 @@ def parse_commented_frontmatter(content: str) -> dict[str, Any]:
                 break
 
         if in_delimited_block:
-            if line.startswith("# "):
-                comment_lines.append(line[2:])
-            elif line.startswith("#"):
-                comment_lines.append(line[1:])
-            else:
-                comment_lines.append(line)
+            comment_lines.append(line.removeprefix("# ").removeprefix("#"))
             continue
 
         if not has_delimiters:
             if trimmed.startswith("#"):
-                if line.startswith("# "):
-                    comment_lines.append(line[2:])
-                elif line.startswith("#"):
-                    comment_lines.append(line[1:])
-                else:
-                    comment_lines.append(line)
+                comment_lines.append(line.removeprefix("# ").removeprefix("#"))
             elif trimmed == "":
                 continue
             else:
@@ -67,16 +57,8 @@ def parse_tags(raw_tags: Any) -> list[str]:
     elif isinstance(raw_tags, str):
         trimmed = raw_tags.strip()
         if trimmed.startswith("[") and trimmed.endswith("]"):
-            try:
-                loaded = json.loads(trimmed)
-                if isinstance(loaded, list):
-                    parsed = [str(item).strip() for item in loaded if str(item).strip()]
-                else:
-                    parsed = [item.strip() for item in trimmed[1:-1].split(",") if item.strip()]
-            except json.JSONDecodeError:
-                parsed = [item.strip() for item in trimmed[1:-1].split(",") if item.strip()]
-        else:
-            parsed = [item.strip() for item in raw_tags.split(",") if item.strip()]
+            trimmed = trimmed[1:-1]
+        parsed = [item.strip().strip("'\"") for item in trimmed.split(",") if item.strip().strip("'\"")]
     else:
         return []
 
@@ -135,35 +117,25 @@ def extract_workflow_metadata(
     )
     description = _trim_optional_str(raw_description, 2048)
 
-    raw_tags = (
-        frontmatter.get("tags")
-        or manifest_keys.get("tags")
-        or (repo_info.get("topics") if repo_info else None)
-    )
+    raw_tags = frontmatter.get("tags") or manifest_keys.get("tags") or (repo_info.get("topics") if repo_info else None)
     tags = parse_tags(raw_tags)
 
     raw_icon = frontmatter.get("icon") or manifest_keys.get("icon")
     icon = _trim_optional_str(raw_icon, 64)
 
-    raw_owner = (
-        frontmatter.get("owner")
-        or manifest_keys.get("owner")
-        or default_owner
-    )
+    raw_owner = frontmatter.get("owner") or manifest_keys.get("owner") or default_owner
     owner = _trim_optional_str(raw_owner, 128)
 
-    raw_version = (
-        version
-        or frontmatter.get("version")
-        or manifest_keys.get("version")
-        or pkg_data.get("version")
-    )
+    raw_version = version or frontmatter.get("version") or manifest_keys.get("version") or pkg_data.get("version")
     clean_version = _trim_optional_str(raw_version, 64)
 
-    clean_source = _trim_optional_str(
-        frontmatter.get("source") or frontmatter.get("source_url") or source,
-        512,
-    ) or source
+    clean_source = (
+        _trim_optional_str(
+            frontmatter.get("source") or frontmatter.get("source_url") or source,
+            512,
+        )
+        or source
+    )
 
     metadata: dict[str, Any] = {
         "title": title,
