@@ -796,7 +796,9 @@ class TestTelemetry:
         assert "updated" in event_types
         assert "install" not in event_types
 
-    def test_install_workflows_should_include_version_in_telemetry_event(self, tmp_path: Path) -> None:
+    def test_install_workflows_should_include_version_in_telemetry_event_when_workflow_is_installed(
+        self, tmp_path: Path
+    ) -> None:
         # Arrange
         marketplace = tmp_path / "marketplace"
         consumer = tmp_path / "consumer"
@@ -818,7 +820,9 @@ class TestTelemetry:
         assert install_call.kwargs["metadata"]["version"] == VERSION_1_2_3
         assert install_call.kwargs["metadata"]["source"] == MARKETPLACE_SOURCE
 
-    def test_install_workflows_should_include_enriched_metadata_from_package_frontmatter(self, tmp_path: Path) -> None:
+    def test_install_workflows_should_include_enriched_metadata_in_telemetry_when_package_has_frontmatter(
+        self, tmp_path: Path
+    ) -> None:
         # Arrange
         marketplace = tmp_path / "marketplace"
         consumer = tmp_path / "consumer"
@@ -859,7 +863,7 @@ class TestTelemetry:
         assert meta["owner"] == "custom-owner"
         assert meta["source"] == MARKETPLACE_SOURCE
 
-    def test_install_workflows_should_isolate_mixed_manifest_and_never_leak_private_workflow(
+    def test_install_workflows_should_isolate_mixed_manifest_and_never_leak_private_workflow_when_registry_is_private(
         self, tmp_path: Path
     ) -> None:
         # Arrange

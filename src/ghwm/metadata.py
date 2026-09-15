@@ -58,7 +58,7 @@ def parse_tags(raw_tags: Any) -> list[str]:
     else:
         return []
 
-    return [t[:64] for t in parsed[:20]]
+    return [tag[:64] for tag in parsed[:20]]
 
 
 def _trim_optional_str(value: Any, max_len: int) -> str | None:

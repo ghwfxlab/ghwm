@@ -78,7 +78,7 @@ class TestIsPublicRepository:
         # Assert
         assert result is False
 
-    def test_is_public_repository_should_return_false_on_network_error(self) -> None:
+    def test_is_public_repository_should_return_false_when_network_error_occurs(self) -> None:
         # Arrange / Act
         with patch("ghwm.telemetry.urlopen", side_effect=URLError("Connection refused")):
             result = is_public_repository("owner", "some-repo")
@@ -86,7 +86,7 @@ class TestIsPublicRepository:
         # Assert
         assert result is False
 
-    def test_is_public_repository_should_return_false_on_malformed_json_response(self) -> None:
+    def test_is_public_repository_should_return_false_when_json_response_is_malformed(self) -> None:
         # Arrange / Act
         with patch("ghwm.telemetry.urlopen", return_value=_mock_http_response(b"not-json")):
             result = is_public_repository("owner", "some-repo")
@@ -94,7 +94,7 @@ class TestIsPublicRepository:
         # Assert
         assert result is False
 
-    def test_is_public_repository_should_not_include_auth_header_in_request(self) -> None:
+    def test_is_public_repository_should_omit_auth_header_when_request_is_sent(self) -> None:
         # Arrange
         response_body = json.dumps({"private": False}).encode()
 
@@ -114,7 +114,7 @@ class TestIsPublicRepositoryIntegration:
     """Integration tests that call the real GitHub API without authentication."""
 
     @pytest.mark.integration
-    def test_is_public_repository_should_return_true_for_known_public_repo(self) -> None:
+    def test_is_public_repository_should_return_true_when_repository_is_public(self) -> None:
         # Arrange / Act
         result = is_public_repository("ghwfxlab", "ghwm")
 
@@ -122,7 +122,7 @@ class TestIsPublicRepositoryIntegration:
         assert result is True
 
     @pytest.mark.integration
-    def test_is_public_repository_should_return_false_for_known_private_repo(self) -> None:
+    def test_is_public_repository_should_return_false_when_repository_is_private(self) -> None:
         # Arrange / Act
         result = is_public_repository("ghwfxlab", "ghwm-test-private")
 
@@ -130,7 +130,7 @@ class TestIsPublicRepositoryIntegration:
         assert result is False
 
     @pytest.mark.integration
-    def test_is_public_repository_should_return_false_for_nonexistent_repo(self) -> None:
+    def test_is_public_repository_should_return_false_when_repository_does_not_exist(self) -> None:
         # Arrange / Act
         result = is_public_repository("ghwfxlab", "does-not-exist-xyz-telemetry-test")
 
@@ -165,7 +165,7 @@ class TestGetPublicRepositoryInfo:
         assert is_pub is False
         assert repo_data == {}
 
-    def test_get_public_repository_info_should_return_false_on_http_error(self) -> None:
+    def test_get_public_repository_info_should_return_false_when_http_error_occurs(self) -> None:
         # Arrange
         not_found = HTTPError(url=None, code=404, msg="Not Found", hdrs=None, fp=None)  # type: ignore[arg-type]
 
@@ -179,7 +179,7 @@ class TestGetPublicRepositoryInfo:
 
 
 class TestTrackInstallation:
-    def test_track_installation_should_be_a_noop_stub(self) -> None:
+    def test_track_installation_should_act_as_noop_when_invoked(self) -> None:
         # Arrange / Act / Assert: must not raise regardless of inputs
         track_installation(
             source="owner/ghwm-registry",
@@ -194,7 +194,7 @@ class TestTrackInstallation:
             event_type="run",
         )
 
-    def test_track_installation_should_accept_enriched_metadata_dictionary(self) -> None:
+    def test_track_installation_should_accept_enriched_metadata_when_metadata_is_provided(self) -> None:
         # Arrange
         metadata = {
             "title": "Super-Linter",
