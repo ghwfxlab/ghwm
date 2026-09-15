@@ -114,6 +114,38 @@ class TestReadFromTree:
         assert results[0].files[0].content == f"name: {AUTO_ASSIGN_PR}\n".encode()
         assert results[0].files[0].target == f".github/workflows/{AUTO_ASSIGN_PR}.yaml"
 
+    def test_read_from_tree_should_extract_metadata_when_package_contains_frontmatter(
+        self, tmp_path: Path
+    ) -> None:
+        workflow_dir = tmp_path / "workflows" / LINTER
+        workflow_dir.mkdir(parents=True)
+        (workflow_dir / "workflow.yml").write_text(
+            "# ---\n"
+            "# title: Linter CI\n"
+            "# description: Fast linting\n"
+            "# tags:\n"
+            "#   - lint\n"
+            "# icon: task\n"
+            "# ---\n"
+            "name: linter\n"
+            "files:\n"
+            "  - source: linter.yaml\n"
+            "    target: .github/workflows/linter.yaml\n"
+        )
+        (workflow_dir / "linter.yaml").write_text("name: linter\n")
+        (workflow_dir / "package.json").write_text('{"version": "1.2.0"}')
+
+        results = read_from_tree(
+            tmp_path, Manifest(source=MARKETPLACE_SOURCE, workflows=[WorkflowEntry(name=LINTER)])
+        )
+
+        assert results[0].metadata is not None
+        assert results[0].metadata["title"] == "Linter CI"
+        assert results[0].metadata["description"] == "Fast linting"
+        assert results[0].metadata["tags"] == ["lint"]
+        assert results[0].metadata["icon"] == "task"
+        assert results[0].metadata["version"] == "1.2.0"
+
     def test_read_from_tree_should_raise_when_workflow_manifest_is_missing(self, tmp_path: Path) -> None:
         workflow_dir = tmp_path / "workflows" / LINTER
         workflow_dir.mkdir(parents=True)

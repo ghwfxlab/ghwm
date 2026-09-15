@@ -185,7 +185,7 @@ def rewrite_manifest_versions(cwd: Path, manifest_path: str, resolved: dict[str,
         if m_name:
             if current_workflow and current_workflow in resolved:
                 # Inject missing version before adding the new name line
-                semver, githead = resolved[current_workflow]
+                semver, _ = resolved[current_workflow]
                 out_lines.append(f'{name_indent}  version: "{semver}"')
                 del resolved[current_workflow]
 
@@ -198,7 +198,7 @@ def rewrite_manifest_versions(cwd: Path, manifest_path: str, resolved: dict[str,
             m_ver = re.match(r"^(\s*version:\s*).*$", line)
             if m_ver:
                 prefix = m_ver.group(1)
-                semver, githead = resolved[current_workflow]
+                semver, _ = resolved[current_workflow]
                 out_lines.append(f'{prefix}"{semver}"')
                 del resolved[current_workflow]
                 current_workflow = None
@@ -207,7 +207,7 @@ def rewrite_manifest_versions(cwd: Path, manifest_path: str, resolved: dict[str,
         out_lines.append(line)
 
     if current_workflow and current_workflow in resolved:
-        semver, githead = resolved[current_workflow]
+        semver, _ = resolved[current_workflow]
         out_lines.append(f'{name_indent}  version: "{semver}"')
 
     file_path.write_text("\n".join(out_lines) + "\n", encoding="utf-8")

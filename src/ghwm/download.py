@@ -8,6 +8,7 @@ import subprocess
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 import yaml
 
@@ -16,10 +17,12 @@ from ghwm.download_npm import (
     build_installed_files,
     download_npm_tarball,
     extract_npm_package,
+    extract_tarball_metadata,
     parse_workflow_manifest_data,
     read_workflow_manifest,
 )
 from ghwm.manifest import Manifest
+from ghwm.metadata import extract_workflow_metadata
 from ghwm.package_names import scoped_package_name
 from ghwm.paths import safe_resolve_path
 
@@ -31,6 +34,7 @@ class WorkflowSource:
     name: str
     package_name: str
     files: list[InstalledFile]
+    metadata: dict[str, Any] | None = None
 
 
 def gh_cli_available() -> bool:
@@ -83,11 +87,19 @@ def download_workflows(
             temp_dir = Path(tmpdir)
             tarball_path = download_npm_tarball(owner, entry.name, version, temp_dir, token)
             manifest_data = read_workflow_manifest(tarball_path)
+            metadata = extract_tarball_metadata(
+                tarball_path,
+                workflow_name=entry.name,
+                source=entry_source,
+                version=version,
+                manifest_data=manifest_data,
+            )
             results.append(
                 WorkflowSource(
                     name=entry.name,
                     package_name=scoped_package_name(owner, entry.name),
                     files=extract_npm_package(tarball_path, manifest_data),
+                    metadata=metadata,
                 )
             )
 
@@ -116,18 +128,45 @@ def read_from_tree(repo_root: Path, manifest: Manifest) -> list[WorkflowSource]:
         if not manifest_path.is_file():
             raise FileNotFoundError(f"Workflow package manifest not found: workflows/{name}/workflow.yml")
 
-        manifest_data = parse_workflow_manifest_data(yaml.safe_load(manifest_path.read_text(encoding="utf-8")))
+        manifest_text = manifest_path.read_text(encoding="utf-8")
+        manifest_data = parse_workflow_manifest_data(yaml.safe_load(manifest_text))
 
         def read_file(file_source: str, workflow_dir: Path = workflow_dir, name: str = name) -> bytes:
             return _read_local_package_file(workflow_dir, name, file_source)
 
         files = build_installed_files(manifest_data, read_file)
 
+        pkg_json_path = workflow_dir / "package.json"
+        pkg_json_content = pkg_json_path.read_text(encoding="utf-8") if pkg_json_path.is_file() else None
+
+        workflow_file_content: str | None = None
+        for candidate_name in (f"{name}.yaml", f"{name}.yml"):
+            candidate_path = workflow_dir / candidate_name
+            if candidate_path.is_file():
+                workflow_file_content = candidate_path.read_text(encoding="utf-8")
+                break
+        if not workflow_file_content:
+            for installed_file in files:
+                if installed_file.target.startswith(".github/workflows/"):
+                    workflow_file_content = installed_file.content.decode("utf-8", errors="replace")
+                    break
+
+        metadata = extract_workflow_metadata(
+            workflow_name=name,
+            source=entry_source,
+            version=entry.version,
+            workflow_yml_content=manifest_text,
+            workflow_file_content=workflow_file_content,
+            package_json_content=pkg_json_content,
+            manifest_data=manifest_data,
+        )
+
         results.append(
             WorkflowSource(
                 name=name,
                 package_name=scoped_package_name(owner, name),
                 files=files,
+                metadata=metadata,
             )
         )
 
