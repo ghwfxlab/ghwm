@@ -16,6 +16,7 @@ from urllib.request import Request, urlopen
 
 import yaml
 
+from ghwm.metadata import extract_workflow_metadata
 from ghwm.package_names import scoped_package_name
 
 REGISTRY_URL = "https://npm.pkg.github.com"
@@ -216,3 +217,53 @@ def extract_npm_package(tarball_path: Path, manifest_data: dict[str, Any]) -> li
             manifest_data,
             lambda source: _read_tar_member(tar, f"package/{source}"),
         )
+
+
+def extract_tarball_metadata(
+    tarball_path: Path,
+    workflow_name: str,
+    source: str,
+    version: str | None,
+    manifest_data: dict[str, Any],
+) -> dict[str, Any]:
+    """Extract metadata for a workflow package from an npm tarball."""
+    workflow_yml_content: str | None = None
+    package_json_content: str | None = None
+    workflow_file_content: str | None = None
+
+    try:
+        with tarfile.open(tarball_path, "r:gz") as tar:
+            try:
+                workflow_yml_content = _read_tar_member(tar, "package/workflow.yml").decode("utf-8", errors="replace")
+            except FileNotFoundError:
+                workflow_yml_content = None
+
+            try:
+                package_json_content = _read_tar_member(tar, "package/package.json").decode("utf-8", errors="replace")
+            except FileNotFoundError:
+                package_json_content = None
+
+            for raw_file in manifest_data.get("files", []):
+                if isinstance(raw_file, dict):
+                    src = raw_file.get("source")
+                    tgt = raw_file.get("target")
+                    if isinstance(src, str) and isinstance(tgt, str) and tgt.startswith(".github/workflows/"):
+                        try:
+                            workflow_file_content = _read_tar_member(tar, f"package/{src}").decode(
+                                "utf-8", errors="replace"
+                            )
+                            break
+                        except FileNotFoundError:
+                            pass
+    except (tarfile.TarError, FileNotFoundError, OSError):
+        pass
+
+    return extract_workflow_metadata(
+        workflow_name=workflow_name,
+        source=source,
+        version=version,
+        workflow_yml_content=workflow_yml_content,
+        workflow_file_content=workflow_file_content,
+        package_json_content=package_json_content,
+        manifest_data=manifest_data,
+    )

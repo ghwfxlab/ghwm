@@ -18,6 +18,7 @@ from ghwm.download_npm import (
     build_installed_files,
     download_npm_tarball,
     extract_npm_package,
+    extract_tarball_metadata,
     manifest_files,
     npm_package_metadata_url,
     npm_tarball_url,
@@ -488,3 +489,47 @@ class TestResolveLatestVersion:
         # Act
         with pytest.raises(HTTPError):
             resolve_latest_version("owner", "linter", "token")
+
+
+class TestExtractTarballMetadata:
+    def test_extract_tarball_metadata_should_extract_frontmatter_from_tarball(self, tmp_path: Path) -> None:
+        # Arrange
+        tarball_path = tmp_path / "package.tgz"
+        tarball_bytes = _make_tarball_bytes(
+            {
+                "package/workflow.yml": (
+                    "# ---\n"
+                    "# title: Super Linter\n"
+                    "# description: Lint all files\n"
+                    "# tags:\n"
+                    "#   - lint\n"
+                    "#   - ci\n"
+                    "# icon: fact_check\n"
+                    "# owner: ghwfxlab\n"
+                    "# ---\n"
+                    "name: linter\n"
+                    "files:\n"
+                    "  - source: linter.yaml\n"
+                    "    target: .github/workflows/linter.yaml\n"
+                ),
+                "package/package.json": '{"name": "@ghwfxlab/ghwm-linter", "version": "1.0.1"}',
+            }
+        )
+        tarball_path.write_bytes(tarball_bytes)
+
+        # Act
+        meta = extract_tarball_metadata(
+            tarball_path=tarball_path,
+            workflow_name="linter",
+            source="ghwfxlab/ghwm-registry",
+            version="1.0.1",
+            manifest_data={"files": [{"source": "linter.yaml", "target": ".github/workflows/linter.yaml"}]},
+        )
+
+        # Assert
+        assert meta["title"] == "Super Linter"
+        assert meta["description"] == "Lint all files"
+        assert meta["tags"] == ["lint", "ci"]
+        assert meta["icon"] == "fact_check"
+        assert meta["owner"] == "ghwfxlab"
+        assert meta["version"] == "1.0.1"
