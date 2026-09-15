@@ -93,14 +93,14 @@ class TestParseTags:
         # Assert
         assert result == ["lint", "actions", "pre-commit"]
 
-    def test_parse_tags_should_split_comma_separated_string(self) -> None:
+    def test_parse_tags_should_split_tags_when_input_is_comma_separated_string(self) -> None:
         # Arrange / Act
         result = parse_tags("lint, actions, pre-commit")
 
         # Assert
         assert result == ["lint", "actions", "pre-commit"]
 
-    def test_parse_tags_should_parse_json_array_string(self) -> None:
+    def test_parse_tags_should_parse_tags_when_input_is_json_array_string(self) -> None:
         # Arrange / Act
         result = parse_tags('["lint", "actions"]')
 
@@ -113,7 +113,7 @@ class TestParseTags:
         assert parse_tags("") == []
         assert parse_tags([]) == []
 
-    def test_parse_tags_should_cap_at_twenty_tags(self) -> None:
+    def test_parse_tags_should_cap_at_twenty_tags_when_input_exceeds_limit(self) -> None:
         # Arrange
         many_tags = [f"tag-{i}" for i in range(25)]
 
@@ -196,7 +196,7 @@ class TestExtractWorkflowMetadata:
         assert meta["tags"] == ["actions", "automation"]
         assert meta["owner"] == "google-github-actions"
 
-    def test_extract_workflow_metadata_should_safely_handle_completely_empty_sources(self) -> None:
+    def test_extract_workflow_metadata_should_return_defaults_when_sources_are_empty(self) -> None:
         # Arrange / Act
         meta = extract_workflow_metadata(
             workflow_name="minimal",
@@ -235,7 +235,7 @@ class TestExtractWorkflowMetadata:
         assert meta["title"] == "Main Flow"
         assert meta["description"] == "Main pipeline"
 
-    def test_extract_workflow_metadata_should_read_manifest_keys_and_created_at(self) -> None:
+    def test_extract_workflow_metadata_should_read_manifest_keys_and_created_at_when_both_are_present(self) -> None:
         # Arrange
         frontmatter = "# ---\n# createdAt: '2026-09-08T12:00:00Z'\n# ---\nname: flow\n"
         manifest_data = {
@@ -258,7 +258,7 @@ class TestExtractWorkflowMetadata:
         assert meta["tags"] == ["ci", "cd"]
         assert meta["created_at"] == "2026-09-08T12:00:00Z"
 
-    def test_extract_workflow_metadata_should_ignore_invalid_package_json(self) -> None:
+    def test_extract_workflow_metadata_should_ignore_package_json_when_json_is_invalid(self) -> None:
         # Arrange / Act
         meta = extract_workflow_metadata(
             workflow_name="flow",

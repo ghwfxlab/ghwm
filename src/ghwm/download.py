@@ -111,6 +111,43 @@ def read_local(local_path: Path, manifest: Manifest) -> list[WorkflowSource]:
     return read_from_tree(local_path, manifest)
 
 
+def _extract_local_workflow_metadata(
+    *,
+    workflow_dir: Path,
+    name: str,
+    entry_source: str,
+    version: str | None,
+    manifest_text: str,
+    manifest_data: dict[str, Any],
+    files: list[InstalledFile],
+) -> dict[str, Any]:
+    """Extract metadata for a local workflow package from its directory and files."""
+    pkg_json_path = workflow_dir / "package.json"
+    pkg_json_content = pkg_json_path.read_text(encoding="utf-8") if pkg_json_path.is_file() else None
+
+    workflow_file_content: str | None = None
+    for candidate_name in (f"{name}.yaml", f"{name}.yml"):
+        candidate_path = workflow_dir / candidate_name
+        if candidate_path.is_file():
+            workflow_file_content = candidate_path.read_text(encoding="utf-8")
+            break
+    if not workflow_file_content:
+        for installed_file in files:
+            if installed_file.target.startswith(".github/workflows/"):
+                workflow_file_content = installed_file.content.decode("utf-8", errors="replace")
+                break
+
+    return extract_workflow_metadata(
+        workflow_name=name,
+        source=entry_source,
+        version=version,
+        workflow_yml_content=manifest_text,
+        workflow_file_content=workflow_file_content,
+        package_json_content=pkg_json_content,
+        manifest_data=manifest_data,
+    )
+
+
 def read_from_tree(repo_root: Path, manifest: Manifest) -> list[WorkflowSource]:
     """Read workflow packages from a local repository tree."""
     workflows_dir = repo_root / "workflows"
@@ -136,29 +173,14 @@ def read_from_tree(repo_root: Path, manifest: Manifest) -> list[WorkflowSource]:
 
         files = build_installed_files(manifest_data, read_file)
 
-        pkg_json_path = workflow_dir / "package.json"
-        pkg_json_content = pkg_json_path.read_text(encoding="utf-8") if pkg_json_path.is_file() else None
-
-        workflow_file_content: str | None = None
-        for candidate_name in (f"{name}.yaml", f"{name}.yml"):
-            candidate_path = workflow_dir / candidate_name
-            if candidate_path.is_file():
-                workflow_file_content = candidate_path.read_text(encoding="utf-8")
-                break
-        if not workflow_file_content:
-            for installed_file in files:
-                if installed_file.target.startswith(".github/workflows/"):
-                    workflow_file_content = installed_file.content.decode("utf-8", errors="replace")
-                    break
-
-        metadata = extract_workflow_metadata(
-            workflow_name=name,
-            source=entry_source,
+        metadata = _extract_local_workflow_metadata(
+            workflow_dir=workflow_dir,
+            name=name,
+            entry_source=entry_source,
             version=entry.version,
-            workflow_yml_content=manifest_text,
-            workflow_file_content=workflow_file_content,
-            package_json_content=pkg_json_content,
+            manifest_text=manifest_text,
             manifest_data=manifest_data,
+            files=files,
         )
 
         results.append(
