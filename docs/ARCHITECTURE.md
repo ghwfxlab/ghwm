@@ -94,6 +94,8 @@ C4Component
 | `lock.py`          | Read and write `ghwm.lock` (JSON); in-memory lockfile operations            |
 | `package_names.py` | Helpers to compute scoped npm package names from org and workflow name      |
 | `paths.py`         | Path security utilities including path traversal checks                     |
+| `metadata.py`      | Package metadata extraction from frontmatter, manifests, and package.json   |
+| `telemetry.py`     | Privacy-gated anonymous usage telemetry and registry visibility checks      |
 
 ## Workflow lifecycle
 

@@ -161,7 +161,7 @@ class TestReadFromTree:
         assert results[0].metadata["icon"] == "task"
         assert results[0].metadata["version"] == "1.2.0"
 
-    def test_read_from_tree_should_extract_metadata_from_workflow_file_in_files_when_name_yaml_is_absent(
+    def test_read_from_tree_should_extract_metadata_from_workflow_target_file_when_declared_in_manifest(
         self, tmp_path: Path
     ) -> None:
         # Arrange
