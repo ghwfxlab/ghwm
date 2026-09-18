@@ -58,10 +58,12 @@ def parse_tags(raw_tags: Any) -> list[str]:
     else:
         return []
 
-    return [tag[:64] for tag in parsed[:20]]
+    unique_tags = list(dict.fromkeys(parsed))
+    return [tag[:64] for tag in unique_tags[:20]]
 
 
 def _trim_optional_str(value: Any, max_len: int) -> str | None:
+    """Trim string representation of value to max_len; return None if falsy or empty."""
     if value is None:
         return None
     trimmed = str(value).strip()
@@ -69,7 +71,6 @@ def _trim_optional_str(value: Any, max_len: int) -> str | None:
 
 
 def extract_workflow_metadata(
-    workflow_name: str,
     source: str,
     *,
     version: str | None = None,
@@ -77,9 +78,15 @@ def extract_workflow_metadata(
     workflow_file_content: str | None = None,
     package_json_content: str | None = None,
     manifest_data: dict[str, Any] | None = None,
-    repo_info: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Extract structured metadata for a workflow from package files and defaults."""
+    """Extract structured metadata for a workflow package.
+
+    Resolution precedence for fields:
+    1. Commented YAML frontmatter in ``workflow.yml`` (or workflow file)
+    2. Parsed manifest keys in ``workflow.yml``
+    3. ``package.json`` fields (description, version)
+    4. Sane defaults based on ``source`` and ``version``
+    """
     frontmatter: dict[str, Any] = {}
 
     if workflow_yml_content:
@@ -106,15 +113,10 @@ def extract_workflow_metadata(
     raw_title = frontmatter.get("title") or manifest_keys.get("title")
     title = _trim_optional_str(raw_title, 128)
 
-    raw_description = (
-        frontmatter.get("description")
-        or manifest_keys.get("description")
-        or pkg_data.get("description")
-        or (repo_info.get("description") if repo_info else None)
-    )
+    raw_description = frontmatter.get("description") or manifest_keys.get("description") or pkg_data.get("description")
     description = _trim_optional_str(raw_description, 2048)
 
-    raw_tags = frontmatter.get("tags") or manifest_keys.get("tags") or (repo_info.get("topics") if repo_info else None)
+    raw_tags = frontmatter.get("tags") or manifest_keys.get("tags")
     tags = parse_tags(raw_tags)
 
     raw_icon = frontmatter.get("icon") or manifest_keys.get("icon")
@@ -124,27 +126,27 @@ def extract_workflow_metadata(
     owner = _trim_optional_str(raw_owner, 128)
 
     raw_version = version or frontmatter.get("version") or manifest_keys.get("version") or pkg_data.get("version")
-    clean_version = _trim_optional_str(raw_version, 64)
+    resolved_version = _trim_optional_str(raw_version, 64)
 
-    clean_source = (
-        _trim_optional_str(
-            frontmatter.get("source") or frontmatter.get("source_url") or source,
-            512,
-        )
-        or source
-    )
+    raw_source = frontmatter.get("source") or frontmatter.get("source_url") or manifest_keys.get("source") or source
+    resolved_source = _trim_optional_str(raw_source, 512) or source
 
     metadata: dict[str, Any] = {
         "title": title,
         "description": description,
         "tags": tags,
         "icon": icon,
-        "version": clean_version,
+        "version": resolved_version,
         "owner": owner,
-        "source": clean_source,
+        "source": resolved_source,
     }
 
-    raw_created_at = frontmatter.get("created_at") or frontmatter.get("createdAt")
+    raw_created_at = (
+        frontmatter.get("created_at")
+        or frontmatter.get("createdAt")
+        or manifest_keys.get("created_at")
+        or manifest_keys.get("createdAt")
+    )
     created_at = _trim_optional_str(raw_created_at, 64)
     if created_at is not None:
         metadata["created_at"] = created_at

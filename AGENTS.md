@@ -33,6 +33,7 @@ Agents should read and follow these standards for all contributions.
 - `src/ghwm/install.py` - install/update/prune orchestration
 - `src/ghwm/managed_files.py` - low-level workflow/config sync, trigger merge, and prune checks
 - `src/ghwm/lock.py` - lockfile read/write and in-memory lockfile operations
+- `src/ghwm/metadata.py` - package metadata extraction (frontmatter, manifest keys, package.json)
 - `src/ghwm/telemetry.py` - privacy-gated telemetry: public-repo check and installation event emission
 - `src/ghwm/__main__.py` - `python -m ghwm` entry point
 - `tests/` - module-aligned pytest suite

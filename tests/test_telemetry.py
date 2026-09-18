@@ -5,10 +5,11 @@ from __future__ import annotations
 import json
 from unittest.mock import MagicMock, patch
 from urllib.error import HTTPError, URLError
+from urllib.request import Request, urlopen
 
 import pytest
 
-from ghwm.telemetry import get_public_repository_info, is_public_repository, track_installation
+from ghwm.telemetry import is_public_repository, track_installation
 
 
 def _mock_http_response(body: bytes) -> MagicMock:
@@ -110,8 +111,25 @@ class TestIsPublicRepository:
         assert "Authorization" not in kwargs.get("headers", {})
 
 
+def _is_rate_limited() -> bool:
+    url = "https://api.github.com/rate_limit"
+    headers = {"Accept": "application/vnd.github+json"}
+    try:
+        request = Request(url, headers=headers)  # noqa: S310
+        with urlopen(request, timeout=5) as response:  # noqa: S310
+            data = json.loads(response.read())
+            return bool(data.get("resources", {}).get("core", {}).get("remaining", 0) == 0)
+    except (HTTPError, URLError, OSError, json.JSONDecodeError, KeyError):
+        return True
+
+
 class TestIsPublicRepositoryIntegration:
     """Integration tests that call the real GitHub API without authentication."""
+
+    @pytest.fixture(autouse=True)
+    def check_rate_limit(self) -> None:
+        if _is_rate_limited():
+            pytest.skip("GitHub unauthenticated API rate limit (60 req/hr) exceeded for current IP")
 
     @pytest.mark.integration
     def test_is_public_repository_should_return_true_when_repository_is_public(self) -> None:
@@ -136,46 +154,6 @@ class TestIsPublicRepositoryIntegration:
 
         # Assert
         assert result is False
-
-
-class TestGetPublicRepositoryInfo:
-    def test_get_public_repository_info_should_return_true_and_data_when_repo_is_public(self) -> None:
-        # Arrange
-        data = {"private": False, "description": "Workflow registry", "topics": ["actions", "lint"]}
-        response_body = json.dumps(data).encode()
-
-        # Act
-        with patch("ghwm.telemetry.urlopen", return_value=_mock_http_response(response_body)):
-            is_pub, repo_data = get_public_repository_info("owner", "my-repo")
-
-        # Assert
-        assert is_pub is True
-        assert repo_data["description"] == "Workflow registry"
-        assert repo_data["topics"] == ["actions", "lint"]
-
-    def test_get_public_repository_info_should_return_false_and_empty_dict_when_repo_is_private(self) -> None:
-        # Arrange
-        response_body = json.dumps({"private": True, "name": "my-private-repo"}).encode()
-
-        # Act
-        with patch("ghwm.telemetry.urlopen", return_value=_mock_http_response(response_body)):
-            is_pub, repo_data = get_public_repository_info("owner", "my-private-repo")
-
-        # Assert
-        assert is_pub is False
-        assert repo_data == {}
-
-    def test_get_public_repository_info_should_return_false_when_http_error_occurs(self) -> None:
-        # Arrange
-        not_found = HTTPError(url=None, code=404, msg="Not Found", hdrs=None, fp=None)  # type: ignore[arg-type]
-
-        # Act
-        with patch("ghwm.telemetry.urlopen", side_effect=not_found):
-            is_pub, repo_data = get_public_repository_info("owner", "missing")
-
-        # Assert
-        assert is_pub is False
-        assert repo_data == {}
 
 
 class TestTrackInstallation:
