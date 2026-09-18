@@ -99,7 +99,7 @@ C4Component
 
 ### 1 — Manifest parsing (`manifest.py`)
 
-`ghwm.yml` is a YAML file in the consumer repository root. The parser
+`ghwm.yml` is a YAML file in the consumer repository root (see [Manifest and Lockfile Reference](reference/manifest.md)). The parser
 produces a `Manifest` containing a list of `WorkflowEntry` objects. Each entry
 carries:
 
@@ -112,7 +112,7 @@ carries:
 
 The manifest also declares a **source** in `owner/repository` form. The owner
 becomes the npm scope: `owner/ghwm-registry` →
-`@owner/ghwm-<name>`.
+`@owner/<name>`.
 
 Version resolution produces a `resolved_ref` string used directly as the npm
 package version. An explicit version is required; omitting it for a remote
@@ -123,12 +123,12 @@ install is an error.
 Each workflow maps to a scoped GitHub Packages npm package:
 
 ```text
-@<owner>/ghwm-<name>@<version>
+@<owner>/<name>@<version>
 ```
 
 For each workflow, the tool:
 
-1. Fetches package metadata from `https://npm.pkg.github.com/@<owner>/ghwm-<name>`.
+1. Fetches package metadata from `https://npm.pkg.github.com/@<owner>/<name>`.
 2. Resolves the `dist.tarball` URL for the requested version.
 3. Downloads the `.tgz` tarball.
 4. Reads `package/workflow.yml` from the tarball to get the `files` list.
@@ -172,7 +172,7 @@ Both paths return an `_InstalledFileResult` with `changed` and an optional
 
 ```yaml
 # Managed by ghwm (<name>@<version>)
-# Source: @<org>/ghwm-<name>:<source-file>
+# Source: @<org>/<name>:<source-file>
 # Hash: sha256:<hex>
 # Re-run `ghwm install` to refresh this file.
 ```
@@ -197,7 +197,7 @@ unless `--force`.
 
 ### 5 — Lockfile (`lock.py`)
 
-`ghwm.lock` (version 1) is committed alongside `ghwm.yml`:
+`ghwm.lock` (version 1) is committed alongside `ghwm.yml` (see [Manifest and Lockfile Reference](reference/manifest.md)):
 
 ```json
 {
@@ -206,7 +206,7 @@ unless `--force`.
     {
       "name": "auto-assign-pr",
       "version": "2.0.0",
-      "source": "@owner/ghwm-auto-assign-pr",
+      "source": "@owner/auto-assign-pr",
       "files": [
         {
           "target": ".github/workflows/auto-assign-pr.yaml",
@@ -229,7 +229,7 @@ Package-level fields:
 | --------- | ---------------------------------------------- |
 | `name`    | Workflow identifier (matches manifest entry)   |
 | `version` | Pinned version                                 |
-| `source`  | Scoped npm package name (`@org/ghwm-<name>`)   |
+| `source`  | Scoped npm package name (`@org/<name>`)        |
 | `files`   | Array of file entries tracked for this package |
 
 Per-file fields:
@@ -279,8 +279,9 @@ argv
               │     ├─▶ _prune_stale()
               │     └─▶ write_lockfile()
               ├─▶ update_workflows()   (install_workflows, prune=False)
-              ├─▶ list  (prints manifest entries, no download)
-              └─▶ audit (audits managed workflows via zizmor)
+              ├─▶ upgrade              (resolve latest SemVer, rewrite ghwm.yml, install_workflows)
+              ├─▶ list                 (prints manifest entries, no download)
+              └─▶ audit                (audits managed workflows via zizmor)
 ```
 
 ## Versioning and update strategy
@@ -289,17 +290,18 @@ argv
 | --------- | -------------------------- | ------------ | ----------------------- |
 | `install` | Yes (missing/changed only) | Yes          | Yes                     |
 | `update`  | Yes (all)                  | No           | Yes                     |
+| `upgrade` | Yes (latest published)    | No           | Updates to latest tags  |
 | `list`    | No                         | No           | —                       |
 | `audit`   | No                         | No           | —                       |
 
 Running `install` twice is idempotent: the second run skips all up-to-date
 workflows.
 
+### Upgrading workflows
+
+The `ghwm upgrade` command queries GitHub Packages for the latest published versions (`dist-tags.latest`) across all declared workflows. It updates the version strings in `ghwm.yml` to the latest semantic versions, then hands off to the standard install flow to download and synchronize the updated packages.
+
 ## Planned features
 
 - **`remove` command** — remove a single managed workflow and its lock entry.
 - **Auto-update** — renovate-style PRs when new registry versions are tagged.
-
-## Upgrading Workflows
-
-The `ghwm upgrade` command resolves the latest SemVer tags to full-length SHAs from the GitHub Packages API. It updates `ghwm.yml` by pinning the SHAs with the semantic versions as comments, then hands off to the standard install flow.
