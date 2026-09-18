@@ -13,11 +13,20 @@ def parse_commented_frontmatter(content: str) -> dict[str, Any]:
     if not content:
         return {}
 
-    lines = content.splitlines()
+    stripped = content.lstrip()
+    if not stripped.startswith("#"):
+        return {}
+
     comment_lines: list[str] = []
     in_delimited_block = False
+    idx = 0
+    length = len(content)
 
-    for line in lines:
+    while idx < length:
+        next_nl = content.find("\n", idx)
+        line = content[idx:next_nl] if next_nl != -1 else content[idx:]
+        idx = length if next_nl == -1 else next_nl + 1
+
         trimmed = line.strip()
         if trimmed == "# ---":
             if not in_delimited_block:
@@ -128,8 +137,7 @@ def extract_workflow_metadata(
     raw_version = version or frontmatter.get("version") or manifest_keys.get("version") or pkg_data.get("version")
     resolved_version = _trim_optional_str(raw_version, 64)
 
-    raw_source = frontmatter.get("source") or frontmatter.get("source_url") or manifest_keys.get("source") or source
-    resolved_source = _trim_optional_str(raw_source, 512) or source
+    resolved_source = _trim_optional_str(source, 512) or source
 
     metadata: dict[str, Any] = {
         "title": title,

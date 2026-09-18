@@ -1,6 +1,11 @@
 import pytest
 
-from ghwm.managed_files import _find_top_level_section, _preserve_existing_envs, _preserve_existing_triggers
+from ghwm.managed_files import (
+    _extract_body,
+    _find_top_level_section,
+    _preserve_existing_envs,
+    _preserve_existing_triggers,
+)
 
 
 def _workflow(*lines: str) -> str:
@@ -156,3 +161,16 @@ def test_preserve_existing_triggers_should_preserve_quoted_on_key_when_values_di
         '"on":',
         "  push:",
     )
+
+
+def test_extract_body_should_return_empty_string_when_content_is_empty() -> None:
+    assert _extract_body("") == ""
+
+
+def test_extract_body_should_return_empty_string_when_content_has_only_comments() -> None:
+    assert _extract_body("# header 1\n# header 2\n") == ""
+
+
+def test_extract_body_should_strip_header_and_preserve_workflow_body() -> None:
+    content = "# Managed by ghwm\n# Hash: 123\n\nname: my-workflow\n"
+    assert _extract_body(content) == "name: my-workflow\n"

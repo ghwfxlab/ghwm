@@ -19,6 +19,7 @@ from ghwm.download_npm import (
     download_npm_tarball,
     extract_npm_package,
     extract_tarball_metadata,
+    find_workflow_file_content,
     manifest_files,
     npm_package_metadata_url,
     npm_tarball_url,
@@ -620,3 +621,58 @@ class TestExtractTarballMetadata:
         # Assert
         assert meta["title"] is None
         assert meta["source"] == "owner/repo"
+
+    def test_extract_tarball_metadata_should_use_pre_extracted_files_when_provided(self, tmp_path: Path) -> None:
+        # Arrange: tarball with workflow.yml but without primary workflow file in tarball
+        workflow_yml = "name: my-flow\n"
+        tarball_bytes = _make_tarball_bytes({"workflow.yml": workflow_yml})
+        tarball_path = tmp_path / "pkg.tgz"
+        tarball_path.write_bytes(tarball_bytes)
+
+        files = [
+            InstalledFile(
+                source="flow.yml",
+                content=b"# ---\n# title: Pre-Extracted Title\n# ---\nname: flow\n",
+                target=".github/workflows/flow.yml",
+            )
+        ]
+
+        # Act
+        meta = extract_tarball_metadata(
+            tarball_path=tarball_path,
+            source="owner/repo",
+            version="1.0.0",
+            manifest_data={"files": [{"source": "flow.yml", "target": ".github/workflows/flow.yml"}]},
+            files=files,
+        )
+
+        # Assert
+        assert meta["title"] == "Pre-Extracted Title"
+
+
+class TestFindWorkflowFileContent:
+    def test_find_workflow_file_content_should_return_content_when_target_is_in_workflows_dir(self) -> None:
+        # Arrange
+        files = [
+            InstalledFile(source="config.json", content=b"{}", target="config.json"),
+            InstalledFile(source="main.yml", content=b"name: main\n", target=".github/workflows/main.yml"),
+        ]
+
+        # Act
+        content = find_workflow_file_content(files)
+
+        # Assert
+        assert content == "name: main\n"
+
+    def test_find_workflow_file_content_should_return_none_when_no_file_targets_workflows_dir(self) -> None:
+        # Arrange
+        files = [
+            InstalledFile(source="config.json", content=b"{}", target="config.json"),
+            InstalledFile(source="README.md", content=b"# Docs", target="README.md"),
+        ]
+
+        # Act
+        content = find_workflow_file_content(files)
+
+        # Assert
+        assert content is None
