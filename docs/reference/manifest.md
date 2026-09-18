@@ -83,40 +83,54 @@ When using the mapping syntax, the following fields are supported:
 ### Field Details
 
 #### `name`
+
 The package identifier within the registry.
+
 - Must be a non-empty string.
 - Each workflow name in `workflows` must be unique. Duplicate workflow names cause a manifest parse error.
 - Also supports inline versions (e.g. `name: linter@1.0.0`).
 
 #### `version`
+
 The exact package version string to install.
+
 - Required for remote installs from GitHub Packages.
 - Remote resolution maps to `@<source-owner>/<name>@<version>`.
 
 #### `source`
+
 Overrides the top-level `source` registry for this individual workflow.
+
 - Must be in `owner/repository` format.
 - The owner segment is used as the npm organization scope for the package.
 
 #### `target`
+
 Overrides the destination filename for the installed workflow.
+
 - By default, the workflow file retains its filename from the package and is written to `.github/workflows/<filename>`.
 - Setting `target: custom-name.yml` places the workflow file at `.github/workflows/custom-name.yml`.
 
 #### `update-triggers`
+
 Controls whether custom modifications to workflow triggers are preserved during updates.
+
 - `false` (default): Preserves the existing `on:` block from the local file when updating.
 - `true`: Replaces the `on:` block with the trigger configuration defined in the upstream package.
 - Can also be forced globally on the CLI using `--update-triggers`.
 
 #### `update-envs`
+
 Controls whether custom environment variables are preserved during updates.
+
 - `false` (default): Preserves the existing `env:` block from the local file when updating.
 - `true`: Replaces the `env:` block with the upstream package's `env:` block.
 - Can also be forced globally on the CLI using `--update-envs`.
 
 #### `update-config-files`
+
 Controls the overwrite behavior of companion configuration files bundled with the workflow.
+
 - `false` (default): Existing configuration files on disk are never overwritten during updates.
 - `true`: Overwrites existing configuration files with the packaged versions.
 
