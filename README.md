@@ -62,7 +62,7 @@ workflows:
 package named `@<source owner>/<name>`.
 
 If you want to override the generated workflow filename, add `target: my-review.yml` to the
-workflow entry.
+workflow entry. For the complete schema, field types, and defaults, see the [Manifest and Lockfile Reference](docs/reference/manifest.md).
 
 ### 2. Install workflows
 

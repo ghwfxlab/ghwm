@@ -36,7 +36,7 @@ By participating in this project, you agree to maintain a respectful, welcoming,
 
 To build and run `ghwm` locally, ensure you have the following tools installed:
 
-1. **Python 3.12 or 3.14**: Python 3.12 is the primary target version, while Python 3.14 is used in some testing setups.
+1. **Python 3.12**: Python 3.12 is the primary target version, while Python 3.14 is supported in CI test matrices.
 2. **[uv](https://docs.astral.sh/uv/)**: A fast Python package installer and resolver.
 3. **Node.js & npx**: Required for prose and style linting on documentation files.
 4. **Docker** (Optional): Required for running the repository's container-based super-linter checks.
