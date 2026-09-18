@@ -13,11 +13,20 @@ def parse_commented_frontmatter(content: str) -> dict[str, Any]:
     if not content:
         return {}
 
-    lines = content.splitlines()
+    stripped = content.lstrip()
+    if not stripped.startswith("#"):
+        return {}
+
     comment_lines: list[str] = []
     in_delimited_block = False
+    idx = 0
+    length = len(content)
 
-    for line in lines:
+    while idx < length:
+        next_nl = content.find("\n", idx)
+        line = content[idx:next_nl] if next_nl != -1 else content[idx:]
+        idx = length if next_nl == -1 else next_nl + 1
+
         trimmed = line.strip()
         if trimmed == "# ---":
             if not in_delimited_block:

@@ -84,6 +84,16 @@ class TestParseCommentedFrontmatter:
         # Assert
         assert result == {}
 
+    def test_parse_commented_frontmatter_should_return_empty_dict_when_frontmatter_block_is_empty(self) -> None:
+        # Arrange
+        content = "# ---\n# ---\nname: simple-workflow\n"
+
+        # Act
+        result = parse_commented_frontmatter(content)
+
+        # Assert
+        assert result == {}
+
 
 class TestParseTags:
     def test_parse_tags_should_return_list_when_input_is_a_list(self) -> None:
