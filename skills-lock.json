@@ -12,6 +12,12 @@
       "sourceType": "github",
       "skillPath": "plugins/python-development/skills/python-performance-optimization/SKILL.md",
       "computedHash": "5a0e5ccd00cd8e850e1068707e042339e182190eb89f8a300f58c18f53876059"
+    },
+    "tdd": {
+      "source": "mattpocock/skills",
+      "sourceType": "github",
+      "skillPath": "skills/engineering/tdd/SKILL.md",
+      "computedHash": "e753a5da75292bbe59d302d89566bc2c53d0e73944da2f0e944a7578883c07d0"
     }
   }
 }
