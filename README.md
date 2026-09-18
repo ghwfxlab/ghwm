@@ -244,12 +244,13 @@ downloading the npm package tarball.
 | Workflow name | `linter` |
 | Workflow version | `1.2.3` |
 | Event type | `install` (first time added) or `updated` (workflow changed on re-install) |
+| Workflow metadata (optional) | Title, description, tags, icon, owner, version, source, created_at |
 
 **What is never tracked:** IP addresses, hostnames, usernames, file paths, repository names, environment variables, or any other system or user information.
 
 ### Privacy gate
 
-Telemetry is **only emitted when the workflow registry is a public GitHub repository**. Before sending any data, `ghwm` calls the GitHub REST API (`GET /repos/{owner}/{repo}`) to check the visibility of the source registry. If the registry is private, internal, or if the check fails for any reason (network error, rate limit, missing permissions), telemetry is skipped silently and the install continues normally.
+Telemetry is **only emitted when the workflow registry is a public GitHub repository**. Before sending any data, `ghwm` calls the GitHub REST API (`GET /repos/{owner}/{repo}`) without authentication to check the visibility of each workflow's resolved source registry. If a registry is private, internal, or if the check fails for any reason (network error, rate limit, missing permissions), telemetry is skipped silently for that workflow and the install continues normally.
 
 This means workflows sourced from private or internal enterprise registries are **never tracked**, protecting proprietary workflow IP.
 

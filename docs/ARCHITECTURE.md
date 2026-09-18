@@ -94,6 +94,8 @@ C4Component
 | `lock.py`          | Read and write `ghwm.lock` (JSON); in-memory lockfile operations            |
 | `package_names.py` | Helpers to compute scoped npm package names from org and workflow name      |
 | `paths.py`         | Path security utilities including path traversal checks                     |
+| `metadata.py`      | Package metadata extraction from frontmatter, manifests, and package.json   |
+| `telemetry.py`     | Privacy-gated anonymous usage telemetry and registry visibility checks      |
 
 ## Workflow lifecycle
 
@@ -260,6 +262,23 @@ The lockfile is deleted automatically when all packages are removed.
    - **Low severity**: 5 points
    - **Informational**: 1 point
 6. If any High or Medium severity findings are present, exit with code `1` to fail CI builds.
+
+### 7 — Telemetry and metadata extraction (`telemetry.py`, `metadata.py`)
+
+Usage telemetry is privacy-gated and tracks workflow adoption from public registries:
+
+1. **Metadata Extraction (`metadata.py`)**:
+   During workflow package download or local reading, metadata is extracted from:
+   - Commented YAML frontmatter delimited by `# ---` or leading `#` comment blocks in `workflow.yml` or the workflow YAML file.
+   - Fallbacks from `package.json` (`description`, `version`) and manifest keys.
+   - Enriched fields include: `title`, `description`, `tags`, `icon`, `owner`, `version`, `source`, and optional `created_at`.
+2. **Per-Workflow Privacy Gate (`install.py`, `telemetry.py`)**:
+   - Each workflow's specific resolved source (`entry.source or manifest.source`) is checked against GitHub API (`GET /repos/{owner}/{repo}`) without credentials.
+   - Any private repository, 404, 401, 403 (rate limited), timeout, or network error immediately halts telemetry for that workflow (fail-closed).
+   - Private workflows never emit telemetry, protecting proprietary workflow IP even in mixed-source manifests.
+3. **Event Emission (`telemetry.py`)**:
+   - Calls `track_installation()` with the resolved source, workflow name, version, event type (`"install"` or `"updated"`), and enriched `metadata` block.
+   - Telemetry operations are strictly non-blocking and fail-silent: network or parsing errors never fail an install or update.
 
 ## CLI command flow
 

@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from unittest.mock import MagicMock, patch
 from urllib.error import HTTPError, URLError
+from urllib.request import Request, urlopen
 
 import pytest
 
@@ -78,7 +79,7 @@ class TestIsPublicRepository:
         # Assert
         assert result is False
 
-    def test_is_public_repository_should_return_false_on_network_error(self) -> None:
+    def test_is_public_repository_should_return_false_when_network_error_occurs(self) -> None:
         # Arrange / Act
         with patch("ghwm.telemetry.urlopen", side_effect=URLError("Connection refused")):
             result = is_public_repository("owner", "some-repo")
@@ -86,7 +87,7 @@ class TestIsPublicRepository:
         # Assert
         assert result is False
 
-    def test_is_public_repository_should_return_false_on_malformed_json_response(self) -> None:
+    def test_is_public_repository_should_return_false_when_json_response_is_malformed(self) -> None:
         # Arrange / Act
         with patch("ghwm.telemetry.urlopen", return_value=_mock_http_response(b"not-json")):
             result = is_public_repository("owner", "some-repo")
@@ -94,7 +95,7 @@ class TestIsPublicRepository:
         # Assert
         assert result is False
 
-    def test_is_public_repository_should_not_include_auth_header_in_request(self) -> None:
+    def test_is_public_repository_should_omit_auth_header_when_request_is_sent(self) -> None:
         # Arrange
         response_body = json.dumps({"private": False}).encode()
 
@@ -110,11 +111,28 @@ class TestIsPublicRepository:
         assert "Authorization" not in kwargs.get("headers", {})
 
 
+def _is_rate_limited() -> bool:
+    url = "https://api.github.com/rate_limit"
+    headers = {"Accept": "application/vnd.github+json"}
+    try:
+        request = Request(url, headers=headers)  # noqa: S310
+        with urlopen(request, timeout=5) as response:  # noqa: S310
+            data = json.loads(response.read())
+            return bool(data.get("resources", {}).get("core", {}).get("remaining", 0) == 0)
+    except (HTTPError, URLError, OSError, json.JSONDecodeError, KeyError):
+        return True
+
+
 class TestIsPublicRepositoryIntegration:
     """Integration tests that call the real GitHub API without authentication."""
 
+    @pytest.fixture(autouse=True)
+    def check_rate_limit(self) -> None:
+        if _is_rate_limited():
+            pytest.skip("GitHub unauthenticated API rate limit (60 req/hr) exceeded for current IP")
+
     @pytest.mark.integration
-    def test_is_public_repository_should_return_true_for_known_public_repo(self) -> None:
+    def test_is_public_repository_should_return_true_when_repository_is_public(self) -> None:
         # Arrange / Act
         result = is_public_repository("ghwfxlab", "ghwm")
 
@@ -122,7 +140,7 @@ class TestIsPublicRepositoryIntegration:
         assert result is True
 
     @pytest.mark.integration
-    def test_is_public_repository_should_return_false_for_known_private_repo(self) -> None:
+    def test_is_public_repository_should_return_false_when_repository_is_private(self) -> None:
         # Arrange / Act
         result = is_public_repository("ghwfxlab", "ghwm-test-private")
 
@@ -130,7 +148,7 @@ class TestIsPublicRepositoryIntegration:
         assert result is False
 
     @pytest.mark.integration
-    def test_is_public_repository_should_return_false_for_nonexistent_repo(self) -> None:
+    def test_is_public_repository_should_return_false_when_repository_does_not_exist(self) -> None:
         # Arrange / Act
         result = is_public_repository("ghwfxlab", "does-not-exist-xyz-telemetry-test")
 
@@ -139,7 +157,7 @@ class TestIsPublicRepositoryIntegration:
 
 
 class TestTrackInstallation:
-    def test_track_installation_should_be_a_noop_stub(self) -> None:
+    def test_track_installation_should_act_as_noop_when_invoked(self) -> None:
         # Arrange / Act / Assert: must not raise regardless of inputs
         track_installation(
             source="owner/ghwm-registry",
@@ -152,4 +170,25 @@ class TestTrackInstallation:
             workflow_name="linter",
             version=None,
             event_type="run",
+        )
+
+    def test_track_installation_should_accept_enriched_metadata_when_metadata_is_provided(self) -> None:
+        # Arrange
+        metadata = {
+            "title": "Super-Linter",
+            "description": "Code linting",
+            "tags": ["lint", "ci"],
+            "icon": "fact_check",
+            "version": "1.0.1",
+            "owner": "ghwfxlab",
+            "source": "ghwfxlab/ghwm-registry",
+        }
+
+        # Act / Assert: must execute cleanly without error
+        track_installation(
+            source="ghwfxlab/ghwm-registry",
+            workflow_name="super-linter",
+            version="1.0.1",
+            event_type="install",
+            metadata=metadata,
         )
