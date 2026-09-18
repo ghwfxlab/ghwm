@@ -128,8 +128,7 @@ def extract_workflow_metadata(
     raw_version = version or frontmatter.get("version") or manifest_keys.get("version") or pkg_data.get("version")
     resolved_version = _trim_optional_str(raw_version, 64)
 
-    raw_source = frontmatter.get("source") or frontmatter.get("source_url") or manifest_keys.get("source") or source
-    resolved_source = _trim_optional_str(raw_source, 512) or source
+    resolved_source = _trim_optional_str(source, 512) or source
 
     metadata: dict[str, Any] = {
         "title": title,

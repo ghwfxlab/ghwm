@@ -4,10 +4,12 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import cast
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
+from ghwm.download import WorkflowSource
+from ghwm.download_npm import InstalledFile
 from ghwm.install import install_workflows, update_workflows
 from ghwm.lock import read_lockfile
 from ghwm.managed_files import _extract_body, _load_workflow_yaml
@@ -717,20 +719,25 @@ class TestTelemetry:
 
     def test_install_workflows_should_not_emit_telemetry_when_source_has_no_slash(self, tmp_path: Path) -> None:
         # Arrange
-        marketplace = tmp_path / "marketplace"
         consumer = tmp_path / "consumer"
         consumer.mkdir()
-        _write_marketplace_package(marketplace, LINTER, "name: linter\non: push\n")
-        manifest = _marketplace_manifest([{"name": LINTER, "version": VERSION_1_2_3}])
+        manifest = Manifest(
+            source="noslash",
+            workflows=[WorkflowEntry(name=LINTER, version=VERSION_1_2_3, source="noslash")],
+        )
+        fake_source = WorkflowSource(
+            name=LINTER,
+            package_name=f"@scope/{LINTER}",
+            files=[InstalledFile("main.yml", b"name: test\n", f".github/workflows/{LINTER}.yaml")],
+        )
 
-        # Act: call _emit_telemetry directly with a malformed source (no slash)
-        from ghwm.install import InstallResult, _emit_telemetry
-
+        # Act
         with (
+            patch("ghwm.install.download_workflows", return_value=[fake_source]),
             patch("ghwm.install.is_public_repository") as mock_check,
             patch("ghwm.install.track_installation") as mock_track,
         ):
-            _emit_telemetry("noslash", manifest, InstallResult(installed=[LINTER], updated=[], pruned=[], skipped=[]))
+            install_workflows(consumer, manifest)
 
         # Assert: guard returns early without calling anything
         mock_check.assert_not_called()
@@ -928,12 +935,21 @@ class TestTelemetry:
         assert mock_track.call_args_list[0].kwargs["source"] == custom_source
         assert mock_track.call_args_list[0].kwargs["metadata"]["source"] == custom_source
 
-    def test_emit_telemetry_should_suppress_unexpected_exceptions_when_failure_occurs(self) -> None:
+    def test_install_workflows_should_suppress_unexpected_telemetry_exceptions_when_failure_occurs(
+        self, tmp_path: Path
+    ) -> None:
         # Arrange
-        from ghwm.install import InstallResult, _emit_telemetry
+        marketplace = tmp_path / "marketplace"
+        consumer = tmp_path / "consumer"
+        consumer.mkdir()
+        _write_marketplace_package(marketplace, LINTER, "name: linter\non: push\n")
+        manifest = _marketplace_manifest([{"name": LINTER, "version": VERSION_1_2_3}])
 
-        manifest = MagicMock()
-        manifest.workflows = None
+        # Act & Assert: unexpected telemetry exception must not fail the install
+        with (
+            patch("ghwm.install.is_public_repository", return_value=True),
+            patch("ghwm.install.track_installation", side_effect=RuntimeError("telemetry server down")),
+        ):
+            result = install_workflows(consumer, manifest, local_path=marketplace)
 
-        # Act & Assert: should safely return without propagating exception
-        _emit_telemetry("owner/repo", manifest, InstallResult(installed=["test"], updated=[], pruned=[], skipped=[]))
+        assert result.installed == [LINTER]

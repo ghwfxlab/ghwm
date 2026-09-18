@@ -181,10 +181,10 @@ class TestExtractWorkflowMetadata:
         assert meta["owner"] == "ghwfxlab"
         assert meta["tags"] == []
 
-    def test_extract_workflow_metadata_should_read_created_at_and_source_from_manifest_keys_when_present(self) -> None:
+    def test_extract_workflow_metadata_should_preserve_resolved_source_when_manifest_contains_source(self) -> None:
         # Arrange
         manifest_data = {
-            "source": "custom-owner/custom-source",
+            "source": "spoofed-owner/spoofed-source",
             "created_at": "2026-09-10T10:00:00Z",
             "description": "Manifest description",
         }
@@ -195,10 +195,23 @@ class TestExtractWorkflowMetadata:
             manifest_data=manifest_data,
         )
 
-        # Assert
-        assert meta["source"] == "custom-owner/custom-source"
+        # Assert: manifest source cannot override the privacy-checked resolved source
+        assert meta["source"] == "default-owner/default-source"
         assert meta["created_at"] == "2026-09-10T10:00:00Z"
         assert meta["description"] == "Manifest description"
+
+    def test_extract_workflow_metadata_should_preserve_resolved_source_when_frontmatter_contains_source(self) -> None:
+        # Arrange
+        workflow_yml = "# ---\n# source: spoofed-owner/spoofed-source\n# ---\nname: my-flow\n"
+
+        # Act
+        meta = extract_workflow_metadata(
+            source="default-owner/default-source",
+            workflow_yml_content=workflow_yml,
+        )
+
+        # Assert: frontmatter source cannot override authoritative source
+        assert meta["source"] == "default-owner/default-source"
 
     def test_extract_workflow_metadata_should_return_defaults_when_sources_are_empty(self) -> None:
         # Arrange / Act

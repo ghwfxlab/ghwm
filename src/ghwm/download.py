@@ -18,6 +18,7 @@ from ghwm.download_npm import (
     download_npm_tarball,
     extract_npm_package,
     extract_tarball_metadata,
+    find_workflow_file_content,
     parse_workflow_manifest_data,
     read_workflow_manifest,
 )
@@ -87,17 +88,19 @@ def download_workflows(
             temp_dir = Path(tmpdir)
             tarball_path = download_npm_tarball(owner, entry.name, version, temp_dir, token)
             manifest_data = read_workflow_manifest(tarball_path)
+            files = extract_npm_package(tarball_path, manifest_data)
             metadata = extract_tarball_metadata(
                 tarball_path,
                 source=entry_source,
                 version=version,
                 manifest_data=manifest_data,
+                files=files,
             )
             results.append(
                 WorkflowSource(
                     name=entry.name,
                     package_name=scoped_package_name(owner, entry.name),
-                    files=extract_npm_package(tarball_path, manifest_data),
+                    files=files,
                     metadata=metadata,
                 )
             )
@@ -123,11 +126,7 @@ def _extract_local_workflow_metadata(
     pkg_json_path = workflow_dir / "package.json"
     pkg_json_content = pkg_json_path.read_text(encoding="utf-8") if pkg_json_path.is_file() else None
 
-    workflow_file_content: str | None = None
-    for installed_file in files:
-        if installed_file.target.startswith(".github/workflows/"):
-            workflow_file_content = installed_file.content.decode("utf-8", errors="replace")
-            break
+    workflow_file_content = find_workflow_file_content(files)
 
     return extract_workflow_metadata(
         source=source,
