@@ -244,7 +244,7 @@ downloading the npm package tarball.
 | Workflow name | `linter` |
 | Workflow version | `1.2.3` |
 | Event type | `install` (first time added) or `updated` (workflow changed on re-install) |
-| Workflow metadata (optional) | Title, description, tags, icon, owner, version, source |
+| Workflow metadata (optional) | Title, description, tags, icon, owner, version, source, created_at |
 
 **What is never tracked:** IP addresses, hostnames, usernames, file paths, repository names, environment variables, or any other system or user information.
 

@@ -63,7 +63,7 @@ def install_workflows(
         _prune_stale(cwd, manifest, lockfile, result, force=force)
 
     if not no_telemetry:
-        _emit_telemetry(manifest.source, manifest, result, workflow_sources=workflow_sources_by_name)
+        _emit_telemetry(manifest.source, manifest, result, workflow_sources_by_name=workflow_sources_by_name)
 
     write_lockfile(cwd, lockfile)
     return result
@@ -97,12 +97,12 @@ def _emit_telemetry(
     source: str,
     manifest: Manifest,
     result: InstallResult,
-    workflow_sources: dict[str, WorkflowSource] | None = None,
+    workflow_sources_by_name: dict[str, WorkflowSource] | None = None,
 ) -> None:
     """Emit telemetry events for installs and updates if the workflow source registry is public."""
     try:
         entry_by_name = {entry.name: entry for entry in manifest.workflows}
-        workflow_sources_map = workflow_sources or {}
+        workflow_sources_map = workflow_sources_by_name or {}
         public_cache: dict[tuple[str, str], bool] = {}
 
         events = [(name, "install") for name in result.installed] + [(name, "updated") for name in result.updated]
@@ -127,7 +127,6 @@ def _emit_telemetry(
                 ws.metadata
                 if ws and ws.metadata is not None
                 else extract_workflow_metadata(
-                    workflow_name=name,
                     source=workflow_source_str,
                     version=version,
                 )

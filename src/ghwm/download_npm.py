@@ -221,7 +221,6 @@ def extract_npm_package(tarball_path: Path, manifest_data: dict[str, Any]) -> li
 
 def extract_tarball_metadata(
     tarball_path: Path,
-    workflow_name: str,
     source: str,
     version: str | None,
     manifest_data: dict[str, Any],
@@ -261,7 +260,6 @@ def extract_tarball_metadata(
         pass
 
     return extract_workflow_metadata(
-        workflow_name=workflow_name,
         source=source,
         version=version,
         workflow_yml_content=workflow_yml_content,

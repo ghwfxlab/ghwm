@@ -123,6 +123,13 @@ class TestParseTags:
         # Assert
         assert len(result) == 20
 
+    def test_parse_tags_should_deduplicate_tags_when_input_contains_duplicates(self) -> None:
+        # Arrange / Act
+        result = parse_tags(["lint", "ci", "lint", "ci", "actions"])
+
+        # Assert
+        assert result == ["lint", "ci", "actions"]
+
 
 class TestExtractWorkflowMetadata:
     def test_extract_workflow_metadata_should_return_full_metadata_when_frontmatter_is_present(self) -> None:
@@ -141,7 +148,6 @@ class TestExtractWorkflowMetadata:
 
         # Act
         meta = extract_workflow_metadata(
-            workflow_name="super-linter",
             source="ghwfxlab/ghwm-registry",
             version="1.0.1",
             workflow_yml_content=workflow_yml,
@@ -164,7 +170,6 @@ class TestExtractWorkflowMetadata:
 
         # Act
         meta = extract_workflow_metadata(
-            workflow_name="linter",
             source="ghwfxlab/ghwm-registry",
             package_json_content=pkg_json,
         )
@@ -176,30 +181,28 @@ class TestExtractWorkflowMetadata:
         assert meta["owner"] == "ghwfxlab"
         assert meta["tags"] == []
 
-    def test_extract_workflow_metadata_should_fallback_to_repo_info_when_package_lacks_metadata(self) -> None:
+    def test_extract_workflow_metadata_should_read_created_at_and_source_from_manifest_keys_when_present(self) -> None:
         # Arrange
-        repo_info = {
-            "description": "Community action workflows",
-            "topics": ["actions", "automation"],
+        manifest_data = {
+            "source": "custom-owner/custom-source",
+            "created_at": "2026-09-10T10:00:00Z",
+            "description": "Manifest description",
         }
 
         # Act
         meta = extract_workflow_metadata(
-            workflow_name="example",
-            source="google-github-actions/example-workflows",
-            version="0.1.0",
-            repo_info=repo_info,
+            source="default-owner/default-source",
+            manifest_data=manifest_data,
         )
 
         # Assert
-        assert meta["description"] == "Community action workflows"
-        assert meta["tags"] == ["actions", "automation"]
-        assert meta["owner"] == "google-github-actions"
+        assert meta["source"] == "custom-owner/custom-source"
+        assert meta["created_at"] == "2026-09-10T10:00:00Z"
+        assert meta["description"] == "Manifest description"
 
     def test_extract_workflow_metadata_should_return_defaults_when_sources_are_empty(self) -> None:
         # Arrange / Act
         meta = extract_workflow_metadata(
-            workflow_name="minimal",
             source="owner/repo",
             version="1.0.0",
         )
@@ -224,7 +227,6 @@ class TestExtractWorkflowMetadata:
 
         # Act
         meta = extract_workflow_metadata(
-            workflow_name="my-flow",
             source="owner/repo",
             version="1.0.0",
             workflow_yml_content=workflow_yml,
@@ -246,7 +248,6 @@ class TestExtractWorkflowMetadata:
 
         # Act
         meta = extract_workflow_metadata(
-            workflow_name="flow",
             source="owner/repo",
             workflow_yml_content=frontmatter,
             manifest_data=manifest_data,
@@ -261,7 +262,6 @@ class TestExtractWorkflowMetadata:
     def test_extract_workflow_metadata_should_ignore_package_json_when_json_is_invalid(self) -> None:
         # Arrange / Act
         meta = extract_workflow_metadata(
-            workflow_name="flow",
             source="owner/repo",
             package_json_content="not valid json",
         )
@@ -272,7 +272,6 @@ class TestExtractWorkflowMetadata:
     def test_extract_workflow_metadata_should_ignore_package_json_when_not_a_dict(self) -> None:
         # Arrange / Act
         meta = extract_workflow_metadata(
-            workflow_name="flow",
             source="owner/repo",
             package_json_content='["item1", "item2"]',
         )

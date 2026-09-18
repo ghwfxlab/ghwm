@@ -544,7 +544,6 @@ class TestExtractTarballMetadata:
         # Act
         meta = extract_tarball_metadata(
             tarball_path=tarball_path,
-            workflow_name="linter",
             source="ghwfxlab/ghwm-registry",
             version="1.0.1",
             manifest_data={"files": [{"source": "linter.yaml", "target": ".github/workflows/linter.yaml"}]},
@@ -573,7 +572,6 @@ class TestExtractTarballMetadata:
         # Act
         meta = extract_tarball_metadata(
             tarball_path=tarball_path,
-            workflow_name="custom",
             source="owner/repo",
             version="1.0.0",
             manifest_data={
@@ -598,7 +596,6 @@ class TestExtractTarballMetadata:
         # Act
         meta = extract_tarball_metadata(
             tarball_path=tarball_path,
-            workflow_name="broken",
             source="owner/repo",
             version="1.0.0",
             manifest_data={"files": [{"source": "does-not-exist.yaml", "target": ".github/workflows/broken.yaml"}]},
@@ -615,7 +612,6 @@ class TestExtractTarballMetadata:
         # Act
         meta = extract_tarball_metadata(
             tarball_path=corrupt_path,
-            workflow_name="corrupt",
             source="owner/repo",
             version="1.0.0",
             manifest_data={},
