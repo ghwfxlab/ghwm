@@ -290,7 +290,7 @@ argv
 | --------- | -------------------------- | ------------ | ----------------------- |
 | `install` | Yes (missing/changed only) | Yes          | Yes                     |
 | `update`  | Yes (all)                  | No           | Yes                     |
-| `upgrade` | Yes (latest published)    | No           | Updates to latest tags  |
+| `upgrade` | Yes (latest published)     | No           | Updates to latest tags  |
 | `list`    | No                         | No           | —                       |
 | `audit`   | No                         | No           | —                       |
 
