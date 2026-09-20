@@ -119,7 +119,9 @@ def _is_rate_limited() -> bool:
         with urlopen(request, timeout=5) as response:  # noqa: S310
             data = json.loads(response.read())
             return bool(data.get("resources", {}).get("core", {}).get("remaining", 0) == 0)
-    except (HTTPError, URLError, OSError, json.JSONDecodeError, KeyError):
+    except HTTPError as exc:
+        return exc.code in {403, 429}
+    except (URLError, OSError, json.JSONDecodeError, KeyError):
         return True
 
 

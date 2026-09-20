@@ -19,7 +19,9 @@ from ghwm.download_npm import (
     download_npm_tarball,
     extract_npm_package,
     extract_tarball_metadata,
+    find_primary_workflow_source,
     find_workflow_file_content,
+    is_workflow_file,
     manifest_files,
     npm_package_metadata_url,
     npm_tarball_url,
@@ -676,3 +678,51 @@ class TestFindWorkflowFileContent:
 
         # Assert
         assert content is None
+
+
+class TestIsWorkflowFile:
+    def test_is_workflow_file_should_return_true_when_target_is_in_workflows(self) -> None:
+        # Arrange
+        file_obj = InstalledFile(source="ci.yml", content=b"", target=".github/workflows/ci.yml")
+
+        # Act / Assert
+        assert is_workflow_file(file_obj) is True
+
+    def test_is_workflow_file_should_return_false_when_target_is_not_in_workflows(self) -> None:
+        # Arrange
+        file_obj = InstalledFile(source="config.json", content=b"", target="config.json")
+
+        # Act / Assert
+        assert is_workflow_file(file_obj) is False
+
+
+class TestFindPrimaryWorkflowSource:
+    def test_find_primary_workflow_source_should_return_source_when_workflow_target_exists(self) -> None:
+        # Arrange
+        manifest_data = {
+            "files": [
+                {"source": "config.json", "target": "config.json"},
+                {"source": "linter.yaml", "target": ".github/workflows/linter.yaml"},
+            ]
+        }
+
+        # Act
+        result = find_primary_workflow_source(manifest_data)
+
+        # Assert
+        assert result == "linter.yaml"
+
+    def test_find_primary_workflow_source_should_return_none_when_no_workflow_target_exists(self) -> None:
+        # Arrange
+        manifest_data = {
+            "files": [
+                "invalid-item",
+                {"source": "config.json", "target": "config.json"},
+            ]
+        }
+
+        # Act
+        result = find_primary_workflow_source(manifest_data)
+
+        # Assert
+        assert result is None

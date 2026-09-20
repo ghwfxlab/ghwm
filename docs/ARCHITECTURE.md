@@ -187,11 +187,13 @@ Both paths return an `_InstalledFileResult` with `changed` and an optional
 2. Call `download_workflows()` to obtain `WorkflowSource` objects.
 3. For each `WorkflowEntry`, call `_install_one()`:
    - Sort files so workflow files are processed before config files.
-   - Delegate each file to `_sync_workflow_file` or `_sync_config_file`.
-   - Accumulate `LockFileEntry` objects and upsert into the lockfile.
-4. If `prune=True`, call `_prune_stale()` to remove managed workflow files no
+
+- Delegate each file to `sync_workflow_file` or `sync_config_file`.
+- Accumulate `LockFileEntry` objects and upsert into the lockfile.
+
+1. If `prune=True`, call `_prune_stale()` to remove managed workflow files no
    longer in the manifest.
-5. Write the updated lockfile.
+2. Write the updated lockfile.
 
 **Pruning** only removes workflow files (`.github/workflows/`). Config files
 are always left in place. A modified managed file (changed hash) is not pruned
@@ -293,8 +295,8 @@ argv
               │     ├─▶ download_workflows()  → [WorkflowSource]
               │     │     └─▶ download_npm_tarball() / read_local()
               │     ├─▶ _install_one() × N
-              │     │     ├─▶ _sync_workflow_file()
-              │     │     └─▶ _sync_config_file()
+              │     │     ├─▶ sync_workflow_file()
+              │     │     └─▶ sync_config_file()
               │     ├─▶ _prune_stale()
               │     └─▶ write_lockfile()
               ├─▶ update_workflows()   (install_workflows, prune=False)

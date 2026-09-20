@@ -19,31 +19,31 @@ def parse_commented_frontmatter(content: str) -> dict[str, Any]:
 
     comment_lines: list[str] = []
     in_delimited_block = False
-    idx = 0
-    length = len(content)
+    has_delimiter = False
 
-    while idx < length:
-        next_new_line = content.find("\n", idx)
-        line = content[idx:next_new_line] if next_new_line != -1 else content[idx:]
-        idx = length if next_new_line == -1 else next_new_line + 1
-
+    for line in content.splitlines():
         trimmed = line.strip()
         if trimmed == "# ---":
             if not in_delimited_block:
                 in_delimited_block = True
+                has_delimiter = True
+                comment_lines = []
                 continue
             break
 
         if in_delimited_block:
+            if not trimmed.startswith("#") and trimmed != "":
+                break
             comment_lines.append(line.removeprefix("# ").removeprefix("#"))
             continue
 
-        if trimmed.startswith("#"):
-            comment_lines.append(line.removeprefix("# ").removeprefix("#"))
-        elif trimmed == "":
-            continue
-        else:
-            break
+        if not has_delimiter:
+            if trimmed.startswith("#"):
+                comment_lines.append(line.removeprefix("# ").removeprefix("#"))
+            elif trimmed == "":
+                continue
+            else:
+                break
 
     if not comment_lines:
         return {}

@@ -12,7 +12,7 @@ from ghwm.download import WorkflowSource
 from ghwm.download_npm import InstalledFile
 from ghwm.install import install_workflows, update_workflows
 from ghwm.lock import read_lockfile
-from ghwm.managed_files import _extract_body, _load_workflow_yaml
+from ghwm.managed_files import extract_body, load_workflow_yaml
 from ghwm.manifest import Manifest, WorkflowEntry, parse_manifest
 from tests.shared import (
     AUTO_ASSIGN_PR,
@@ -186,7 +186,7 @@ class TestInstallWorkflows:
 
         update_workflows(consumer, manifest, local_path=marketplace)
 
-        body = cast(dict[str, object], _load_workflow_yaml(_extract_body(installed_path.read_text())))
+        body = cast(dict[str, object], load_workflow_yaml(extract_body(installed_path.read_text())))
         assert body["name"] == "v2"
         assert body["on"] == {"push": {"branches": ["release/*"]}}
 
@@ -258,7 +258,7 @@ class TestInstallWorkflows:
         installed_path = consumer / ".github" / "workflows" / "linter.yaml"
         body = cast(
             dict[str, object],
-            _load_workflow_yaml(_extract_body(installed_path.read_text())),
+            load_workflow_yaml(extract_body(installed_path.read_text())),
         )
         assert body["on"] == "pull_request"
 
@@ -288,7 +288,7 @@ class TestInstallWorkflows:
 
         update_workflows(consumer, manifest, local_path=marketplace)
 
-        body = cast(dict[str, object], _load_workflow_yaml(_extract_body(installed_path.read_text())))
+        body = cast(dict[str, object], load_workflow_yaml(extract_body(installed_path.read_text())))
         assert body["name"] == "v2"
         assert body["on"] == {"pull_request": None}
 
@@ -318,7 +318,7 @@ class TestInstallWorkflows:
 
         update_workflows(consumer, manifest, local_path=marketplace, update_triggers=True)
 
-        body = cast(dict[str, object], _load_workflow_yaml(_extract_body(installed_path.read_text())))
+        body = cast(dict[str, object], load_workflow_yaml(extract_body(installed_path.read_text())))
         assert body["on"] == {"pull_request": None}
 
     def test_update_workflows_should_preserve_existing_envs_when_updating_by_default(self, tmp_path: Path) -> None:
@@ -347,7 +347,7 @@ class TestInstallWorkflows:
 
         update_workflows(consumer, manifest, local_path=marketplace)
 
-        body = cast(dict[str, object], _load_workflow_yaml(_extract_body(installed_path.read_text())))
+        body = cast(dict[str, object], load_workflow_yaml(extract_body(installed_path.read_text())))
         assert body["name"] == "v2"
         assert body["env"] == {"MY_VAR": "consumer_changed"}
 
@@ -377,7 +377,7 @@ class TestInstallWorkflows:
 
         update_workflows(consumer, manifest, local_path=marketplace)
 
-        body = cast(dict[str, object], _load_workflow_yaml(_extract_body(installed_path.read_text())))
+        body = cast(dict[str, object], load_workflow_yaml(extract_body(installed_path.read_text())))
         assert body["name"] == "v2"
         assert body["env"] == {"MY_VAR": "new"}
 
@@ -407,7 +407,7 @@ class TestInstallWorkflows:
 
         update_workflows(consumer, manifest, local_path=marketplace, update_envs=True)
 
-        body = cast(dict[str, object], _load_workflow_yaml(_extract_body(installed_path.read_text())))
+        body = cast(dict[str, object], load_workflow_yaml(extract_body(installed_path.read_text())))
         assert body["env"] == {"MY_VAR": "new"}
 
     def test_update_workflows_should_leave_config_file_untouched_when_update_config_files_is_false(

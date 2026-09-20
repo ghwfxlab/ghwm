@@ -8,12 +8,12 @@ from pathlib import Path
 from ghwm.download import WorkflowSource, download_workflows
 from ghwm.lock import LockEntry, Lockfile, LockFileEntry, read_lockfile, write_lockfile
 from ghwm.managed_files import (
-    _is_workflow_target,
-    _prune_workflow_files,
-    _resolve_target,
-    _sync_config_file,
-    _sync_workflow_file,
-    _WorkflowBlockedError,
+    WorkflowBlockedError,
+    is_workflow_target,
+    prune_workflow_files,
+    resolve_target,
+    sync_config_file,
+    sync_workflow_file,
 )
 from ghwm.manifest import Manifest, WorkflowEntry
 from ghwm.metadata import extract_workflow_metadata
@@ -122,10 +122,10 @@ def _emit_telemetry(
                 continue
 
             version = entry.version if entry else None
-            ws = workflow_sources_map.get(name)
+            workflow_source = workflow_sources_map.get(name)
             metadata = (
-                ws.metadata
-                if ws and ws.metadata is not None
+                workflow_source.metadata
+                if workflow_source and workflow_source.metadata is not None
                 else extract_workflow_metadata(
                     source=workflow_source_str,
                     version=version,
@@ -162,16 +162,16 @@ def _install_one(
 
     sorted_files = sorted(
         workflow_source.files,
-        key=lambda installed_file: not _is_workflow_target(installed_file.target),
+        key=lambda installed_file: not is_workflow_target(installed_file.target),
     )
 
     try:
         for installed_file in sorted_files:
-            target = _resolve_target(cwd, entry, installed_file)
+            target = resolve_target(cwd, entry, installed_file)
             previous_lock_file = existing_lock.find_file(target) if existing_lock is not None else None
 
-            if _is_workflow_target(installed_file.target):
-                file_result = _sync_workflow_file(
+            if is_workflow_target(installed_file.target):
+                file_result = sync_workflow_file(
                     cwd,
                     entry,
                     workflow_source,
@@ -182,7 +182,7 @@ def _install_one(
                     update_envs=update_envs,
                 )
             else:
-                file_result = _sync_config_file(
+                file_result = sync_config_file(
                     cwd,
                     entry,
                     installed_file,
@@ -193,7 +193,7 @@ def _install_one(
             changed = changed or file_result.changed
             if file_result.lock_file is not None:
                 tracked_files.append(file_result.lock_file)
-    except _WorkflowBlockedError as exc:
+    except WorkflowBlockedError as exc:
         result.skipped.append((entry.name, str(exc)))
         return
 
@@ -227,7 +227,7 @@ def _prune_stale(
     stale_entries = [lock_entry for lock_entry in lockfile.packages if lock_entry.name not in manifest_workflow_names]
 
     for entry in stale_entries:
-        skip_reason = _prune_workflow_files(cwd, entry, force=force)
+        skip_reason = prune_workflow_files(cwd, entry, force=force)
         if skip_reason is not None:
             result.skipped.append((entry.name, skip_reason))
             continue
