@@ -220,11 +220,6 @@ def extract_npm_package(tarball_path: Path, manifest_data: dict[str, Any]) -> li
         )
 
 
-def is_workflow_file(installed_file: InstalledFile) -> bool:
-    """Check whether an installed file targets a workflow location."""
-    return is_workflow_target(installed_file.target)
-
-
 def find_workflow_file_content(files: list[InstalledFile]) -> str | None:
     """Find and decode the primary workflow file content from installed files."""
     for installed_file in files:

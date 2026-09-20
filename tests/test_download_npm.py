@@ -21,7 +21,6 @@ from ghwm.download_npm import (
     extract_tarball_metadata,
     find_primary_workflow_source,
     find_workflow_file_content,
-    is_workflow_file,
     manifest_files,
     npm_package_metadata_url,
     npm_tarball_url,
@@ -678,22 +677,6 @@ class TestFindWorkflowFileContent:
 
         # Assert
         assert content is None
-
-
-class TestIsWorkflowFile:
-    def test_is_workflow_file_should_return_true_when_target_is_in_workflows(self) -> None:
-        # Arrange
-        file_obj = InstalledFile(source="ci.yml", content=b"", target=".github/workflows/ci.yml")
-
-        # Act / Assert
-        assert is_workflow_file(file_obj) is True
-
-    def test_is_workflow_file_should_return_false_when_target_is_not_in_workflows(self) -> None:
-        # Arrange
-        file_obj = InstalledFile(source="config.json", content=b"", target="config.json")
-
-        # Act / Assert
-        assert is_workflow_file(file_obj) is False
 
 
 class TestFindPrimaryWorkflowSource:

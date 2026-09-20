@@ -13,7 +13,7 @@ from ghwm.download import WorkflowSource
 from ghwm.download_npm import InstalledFile
 from ghwm.lock import LockEntry, LockFileEntry
 from ghwm.manifest import WorkflowEntry
-from ghwm.paths import safe_resolve_path
+from ghwm.paths import is_workflow_target, safe_resolve_path
 
 
 class WorkflowBlockedError(Exception):
@@ -75,10 +75,6 @@ def _build_header(name: str, version: str | None, source: str, source_hash: str)
 
 def _is_managed(content: str, name: str) -> bool:
     return content.startswith(f"# Managed by ghwm ({name}@")
-
-
-def is_workflow_target(target: str) -> bool:
-    return target.startswith(".github/workflows/")
 
 
 def extract_body(content: str) -> str:
@@ -272,15 +268,3 @@ def prune_workflow_files(cwd: Path, entry: LockEntry, *, force: bool) -> str | N
         target_path.unlink()
 
     return None
-
-
-# Backward-compatibility aliases
-_WorkflowBlockedError = WorkflowBlockedError
-_InstalledFileResult = InstalledFileResult
-_is_workflow_target = is_workflow_target
-_extract_body = extract_body
-_load_workflow_yaml = load_workflow_yaml
-_resolve_target = resolve_target
-_sync_workflow_file = sync_workflow_file
-_sync_config_file = sync_config_file
-_prune_workflow_files = prune_workflow_files

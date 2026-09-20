@@ -31,6 +31,21 @@ def is_public_repository(owner: str, repo: str) -> bool:
         return False
 
 
+def build_telemetry_payload(
+    workflow_name: str,
+    action: str,
+    metadata: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Construct the enriched telemetry event payload."""
+    payload: dict[str, Any] = {
+        "workflow_name": workflow_name,
+        "action": action,
+    }
+    if metadata is not None:
+        payload["metadata"] = metadata
+    return payload
+
+
 def track_installation(
     source: str,
     workflow_name: str,
@@ -50,3 +65,8 @@ def track_installation(
     live telemetry endpoint in Issue #57. Only called when the registry
     repository is confirmed public.
     """
+    _ = build_telemetry_payload(
+        workflow_name=workflow_name,
+        action=event_type,
+        metadata=metadata,
+    )

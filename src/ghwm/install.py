@@ -9,7 +9,6 @@ from ghwm.download import WorkflowSource, download_workflows
 from ghwm.lock import LockEntry, Lockfile, LockFileEntry, read_lockfile, write_lockfile
 from ghwm.managed_files import (
     WorkflowBlockedError,
-    is_workflow_target,
     prune_workflow_files,
     resolve_target,
     sync_config_file,
@@ -17,6 +16,7 @@ from ghwm.managed_files import (
 )
 from ghwm.manifest import Manifest, WorkflowEntry
 from ghwm.metadata import extract_workflow_metadata
+from ghwm.paths import is_workflow_target
 from ghwm.telemetry import is_public_repository, track_installation
 
 
