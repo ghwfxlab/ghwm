@@ -260,9 +260,13 @@ def extract_tarball_metadata(
                     if isinstance(raw_file, dict):
                         raw_file_source = raw_file.get("source")
                         raw_file_target = raw_file.get("target")
-                        if isinstance(raw_file_source, str) and isinstance(raw_file_target, str) and raw_file_target.startswith(".github/workflows/"):
+                        if (
+                            isinstance(raw_file_source, str)
+                            and isinstance(raw_file_target, str)
+                            and raw_file_target.startswith(".github/workflows/")
+                        ):
                             try:
-                                workflow_file_content = _read_tar_member(tar, f"package/{src}").decode(
+                                workflow_file_content = _read_tar_member(tar, f"package/{raw_file_source}").decode(
                                     "utf-8", errors="replace"
                                 )
                                 break
