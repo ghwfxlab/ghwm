@@ -83,13 +83,18 @@ def _is_workflow_target(target: str) -> bool:
 
 def _extract_body(content: str) -> str:
     """Strip the generated header, return the body."""
-    lines = content.split("\n")
-    line_index = 0
-    while line_index < len(lines) and lines[line_index].startswith("#"):
-        line_index += 1
-    while line_index < len(lines) and not lines[line_index].strip():
-        line_index += 1
-    return "\n".join(lines[line_index:])
+    idx = 0
+    length = len(content)
+    while idx < length:
+        next_new_line = content.find("\n", idx)
+        line = content[idx:next_new_line] if next_new_line != -1 else content[idx:]
+        if line.startswith("#"):
+            idx = length if next_new_line == -1 else next_new_line + 1
+        elif not line.strip():
+            idx = length if next_new_line == -1 else next_new_line + 1
+        else:
+            break
+    return content[idx:]
 
 
 def _load_workflow_yaml(content: str) -> object:
