@@ -16,7 +16,7 @@ from urllib.request import Request, urlopen
 
 import yaml
 
-from ghwm.metadata import extract_workflow_metadata
+from ghwm.metadata import extract_workflow_metadata, find_workflow_file_content
 from ghwm.package_names import scoped_package_name
 from ghwm.paths import is_workflow_target
 
@@ -218,14 +218,6 @@ def extract_npm_package(tarball_path: Path, manifest_data: dict[str, Any]) -> li
             manifest_data,
             lambda source: _read_tar_member(tar, f"package/{source}"),
         )
-
-
-def find_workflow_file_content(files: list[InstalledFile]) -> str | None:
-    """Find and decode the primary workflow file content from installed files."""
-    for installed_file in files:
-        if is_workflow_target(installed_file.target):
-            return installed_file.content.decode("utf-8", errors="replace")
-    return None
 
 
 def find_primary_workflow_source(manifest_data: dict[str, Any]) -> str | None:

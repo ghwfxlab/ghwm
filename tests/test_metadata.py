@@ -2,7 +2,13 @@
 
 from __future__ import annotations
 
-from ghwm.metadata import extract_workflow_metadata, parse_commented_frontmatter, parse_tags
+from ghwm.download_npm import InstalledFile
+from ghwm.metadata import (
+    extract_workflow_metadata,
+    find_workflow_file_content,
+    parse_commented_frontmatter,
+    parse_tags,
+)
 
 
 class TestParseCommentedFrontmatter:
@@ -333,3 +339,48 @@ class TestExtractWorkflowMetadata:
 
         # Assert
         assert meta["description"] is None
+
+    def test_extract_workflow_metadata_should_preserve_empty_tags_when_frontmatter_defines_empty_list(
+        self,
+    ) -> None:
+        # Arrange
+        workflow_yml = "# ---\n# tags: []\n# ---\nname: my-flow\n"
+        manifest_data = {"tags": ["fallback-tag"]}
+
+        # Act
+        meta = extract_workflow_metadata(
+            source="owner/repo",
+            workflow_yml_content=workflow_yml,
+            manifest_data=manifest_data,
+        )
+
+        # Assert: explicit empty tags list in frontmatter must not be discarded by fallback
+        assert meta["tags"] == []
+
+
+class TestFindWorkflowFileContent:
+    def test_find_workflow_file_content_should_return_content_when_target_is_in_workflows_dir(self) -> None:
+        # Arrange
+        files = [
+            InstalledFile(source="config.json", content=b"{}", target="config.json"),
+            InstalledFile(source="main.yml", content=b"name: main\n", target=".github/workflows/main.yml"),
+        ]
+
+        # Act
+        content = find_workflow_file_content(files)
+
+        # Assert
+        assert content == "name: main\n"
+
+    def test_find_workflow_file_content_should_return_none_when_no_file_targets_workflows_dir(self) -> None:
+        # Arrange
+        files = [
+            InstalledFile(source="config.json", content=b"{}", target="config.json"),
+            InstalledFile(source="README.md", content=b"# Docs", target="README.md"),
+        ]
+
+        # Act
+        content = find_workflow_file_content(files)
+
+        # Assert
+        assert content is None

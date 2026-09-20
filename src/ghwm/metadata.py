@@ -3,9 +3,14 @@
 from __future__ import annotations
 
 import json
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import yaml
+
+from ghwm.paths import is_workflow_target
+
+if TYPE_CHECKING:
+    from ghwm.download_npm import InstalledFile
 
 
 def parse_commented_frontmatter(content: str) -> dict[str, Any]:
@@ -71,12 +76,28 @@ def parse_tags(raw_tags: Any) -> list[str]:
     return [tag[:64] for tag in unique_tags[:20]]
 
 
+def find_workflow_file_content(files: list[InstalledFile]) -> str | None:
+    """Find and decode the primary workflow file content from installed files."""
+    for installed_file in files:
+        if is_workflow_target(installed_file.target):
+            return installed_file.content.decode("utf-8", errors="replace")
+    return None
+
+
 def _trim_optional_str(value: Any, max_len: int) -> str | None:
     """Trim string representation of value to max_len; return None if falsy or empty."""
     if value is None:
         return None
     trimmed = str(value).strip()
     return trimmed[:max_len] if trimmed else None
+
+
+def _first_non_none(*values: Any) -> Any:
+    """Return the first non-None value, or None if all values are None."""
+    for val in values:
+        if val is not None:
+            return val
+    return None
 
 
 def extract_workflow_metadata(
@@ -119,22 +140,26 @@ def extract_workflow_metadata(
 
     default_owner = source.split("/", 1)[0] if "/" in source else None
 
-    raw_title = frontmatter.get("title") or manifest_keys.get("title")
+    raw_title = _first_non_none(frontmatter.get("title"), manifest_keys.get("title"))
     title = _trim_optional_str(raw_title, 128)
 
-    raw_description = frontmatter.get("description") or manifest_keys.get("description") or pkg_data.get("description")
+    raw_description = _first_non_none(
+        frontmatter.get("description"), manifest_keys.get("description"), pkg_data.get("description")
+    )
     description = _trim_optional_str(raw_description, 2048)
 
-    raw_tags = frontmatter.get("tags") or manifest_keys.get("tags")
+    raw_tags = _first_non_none(frontmatter.get("tags"), manifest_keys.get("tags"))
     tags = parse_tags(raw_tags)
 
-    raw_icon = frontmatter.get("icon") or manifest_keys.get("icon")
+    raw_icon = _first_non_none(frontmatter.get("icon"), manifest_keys.get("icon"))
     icon = _trim_optional_str(raw_icon, 64)
 
-    raw_owner = frontmatter.get("owner") or manifest_keys.get("owner") or default_owner
+    raw_owner = _first_non_none(frontmatter.get("owner"), manifest_keys.get("owner"), default_owner)
     owner = _trim_optional_str(raw_owner, 128)
 
-    raw_version = version or frontmatter.get("version") or manifest_keys.get("version") or pkg_data.get("version")
+    raw_version = _first_non_none(
+        version, frontmatter.get("version"), manifest_keys.get("version"), pkg_data.get("version")
+    )
     resolved_version = _trim_optional_str(raw_version, 64)
 
     resolved_source = _trim_optional_str(source, 512) or source
@@ -149,11 +174,11 @@ def extract_workflow_metadata(
         "source": resolved_source,
     }
 
-    raw_created_at = (
-        frontmatter.get("created_at")
-        or frontmatter.get("createdAt")
-        or manifest_keys.get("created_at")
-        or manifest_keys.get("createdAt")
+    raw_created_at = _first_non_none(
+        frontmatter.get("created_at"),
+        frontmatter.get("createdAt"),
+        manifest_keys.get("created_at"),
+        manifest_keys.get("createdAt"),
     )
     created_at = _trim_optional_str(raw_created_at, 64)
     if created_at is not None:

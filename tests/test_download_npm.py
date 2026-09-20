@@ -20,7 +20,6 @@ from ghwm.download_npm import (
     extract_npm_package,
     extract_tarball_metadata,
     find_primary_workflow_source,
-    find_workflow_file_content,
     manifest_files,
     npm_package_metadata_url,
     npm_tarball_url,
@@ -649,34 +648,6 @@ class TestExtractTarballMetadata:
 
         # Assert
         assert meta["title"] == "Pre-Extracted Title"
-
-
-class TestFindWorkflowFileContent:
-    def test_find_workflow_file_content_should_return_content_when_target_is_in_workflows_dir(self) -> None:
-        # Arrange
-        files = [
-            InstalledFile(source="config.json", content=b"{}", target="config.json"),
-            InstalledFile(source="main.yml", content=b"name: main\n", target=".github/workflows/main.yml"),
-        ]
-
-        # Act
-        content = find_workflow_file_content(files)
-
-        # Assert
-        assert content == "name: main\n"
-
-    def test_find_workflow_file_content_should_return_none_when_no_file_targets_workflows_dir(self) -> None:
-        # Arrange
-        files = [
-            InstalledFile(source="config.json", content=b"{}", target="config.json"),
-            InstalledFile(source="README.md", content=b"# Docs", target="README.md"),
-        ]
-
-        # Act
-        content = find_workflow_file_content(files)
-
-        # Assert
-        assert content is None
 
 
 class TestFindPrimaryWorkflowSource:
