@@ -117,13 +117,9 @@ def extract_workflow_metadata(
     3. ``package.json`` fields (description, version)
     4. Sane defaults based on ``source`` and ``version``
     """
-    frontmatter: dict[str, Any] = {}
-
-    if workflow_yml_content:
-        frontmatter = parse_commented_frontmatter(workflow_yml_content)
-
-    if not frontmatter and workflow_file_content:
-        frontmatter = parse_commented_frontmatter(workflow_file_content)
+    frontmatter_file = parse_commented_frontmatter(workflow_file_content) if workflow_file_content else {}
+    frontmatter_manifest = parse_commented_frontmatter(workflow_yml_content) if workflow_yml_content else {}
+    frontmatter = {**frontmatter_file, **frontmatter_manifest}
 
     # Allow top-level keys in parsed workflow.yml if not in frontmatter
     manifest_keys = manifest_data or {}

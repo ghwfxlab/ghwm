@@ -299,6 +299,33 @@ class TestExtractWorkflowMetadata:
         assert meta["title"] == "Main Flow"
         assert meta["description"] == "Main pipeline"
 
+    def test_extract_workflow_metadata_should_merge_complementary_frontmatter_when_both_files_define_fields(
+        self,
+    ) -> None:
+        # Arrange
+        workflow_yml = "# ---\n# title: Manifest Title\n# ---\nname: my-flow\n"
+        main_yml = (
+            "# ---\n"
+            "# title: Ignored Workflow Title\n"
+            "# description: Merged description\n"
+            "# icon: rule\n"
+            "# ---\n"
+            "name: main\n"
+        )
+
+        # Act
+        meta = extract_workflow_metadata(
+            source="owner/repo",
+            version="1.0.0",
+            workflow_yml_content=workflow_yml,
+            workflow_file_content=main_yml,
+        )
+
+        # Assert: manifest frontmatter overrides workflow file frontmatter, but complementary fields are retained
+        assert meta["title"] == "Manifest Title"
+        assert meta["description"] == "Merged description"
+        assert meta["icon"] == "rule"
+
     def test_extract_workflow_metadata_should_read_manifest_keys_and_created_at_when_both_are_present(self) -> None:
         # Arrange
         frontmatter = "# ---\n# createdAt: '2026-09-08T12:00:00Z'\n# ---\nname: flow\n"
