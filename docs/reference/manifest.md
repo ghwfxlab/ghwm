@@ -89,6 +89,7 @@ The package identifier within the registry.
 - Must be a non-empty string.
 - Each workflow name in `workflows` must be unique. Duplicate workflow names cause a manifest parse error.
 - Also supports inline versions (e.g. `name: linter@1.0.0`).
+- Workflow packages can define presentation metadata (title, description, tags, icon) via commented frontmatter in the upstream workflow file (see [Workflow Frontmatter Specification](frontmatter.md)).
 
 #### `version`
 
