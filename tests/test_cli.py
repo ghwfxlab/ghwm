@@ -1019,9 +1019,7 @@ class TestNoTelemetryFlag:
         # Assert: visibility check must not be called when DO_NOT_TRACK=1
         mock_check.assert_not_called()
 
-    def test_main_should_skip_telemetry_when_ghwm_no_telemetry_env_var_is_set_for_install(
-        self, tmp_path: Path
-    ) -> None:
+    def test_main_should_skip_telemetry_when_ghwm_no_telemetry_env_var_is_set_for_install(self, tmp_path: Path) -> None:
         # Arrange
         marketplace = tmp_path / "marketplace"
         consumer = tmp_path / "consumer"
@@ -1039,9 +1037,7 @@ class TestNoTelemetryFlag:
         # Assert: visibility check must not be called when GHWM_NO_TELEMETRY=1
         mock_check.assert_not_called()
 
-    def test_main_should_skip_telemetry_when_ghwm_no_telemetry_env_var_is_set_for_update(
-        self, tmp_path: Path
-    ) -> None:
+    def test_main_should_skip_telemetry_when_ghwm_no_telemetry_env_var_is_set_for_update(self, tmp_path: Path) -> None:
         # Arrange
         marketplace = tmp_path / "marketplace"
         consumer = tmp_path / "consumer"
