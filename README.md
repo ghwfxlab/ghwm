@@ -264,10 +264,12 @@ ghwm update --no-telemetry
 ghwm upgrade --no-telemetry
 ```
 
-To opt out permanently — for example in CI/CD pipelines or a global shell config — set the `DO_NOT_TRACK=1` environment variable ([consoledonottrack.com](https://consoledonottrack.com/)):
+To opt out permanently — for example in CI/CD pipelines or a global shell config — set either the `DO_NOT_TRACK=1` environment variable ([consoledonottrack.com](https://consoledonottrack.com/)) or `GHWM_NO_TELEMETRY=1`:
 
 ```sh
 export DO_NOT_TRACK=1
+# or
+export GHWM_NO_TELEMETRY=1
 ```
 
 ## Development
