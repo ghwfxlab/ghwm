@@ -23,9 +23,9 @@ def parse_commented_frontmatter(content: str) -> dict[str, Any]:
     length = len(content)
 
     while idx < length:
-        next_nl = content.find("\n", idx)
-        line = content[idx:next_nl] if next_nl != -1 else content[idx:]
-        idx = length if next_nl == -1 else next_nl + 1
+        next_new_line = content.find("\n", idx)
+        line = content[idx:next_new_line] if next_new_line != -1 else content[idx:]
+        idx = length if next_new_line == -1 else next_new_line + 1
 
         trimmed = line.strip()
         if trimmed == "# ---":

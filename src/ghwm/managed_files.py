@@ -86,12 +86,12 @@ def _extract_body(content: str) -> str:
     idx = 0
     length = len(content)
     while idx < length:
-        next_nl = content.find("\n", idx)
-        line = content[idx:next_nl] if next_nl != -1 else content[idx:]
+        next_new_line = content.find("\n", idx)
+        line = content[idx:next_new_line] if next_new_line != -1 else content[idx:]
         if line.startswith("#"):
-            idx = length if next_nl == -1 else next_nl + 1
+            idx = length if next_new_line == -1 else next_new_line + 1
         elif not line.strip():
-            idx = length if next_nl == -1 else next_nl + 1
+            idx = length if next_new_line == -1 else next_new_line + 1
         else:
             break
     return content[idx:]

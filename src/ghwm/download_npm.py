@@ -258,9 +258,9 @@ def extract_tarball_metadata(
             if workflow_file_content is None:
                 for raw_file in manifest_data.get("files", []):
                     if isinstance(raw_file, dict):
-                        src = raw_file.get("source")
-                        tgt = raw_file.get("target")
-                        if isinstance(src, str) and isinstance(tgt, str) and tgt.startswith(".github/workflows/"):
+                        raw_file_source = raw_file.get("source")
+                        raw_file_target = raw_file.get("target")
+                        if isinstance(raw_file_source, str) and isinstance(raw_file_target, str) and raw_file_target.startswith(".github/workflows/"):
                             try:
                                 workflow_file_content = _read_tar_member(tar, f"package/{src}").decode(
                                     "utf-8", errors="replace"
