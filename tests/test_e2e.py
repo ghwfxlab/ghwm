@@ -24,6 +24,9 @@ try:
 except ImportError:
     TESTCONTAINERS_AVAILABLE = False
 
+DEFAULT_REGISTRY_SOURCE = "ghwfxlab/ghwm-registry"
+SECONDARY_REGISTRY_SOURCE = "pljanicki/ghwm-registry"
+
 
 def _is_docker_available() -> bool:
     if not TESTCONTAINERS_AVAILABLE:
@@ -127,7 +130,12 @@ class ContainerWorkspace:
         res = self.container.exec(["sh", "-c", cmd])
         assert res.exit_code == 0, f"Failed to write {rel_path}: {res.output.decode()}"
 
-    def write_manifest(self, source: str, workflows: list[dict[str, Any]]) -> None:
+    def write_manifest(
+        self,
+        workflows: list[dict[str, Any]],
+        *,
+        source: str = DEFAULT_REGISTRY_SOURCE,
+    ) -> None:
         manifest_data = {"source": source, "workflows": workflows}
         manifest_yaml = yaml.dump(manifest_data, sort_keys=False)
         self.write_file("ghwm.yml", manifest_yaml)
@@ -190,11 +198,10 @@ class TestGhwmEndToEnd:
     ) -> None:
         # Arrange
         workspace.write_manifest(
-            source="ghwfxlab/ghwm-registry",
-            workflows=[
+            [
                 {"name": "ghwm-auto-assign-pr", "version": "1.0.0"},
                 {"name": "ghwm-super-linter", "version": "1.0.0"},
-            ],
+            ]
         )
 
         # Act
@@ -229,15 +236,14 @@ class TestGhwmEndToEnd:
     ) -> None:
         # Arrange
         workspace.write_manifest(
-            source="ghwfxlab/ghwm-registry",
-            workflows=[
+            [
                 {"name": "ghwm-super-linter", "version": "1.0.0"},
                 {
                     "name": "ghwm-auto-assign-pr",
                     "version": "1.0.0",
-                    "source": "pljanicki/ghwm-registry",
+                    "source": SECONDARY_REGISTRY_SOURCE,
                 },
-            ],
+            ]
         )
 
         # Act
@@ -259,10 +265,7 @@ class TestGhwmEndToEnd:
         workspace: ContainerWorkspace,
     ) -> None:
         # Arrange: Install version 1.0.0
-        workspace.write_manifest(
-            source="ghwfxlab/ghwm-registry",
-            workflows=[{"name": "ghwm-auto-assign-pr", "version": "1.0.0"}],
-        )
+        workspace.write_manifest([{"name": "ghwm-auto-assign-pr", "version": "1.0.0"}])
         install_exit_code, _ = workspace.run_ghwm("install")
         assert install_exit_code == 0
         assert "# Managed by ghwm (ghwm-auto-assign-pr@1.0.0)" in workspace.read_file(
@@ -270,10 +273,7 @@ class TestGhwmEndToEnd:
         )
 
         # Act: Update manifest to 1.0.1 and run update
-        workspace.write_manifest(
-            source="ghwfxlab/ghwm-registry",
-            workflows=[{"name": "ghwm-auto-assign-pr", "version": "1.0.1"}],
-        )
+        workspace.write_manifest([{"name": "ghwm-auto-assign-pr", "version": "1.0.1"}])
         update_exit_code, update_output = workspace.run_ghwm("update")
 
         # Assert
@@ -289,10 +289,7 @@ class TestGhwmEndToEnd:
         workspace: ContainerWorkspace,
     ) -> None:
         # Arrange: Install version 1.0.1
-        workspace.write_manifest(
-            source="ghwfxlab/ghwm-registry",
-            workflows=[{"name": "ghwm-auto-assign-pr", "version": "1.0.1"}],
-        )
+        workspace.write_manifest([{"name": "ghwm-auto-assign-pr", "version": "1.0.1"}])
         install_exit_code, _ = workspace.run_ghwm("install")
         assert install_exit_code == 0
         assert "# Managed by ghwm (ghwm-auto-assign-pr@1.0.1)" in workspace.read_file(
@@ -300,10 +297,7 @@ class TestGhwmEndToEnd:
         )
 
         # Act: Downgrade manifest to 1.0.0 and run install
-        workspace.write_manifest(
-            source="ghwfxlab/ghwm-registry",
-            workflows=[{"name": "ghwm-auto-assign-pr", "version": "1.0.0"}],
-        )
+        workspace.write_manifest([{"name": "ghwm-auto-assign-pr", "version": "1.0.0"}])
         downgrade_exit_code, downgrade_output = workspace.run_ghwm("install")
 
         # Assert
@@ -319,10 +313,7 @@ class TestGhwmEndToEnd:
         workspace: ContainerWorkspace,
     ) -> None:
         # Arrange: Install 1.0.0 and customize the on: section
-        workspace.write_manifest(
-            source="ghwfxlab/ghwm-registry",
-            workflows=[{"name": "ghwm-auto-assign-pr", "version": "1.0.0"}],
-        )
+        workspace.write_manifest([{"name": "ghwm-auto-assign-pr", "version": "1.0.0"}])
         workspace.run_ghwm("install")
         workspace.replace_in_file(
             ".github/workflows/auto-assign-pr.yaml",
@@ -332,14 +323,13 @@ class TestGhwmEndToEnd:
 
         # Act 1: Update with update-triggers: false
         workspace.write_manifest(
-            source="ghwfxlab/ghwm-registry",
-            workflows=[
+            [
                 {
                     "name": "ghwm-auto-assign-pr",
                     "version": "1.0.1",
                     "update-triggers": False,
                 }
-            ],
+            ]
         )
         exit_code1, _ = workspace.run_ghwm("update")
 
@@ -351,14 +341,13 @@ class TestGhwmEndToEnd:
 
         # Act 2: Update with update-triggers: true
         workspace.write_manifest(
-            source="ghwfxlab/ghwm-registry",
-            workflows=[
+            [
                 {
                     "name": "ghwm-auto-assign-pr",
                     "version": "1.0.1",
                     "update-triggers": True,
                 }
-            ],
+            ]
         )
         exit_code2, _ = workspace.run_ghwm("update")
 
@@ -373,10 +362,7 @@ class TestGhwmEndToEnd:
         workspace: ContainerWorkspace,
     ) -> None:
         # Arrange: Install ghwm-super-linter 1.0.0 and customize its env: section
-        workspace.write_manifest(
-            source="ghwfxlab/ghwm-registry",
-            workflows=[{"name": "ghwm-super-linter", "version": "1.0.0"}],
-        )
+        workspace.write_manifest([{"name": "ghwm-super-linter", "version": "1.0.0"}])
         workspace.run_ghwm("install")
         workspace.replace_in_file(
             ".github/workflows/super-linter.yaml",
@@ -386,14 +372,13 @@ class TestGhwmEndToEnd:
 
         # Act 1: Update with update-envs: false
         workspace.write_manifest(
-            source="ghwfxlab/ghwm-registry",
-            workflows=[
+            [
                 {
                     "name": "ghwm-super-linter",
                     "version": "1.0.1",
                     "update-envs": False,
                 }
-            ],
+            ]
         )
         exit_code1, _ = workspace.run_ghwm("update")
 
@@ -405,14 +390,13 @@ class TestGhwmEndToEnd:
 
         # Act 2: Update with update-envs: true
         workspace.write_manifest(
-            source="ghwfxlab/ghwm-registry",
-            workflows=[
+            [
                 {
                     "name": "ghwm-super-linter",
                     "version": "1.0.1",
                     "update-envs": True,
                 }
-            ],
+            ]
         )
         exit_code2, _ = workspace.run_ghwm("update")
 
@@ -426,10 +410,7 @@ class TestGhwmEndToEnd:
         workspace: ContainerWorkspace,
     ) -> None:
         # Arrange: Install 1.0.0 and customize .github/auto_assign.yaml
-        workspace.write_manifest(
-            source="ghwfxlab/ghwm-registry",
-            workflows=[{"name": "ghwm-auto-assign-pr", "version": "1.0.0"}],
-        )
+        workspace.write_manifest([{"name": "ghwm-auto-assign-pr", "version": "1.0.0"}])
         workspace.run_ghwm("install")
         workspace.replace_in_file(
             ".github/auto_assign.yaml",
@@ -439,14 +420,13 @@ class TestGhwmEndToEnd:
 
         # Act 1: Update with update-config-files: false
         workspace.write_manifest(
-            source="ghwfxlab/ghwm-registry",
-            workflows=[
+            [
                 {
                     "name": "ghwm-auto-assign-pr",
                     "version": "1.0.1",
                     "update-config-files": False,
                 }
-            ],
+            ]
         )
         exit_code1, _ = workspace.run_ghwm("update")
 
@@ -457,14 +437,13 @@ class TestGhwmEndToEnd:
 
         # Act 2: Update with update-config-files: true
         workspace.write_manifest(
-            source="ghwfxlab/ghwm-registry",
-            workflows=[
+            [
                 {
                     "name": "ghwm-auto-assign-pr",
                     "version": "1.0.1",
                     "update-config-files": True,
                 }
-            ],
+            ]
         )
         exit_code2, _ = workspace.run_ghwm("update")
 
@@ -480,11 +459,10 @@ class TestGhwmEndToEnd:
     ) -> None:
         # Arrange: Install two workflows
         workspace.write_manifest(
-            source="ghwfxlab/ghwm-registry",
-            workflows=[
+            [
                 {"name": "ghwm-auto-assign-pr", "version": "1.0.0"},
                 {"name": "ghwm-super-linter", "version": "1.0.0"},
-            ],
+            ]
         )
         workspace.run_ghwm("install")
         assert workspace.file_exists(".github/workflows/auto-assign-pr.yaml")
@@ -492,10 +470,7 @@ class TestGhwmEndToEnd:
         assert workspace.file_exists(".github/workflows/super-linter.yaml")
 
         # Act: Remove auto-assign-pr from manifest and run install
-        workspace.write_manifest(
-            source="ghwfxlab/ghwm-registry",
-            workflows=[{"name": "ghwm-super-linter", "version": "1.0.0"}],
-        )
+        workspace.write_manifest([{"name": "ghwm-super-linter", "version": "1.0.0"}])
         exit_code, output = workspace.run_ghwm("install")
 
         # Assert: auto-assign-pr workflow pruned, config kept, super-linter kept
@@ -515,10 +490,7 @@ class TestGhwmEndToEnd:
         workspace: ContainerWorkspace,
     ) -> None:
         # Arrange: Install workflow and modify its body locally
-        workspace.write_manifest(
-            source="ghwfxlab/ghwm-registry",
-            workflows=[{"name": "ghwm-auto-assign-pr", "version": "1.0.0"}],
-        )
+        workspace.write_manifest([{"name": "ghwm-auto-assign-pr", "version": "1.0.0"}])
         workspace.run_ghwm("install")
         workspace.replace_in_file(
             ".github/workflows/auto-assign-pr.yaml",
@@ -527,10 +499,7 @@ class TestGhwmEndToEnd:
         )
 
         # Act 1: Remove from manifest and run install without --force
-        workspace.write_manifest(
-            source="ghwfxlab/ghwm-registry",
-            workflows=[],
-        )
+        workspace.write_manifest([])
         exit_code1, output1 = workspace.run_ghwm("install")
 
         # Assert 1: File is kept because it was modified
@@ -552,14 +521,13 @@ class TestGhwmEndToEnd:
     ) -> None:
         # Arrange
         workspace.write_manifest(
-            source="ghwfxlab/ghwm-registry",
-            workflows=[
+            [
                 {
                     "name": "ghwm-auto-assign-pr",
                     "version": "1.0.0",
                     "target": "custom-auto-assign.yaml",
                 }
-            ],
+            ]
         )
 
         # Act
@@ -579,10 +547,7 @@ class TestGhwmEndToEnd:
         workspace: ContainerWorkspace,
     ) -> None:
         # Arrange
-        workspace.write_manifest(
-            source="ghwfxlab/ghwm-registry",
-            workflows=[{"name": "ghwm-auto-assign-pr", "version": "1.0.0"}],
-        )
+        workspace.write_manifest([{"name": "ghwm-auto-assign-pr", "version": "1.0.0"}])
         workspace.run_ghwm("install")
 
         # Act
@@ -598,11 +563,10 @@ class TestGhwmEndToEnd:
     ) -> None:
         # Arrange
         workspace.write_manifest(
-            source="ghwfxlab/ghwm-registry",
-            workflows=[
+            [
                 {"name": "ghwm-auto-assign-pr", "version": "1.0.0"},
                 {"name": "ghwm-super-linter", "version": "1.0.0"},
-            ],
+            ]
         )
 
         # Act
@@ -610,7 +574,7 @@ class TestGhwmEndToEnd:
 
         # Assert
         assert exit_code == 0
-        assert "Source: ghwfxlab/ghwm-registry" in output
+        assert f"Source: {DEFAULT_REGISTRY_SOURCE}" in output
         assert "Workflows (2):" in output
         assert "- ghwm-auto-assign-pr@1.0.0" in output
         assert "- ghwm-super-linter@1.0.0" in output
