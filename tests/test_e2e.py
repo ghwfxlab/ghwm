@@ -278,7 +278,7 @@ class TestGhwmEndToEnd:
 
         # Assert
         assert update_exit_code == 0
-        assert "Updated ghwm-auto-assign-pr" in update_output or "Installed ghwm-auto-assign-pr" in update_output
+        assert "↻ Updated ghwm-auto-assign-pr" in update_output
         updated_content = workspace.read_file(".github/workflows/auto-assign-pr.yaml")
         assert "# Managed by ghwm (ghwm-auto-assign-pr@1.0.1)" in updated_content
         lock_data = workspace.read_lockfile()
@@ -304,10 +304,11 @@ class TestGhwmEndToEnd:
             source="ghwfxlab/ghwm-registry",
             workflows=[{"name": "ghwm-auto-assign-pr", "version": "1.0.0"}],
         )
-        downgrade_exit_code, _ = workspace.run_ghwm("install")
+        downgrade_exit_code, downgrade_output = workspace.run_ghwm("install")
 
         # Assert
         assert downgrade_exit_code == 0
+        assert "↻ Updated ghwm-auto-assign-pr" in downgrade_output
         downgraded_content = workspace.read_file(".github/workflows/auto-assign-pr.yaml")
         assert "# Managed by ghwm (ghwm-auto-assign-pr@1.0.0)" in downgraded_content
         lock_data = workspace.read_lockfile()
@@ -499,7 +500,7 @@ class TestGhwmEndToEnd:
 
         # Assert: auto-assign-pr workflow pruned, config kept, super-linter kept
         assert exit_code == 0
-        assert "Pruned auto-assign-pr" in output or "auto-assign-pr" in output
+        assert "✗ Pruned ghwm-auto-assign-pr" in output
         assert not workspace.file_exists(".github/workflows/auto-assign-pr.yaml")
         assert workspace.file_exists(".github/auto_assign.yaml")
         assert workspace.file_exists(".github/workflows/super-linter.yaml")
@@ -534,14 +535,15 @@ class TestGhwmEndToEnd:
 
         # Assert 1: File is kept because it was modified
         assert exit_code1 == 0
-        assert "Skipped pruning" in output1 or "modified" in output1
+        assert "⊘ Skipped ghwm-auto-assign-pr (modified)" in output1
         assert workspace.file_exists(".github/workflows/auto-assign-pr.yaml")
 
         # Act 2: Run with --force
-        exit_code2, _ = workspace.run_ghwm("install", "--force")
+        exit_code2, output2 = workspace.run_ghwm("install", "--force")
 
         # Assert 2: File is pruned with force
         assert exit_code2 == 0
+        assert "✗ Pruned ghwm-auto-assign-pr" in output2
         assert not workspace.file_exists(".github/workflows/auto-assign-pr.yaml")
 
     def test_e2e_should_install_workflow_to_custom_target_when_target_specified(
@@ -588,7 +590,7 @@ class TestGhwmEndToEnd:
 
         # Assert
         assert exit_code == 0
-        assert "up to date" in output or "Skipped" in output
+        assert "⊘ Skipped ghwm-auto-assign-pr (already up to date)" in output
 
     def test_e2e_should_display_declared_workflows_when_list_command_executed(
         self,
@@ -608,5 +610,7 @@ class TestGhwmEndToEnd:
 
         # Assert
         assert exit_code == 0
-        assert "ghwm-auto-assign-pr" in output
-        assert "ghwm-super-linter" in output
+        assert "Source: ghwfxlab/ghwm-registry" in output
+        assert "Workflows (2):" in output
+        assert "- ghwm-auto-assign-pr@1.0.0" in output
+        assert "- ghwm-super-linter@1.0.0" in output
