@@ -52,8 +52,8 @@ jobs:
 
 - **Opening Delimiter**: `# ---` must be the first non-empty line of the file.
 - **Closing Delimiter**: `# ---` terminates the frontmatter block.
-- **Line Prefixing**: Every line within the frontmatter block must begin with `# ` or `#`.
-- **YAML Content**: The text following the `# ` prefix forms standard YAML mapping syntax.
+- **Line Prefixing**: Every line within the frontmatter block must begin with `#` (optionally followed by a space).
+- **YAML Content**: The text following the `#` prefix (and optional space) forms standard YAML mapping syntax.
 
 > [!NOTE]
 > `ghwm` also supports top-of-file comments without explicit `# ---` delimiters as a graceful fallback. However, registry authors must use the explicit `# ---` delimiters for clarity and deterministic parsing across external tools.
@@ -94,9 +94,11 @@ A descriptive overview of what the workflow performs, prerequisites, or key tool
 - **Type**: `string`
 - **Max Length**: 2048 characters (longer values are truncated).
 - **Example**:
+
   ```yaml
   # description: Automated security scanning workflow running zizmor static analysis on GitHub Actions workflows.
   ```
+
 - **Line Length**: For multiline descriptions, conform to standard YAML linter constraints (`<= 120` characters per line) by wrapping lines or using YAML folded block scalars (`>`).
 
 ### `tags`
@@ -106,13 +108,16 @@ A list of tags, categories, or keywords for discovery and classification.
 - **Type**: `string[]` (list of strings, comma-separated string, or JSON array string).
 - **Constraints**: Maximum 20 unique tags; each tag is truncated to 64 characters. Duplicates are removed.
 - **Examples**:
+
   ```yaml
   # tags:
   #   - security
   #   - audit
   #   - actions
   ```
+
   Or compact list format:
+
   ```yaml
   # tags: [security, audit, actions]
   ```
