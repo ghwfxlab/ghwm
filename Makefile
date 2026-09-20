@@ -7,6 +7,7 @@ SHELL := /usr/bin/env bash
 .SHELLFLAGS := -eu -o pipefail -c
 
 UV ?= uv
+export GHWM_TELEMETRY_URL ?= https://ghwm-deployment-tst.ghwfxlab.workers.dev/installations
 TEXTLINT_CONFIG ?= .github/linters/.textlintrc
 TEXTLINT_IGNORE ?= .github/linters/.textlintignore
 
@@ -93,12 +94,11 @@ lang-fix: check-lang-env
 
 setup-precommit:
 	@echo "[setup-precommit] Installing pre-commit hooks..."
-	@pip install pre-commit
-	@pre-commit install --install-hooks
+	@$(UV) run --with pre-commit pre-commit install --install-hooks
 
 precommit:
 	@echo "[precommit] Running pre-commit..."
-	@pre-commit run --all-files
+	@$(UV) run --with pre-commit pre-commit run --all-files
 
 super-linter:
 	@echo "[super-linter] Running super-linter via Docker..."
