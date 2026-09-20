@@ -3,14 +3,22 @@
 from __future__ import annotations
 
 import json
-from typing import TYPE_CHECKING, Any
+from collections.abc import Sequence
+from typing import Any, Protocol
 
 import yaml
 
 from ghwm.paths import is_workflow_target
 
-if TYPE_CHECKING:
-    from ghwm.download_npm import InstalledFile
+
+class InstalledFileLike(Protocol):
+    """Protocol for installed file objects with target path and binary content."""
+
+    @property
+    def target(self) -> str: ...  # pragma: no cover
+
+    @property
+    def content(self) -> bytes: ...  # pragma: no cover
 
 
 def parse_commented_frontmatter(content: str) -> dict[str, Any]:
@@ -24,14 +32,12 @@ def parse_commented_frontmatter(content: str) -> dict[str, Any]:
 
     comment_lines: list[str] = []
     in_delimited_block = False
-    has_delimiter = False
 
     for line in content.splitlines():
         trimmed = line.strip()
         if trimmed == "# ---":
             if not in_delimited_block:
                 in_delimited_block = True
-                has_delimiter = True
                 comment_lines = []
                 continue
             break
@@ -42,13 +48,12 @@ def parse_commented_frontmatter(content: str) -> dict[str, Any]:
             comment_lines.append(line.removeprefix("# ").removeprefix("#"))
             continue
 
-        if not has_delimiter:
-            if trimmed.startswith("#"):
-                comment_lines.append(line.removeprefix("# ").removeprefix("#"))
-            elif trimmed == "":
-                continue
-            else:
-                break
+        if trimmed.startswith("#"):
+            comment_lines.append(line.removeprefix("# ").removeprefix("#"))
+        elif trimmed == "":
+            continue
+        else:
+            break
 
     if not comment_lines:
         return {}
@@ -76,7 +81,7 @@ def parse_tags(raw_tags: Any) -> list[str]:
     return [tag[:64] for tag in unique_tags[:20]]
 
 
-def find_workflow_file_content(files: list[InstalledFile]) -> str | None:
+def find_workflow_file_content(files: Sequence[InstalledFileLike]) -> str | None:
     """Find and decode the primary workflow file content from installed files."""
     for installed_file in files:
         if is_workflow_target(installed_file.target):
