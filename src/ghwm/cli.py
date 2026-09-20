@@ -397,7 +397,11 @@ def main(argv: list[str] | None = None) -> None:
         print(f"Found {len(manifest.workflows)} workflow(s) in {manifest_path}")
 
         if command == "install":
-            no_telemetry = args.no_telemetry or os.environ.get("DO_NOT_TRACK") == "1"
+            no_telemetry = (
+                args.no_telemetry
+                or os.environ.get("DO_NOT_TRACK") == "1"
+                or os.environ.get("GHWM_NO_TELEMETRY") == "1"
+            )
             result = install_workflows(
                 cwd,
                 manifest,
@@ -409,7 +413,11 @@ def main(argv: list[str] | None = None) -> None:
                 no_telemetry=no_telemetry,
             )
         elif command in ("update", "upgrade"):
-            no_telemetry = args.no_telemetry or os.environ.get("DO_NOT_TRACK") == "1"
+            no_telemetry = (
+                args.no_telemetry
+                or os.environ.get("DO_NOT_TRACK") == "1"
+                or os.environ.get("GHWM_NO_TELEMETRY") == "1"
+            )
             result = update_workflows(
                 cwd,
                 manifest,
