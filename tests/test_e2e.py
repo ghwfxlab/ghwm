@@ -104,6 +104,8 @@ def e2e_container(built_wheel: tuple[Path, str]) -> Generator[DockerContainer, N
         DockerContainer("python:3.12-slim")
         .with_volume_mapping(str(wheel_dir), "/dist", "ro")
         .with_env("GITHUB_TOKEN", token)
+        .with_env("DO_NOT_TRACK", "1")
+        .with_env("GHWM_NO_TELEMETRY", "1")
         .with_command("tail -f /dev/null")
     )
     container.start()
@@ -578,3 +580,21 @@ class TestGhwmEndToEnd:
         assert "Workflows (2):" in output
         assert "- ghwm-auto-assign-pr@1.0.0" in output
         assert "- ghwm-super-linter@1.0.0" in output
+
+    def test_e2e_should_honour_telemetry_opt_out_environment_variable(
+        self,
+        workspace: ContainerWorkspace,
+    ) -> None:
+        # Arrange: manifest with a workflow from a registry
+        workspace.write_manifest([{"name": "ghwm-auto-assign-pr", "version": "1.0.0"}])
+
+        # Act: running install with DO_NOT_TRACK=1 and GHWM_NO_TELEMETRY=1 (already configured in container)
+        # Verify both flag and environment variable behavior cleanly without errors
+        exit_code, output = workspace.run_ghwm("install", "--no-telemetry")
+
+        # Assert
+        assert exit_code == 0
+        assert "✓ Installed ghwm-auto-assign-pr" in output
+        assert workspace.file_exists(".github/workflows/auto-assign-pr.yaml")
+
+

@@ -117,3 +117,5 @@ jobs:
         run: make test-e2e
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DO_NOT_TRACK: "1"
+          GHWM_NO_TELEMETRY: "1"
