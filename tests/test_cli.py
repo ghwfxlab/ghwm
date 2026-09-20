@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -984,8 +985,6 @@ class TestNoTelemetryFlag:
         mock_check.assert_not_called()
 
     def test_main_should_pass_no_telemetry_true_to_update_when_flag_is_used(self, tmp_path: Path) -> None:
-        from unittest.mock import patch
-
         # Arrange
         marketplace = tmp_path / "marketplace"
         consumer = tmp_path / "consumer"
@@ -1002,9 +1001,6 @@ class TestNoTelemetryFlag:
         mock_check.assert_not_called()
 
     def test_main_should_skip_telemetry_when_do_not_track_env_var_is_set_for_update(self, tmp_path: Path) -> None:
-        import os
-        from unittest.mock import patch
-
         # Arrange
         marketplace = tmp_path / "marketplace"
         consumer = tmp_path / "consumer"
@@ -1026,9 +1022,6 @@ class TestNoTelemetryFlag:
     def test_main_should_skip_telemetry_when_ghwm_no_telemetry_env_var_is_set_for_install(
         self, tmp_path: Path
     ) -> None:
-        import os
-        from unittest.mock import patch
-
         # Arrange
         marketplace = tmp_path / "marketplace"
         consumer = tmp_path / "consumer"
@@ -1049,9 +1042,6 @@ class TestNoTelemetryFlag:
     def test_main_should_skip_telemetry_when_ghwm_no_telemetry_env_var_is_set_for_update(
         self, tmp_path: Path
     ) -> None:
-        import os
-        from unittest.mock import patch
-
         # Arrange
         marketplace = tmp_path / "marketplace"
         consumer = tmp_path / "consumer"
