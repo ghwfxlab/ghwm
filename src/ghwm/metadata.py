@@ -164,6 +164,14 @@ def extract_workflow_metadata(
 
     resolved_source = _trim_optional_str(source, 512) or source
 
+    raw_created_at = _first_non_none(
+        frontmatter.get("created_at"),
+        frontmatter.get("createdAt"),
+        manifest_keys.get("created_at"),
+        manifest_keys.get("createdAt"),
+    )
+    created_at = _trim_optional_str(raw_created_at, 64)
+
     metadata: dict[str, Any] = {
         "title": title,
         "description": description,
@@ -172,16 +180,7 @@ def extract_workflow_metadata(
         "version": resolved_version,
         "owner": owner,
         "source": resolved_source,
+        "created_at": created_at,
     }
-
-    raw_created_at = _first_non_none(
-        frontmatter.get("created_at"),
-        frontmatter.get("createdAt"),
-        manifest_keys.get("created_at"),
-        manifest_keys.get("createdAt"),
-    )
-    created_at = _trim_optional_str(raw_created_at, 64)
-    if created_at is not None:
-        metadata["created_at"] = created_at
 
     return metadata

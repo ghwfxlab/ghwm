@@ -277,6 +277,7 @@ class TestExtractWorkflowMetadata:
             "version": "1.0.0",
             "owner": "owner",
             "source": "owner/repo",
+            "created_at": None,
         }
 
     def test_extract_workflow_metadata_should_use_workflow_file_content_when_workflow_yml_lacks_frontmatter(
