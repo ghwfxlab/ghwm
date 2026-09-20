@@ -8,10 +8,12 @@ from unittest.mock import patch
 
 import pytest
 
+from ghwm.download import WorkflowSource
+from ghwm.download_npm import InstalledFile
 from ghwm.install import install_workflows, update_workflows
 from ghwm.lock import read_lockfile
-from ghwm.managed_files import _extract_body, _load_workflow_yaml
-from ghwm.manifest import Manifest, parse_manifest
+from ghwm.managed_files import extract_body, load_workflow_yaml
+from ghwm.manifest import Manifest, WorkflowEntry, parse_manifest
 from tests.shared import (
     AUTO_ASSIGN_PR,
     LINTER,
@@ -184,7 +186,7 @@ class TestInstallWorkflows:
 
         update_workflows(consumer, manifest, local_path=marketplace)
 
-        body = cast(dict[str, object], _load_workflow_yaml(_extract_body(installed_path.read_text())))
+        body = cast(dict[str, object], load_workflow_yaml(extract_body(installed_path.read_text())))
         assert body["name"] == "v2"
         assert body["on"] == {"push": {"branches": ["release/*"]}}
 
@@ -256,7 +258,7 @@ class TestInstallWorkflows:
         installed_path = consumer / ".github" / "workflows" / "linter.yaml"
         body = cast(
             dict[str, object],
-            _load_workflow_yaml(_extract_body(installed_path.read_text())),
+            load_workflow_yaml(extract_body(installed_path.read_text())),
         )
         assert body["on"] == "pull_request"
 
@@ -286,7 +288,7 @@ class TestInstallWorkflows:
 
         update_workflows(consumer, manifest, local_path=marketplace)
 
-        body = cast(dict[str, object], _load_workflow_yaml(_extract_body(installed_path.read_text())))
+        body = cast(dict[str, object], load_workflow_yaml(extract_body(installed_path.read_text())))
         assert body["name"] == "v2"
         assert body["on"] == {"pull_request": None}
 
@@ -316,7 +318,7 @@ class TestInstallWorkflows:
 
         update_workflows(consumer, manifest, local_path=marketplace, update_triggers=True)
 
-        body = cast(dict[str, object], _load_workflow_yaml(_extract_body(installed_path.read_text())))
+        body = cast(dict[str, object], load_workflow_yaml(extract_body(installed_path.read_text())))
         assert body["on"] == {"pull_request": None}
 
     def test_update_workflows_should_preserve_existing_envs_when_updating_by_default(self, tmp_path: Path) -> None:
@@ -345,7 +347,7 @@ class TestInstallWorkflows:
 
         update_workflows(consumer, manifest, local_path=marketplace)
 
-        body = cast(dict[str, object], _load_workflow_yaml(_extract_body(installed_path.read_text())))
+        body = cast(dict[str, object], load_workflow_yaml(extract_body(installed_path.read_text())))
         assert body["name"] == "v2"
         assert body["env"] == {"MY_VAR": "consumer_changed"}
 
@@ -375,7 +377,7 @@ class TestInstallWorkflows:
 
         update_workflows(consumer, manifest, local_path=marketplace)
 
-        body = cast(dict[str, object], _load_workflow_yaml(_extract_body(installed_path.read_text())))
+        body = cast(dict[str, object], load_workflow_yaml(extract_body(installed_path.read_text())))
         assert body["name"] == "v2"
         assert body["env"] == {"MY_VAR": "new"}
 
@@ -405,7 +407,7 @@ class TestInstallWorkflows:
 
         update_workflows(consumer, manifest, local_path=marketplace, update_envs=True)
 
-        body = cast(dict[str, object], _load_workflow_yaml(_extract_body(installed_path.read_text())))
+        body = cast(dict[str, object], load_workflow_yaml(extract_body(installed_path.read_text())))
         assert body["env"] == {"MY_VAR": "new"}
 
     def test_update_workflows_should_leave_config_file_untouched_when_update_config_files_is_false(
@@ -674,7 +676,7 @@ class TestTelemetry:
             install_workflows(consumer, manifest, local_path=marketplace)
 
         # Assert
-        calls = [(c.kwargs["event_type"], c.kwargs["workflow_name"]) for c in mock_track.call_args_list]
+        calls = [(call.kwargs["event_type"], call.kwargs["workflow_name"]) for call in mock_track.call_args_list]
         assert ("install", LINTER) in calls
         assert len(mock_track.call_args_list) == 1
 
@@ -717,20 +719,25 @@ class TestTelemetry:
 
     def test_install_workflows_should_not_emit_telemetry_when_source_has_no_slash(self, tmp_path: Path) -> None:
         # Arrange
-        marketplace = tmp_path / "marketplace"
         consumer = tmp_path / "consumer"
         consumer.mkdir()
-        _write_marketplace_package(marketplace, LINTER, "name: linter\non: push\n")
-        manifest = _marketplace_manifest([{"name": LINTER, "version": VERSION_1_2_3}])
+        manifest = Manifest(
+            source="noslash",
+            workflows=[WorkflowEntry(name=LINTER, version=VERSION_1_2_3, source="noslash")],
+        )
+        fake_source = WorkflowSource(
+            name=LINTER,
+            package_name=f"@scope/{LINTER}",
+            files=[InstalledFile("main.yml", b"name: test\n", f".github/workflows/{LINTER}.yaml")],
+        )
 
-        # Act: call _emit_telemetry directly with a malformed source (no slash)
-        from ghwm.install import InstallResult, _emit_telemetry
-
+        # Act
         with (
+            patch("ghwm.install.download_workflows", return_value=[fake_source]),
             patch("ghwm.install.is_public_repository") as mock_check,
             patch("ghwm.install.track_installation") as mock_track,
         ):
-            _emit_telemetry("noslash", manifest, InstallResult(installed=[LINTER], updated=[], pruned=[], skipped=[]))
+            install_workflows(consumer, manifest)
 
         # Assert: guard returns early without calling anything
         mock_check.assert_not_called()
@@ -757,7 +764,7 @@ class TestTelemetry:
             install_workflows(consumer, manifest, local_path=marketplace)
 
         # Assert
-        event_types = [c.kwargs["event_type"] for c in mock_track.call_args_list]
+        event_types = [call.kwargs["event_type"] for call in mock_track.call_args_list]
         assert "install" not in event_types
         assert "run" not in event_types
 
@@ -792,11 +799,13 @@ class TestTelemetry:
             update_workflows(consumer, manifest, local_path=marketplace)
 
         # Assert
-        event_types = [c.kwargs["event_type"] for c in mock_track.call_args_list]
+        event_types = [call.kwargs["event_type"] for call in mock_track.call_args_list]
         assert "updated" in event_types
         assert "install" not in event_types
 
-    def test_install_workflows_should_include_version_in_telemetry_event(self, tmp_path: Path) -> None:
+    def test_install_workflows_should_include_version_in_telemetry_event_when_workflow_is_installed(
+        self, tmp_path: Path
+    ) -> None:
         # Arrange
         marketplace = tmp_path / "marketplace"
         consumer = tmp_path / "consumer"
@@ -812,6 +821,135 @@ class TestTelemetry:
             install_workflows(consumer, manifest, local_path=marketplace)
 
         # Assert
-        install_call = next(c for c in mock_track.call_args_list if c.kwargs["event_type"] == "install")
+        install_call = next(call for call in mock_track.call_args_list if call.kwargs["event_type"] == "install")
         assert install_call.kwargs["version"] == VERSION_1_2_3
         assert install_call.kwargs["source"] == MARKETPLACE_SOURCE
+        assert install_call.kwargs["metadata"]["version"] == VERSION_1_2_3
+        assert install_call.kwargs["metadata"]["source"] == MARKETPLACE_SOURCE
+
+    def test_install_workflows_should_include_enriched_metadata_in_telemetry_when_package_has_frontmatter(
+        self, tmp_path: Path
+    ) -> None:
+        # Arrange
+        marketplace = tmp_path / "marketplace"
+        consumer = tmp_path / "consumer"
+        consumer.mkdir()
+        manifest_content = (
+            "# ---\n"
+            "# title: Super Linter\n"
+            "# description: Lint all the things\n"
+            "# tags:\n"
+            "#   - lint\n"
+            "#   - ci\n"
+            "# icon: fact_check\n"
+            "# owner: custom-owner\n"
+            "# ---\n"
+            "name: linter\n"
+            "files:\n"
+            "  - source: linter.yaml\n"
+            "    target: .github/workflows/linter.yaml\n"
+        )
+        _write_marketplace_package(marketplace, LINTER, "name: linter\non: push\n")
+        (marketplace / "workflows" / LINTER / "workflow.yml").write_text(manifest_content)
+        manifest = _marketplace_manifest([{"name": LINTER, "version": VERSION_1_2_3}])
+
+        # Act
+        with (
+            patch("ghwm.install.is_public_repository", return_value=True),
+            patch("ghwm.install.track_installation") as mock_track,
+        ):
+            install_workflows(consumer, manifest, local_path=marketplace)
+
+        # Assert
+        install_call = next(call for call in mock_track.call_args_list if call.kwargs["event_type"] == "install")
+        meta = install_call.kwargs["metadata"]
+        assert meta["title"] == "Super Linter"
+        assert meta["description"] == "Lint all the things"
+        assert meta["tags"] == ["lint", "ci"]
+        assert meta["icon"] == "fact_check"
+        assert meta["owner"] == "custom-owner"
+        assert meta["source"] == MARKETPLACE_SOURCE
+
+    def test_install_workflows_should_isolate_mixed_manifest_and_never_leak_private_workflow_when_registry_is_private(
+        self, tmp_path: Path
+    ) -> None:
+        # Arrange
+        marketplace = tmp_path / "marketplace"
+        consumer = tmp_path / "consumer"
+        consumer.mkdir()
+        _write_marketplace_package(marketplace, LINTER, "name: linter\non: push\n")
+        _write_marketplace_package(marketplace, "private-flow", "name: private-flow\non: push\n")
+
+        manifest = Manifest(
+            source=MARKETPLACE_SOURCE,
+            workflows=[
+                WorkflowEntry(name=LINTER, version="1.0.0"),
+                WorkflowEntry(name="private-flow", version="2.0.0", source="private-org/private-repo"),
+            ],
+        )
+
+        def mock_visibility(owner: str, repo: str) -> bool:
+            return owner != "private-org"
+
+        # Act
+        with (
+            patch("ghwm.install.is_public_repository", side_effect=mock_visibility),
+            patch("ghwm.install.track_installation") as mock_track,
+        ):
+            install_workflows(consumer, manifest, local_path=marketplace)
+
+        # Assert: ONLY linter was tracked; private-flow was strictly isolated (zero calls)
+        assert len(mock_track.call_args_list) == 1
+        call_kwargs = mock_track.call_args_list[0].kwargs
+        assert call_kwargs["workflow_name"] == LINTER
+        assert call_kwargs["source"] == MARKETPLACE_SOURCE
+        tracked_names = [call.kwargs["workflow_name"] for call in mock_track.call_args_list]
+        assert "private-flow" not in tracked_names
+
+    def test_install_workflows_should_track_against_overridden_source_when_workflow_specifies_custom_source(
+        self, tmp_path: Path
+    ) -> None:
+        # Arrange
+        marketplace = tmp_path / "marketplace"
+        consumer = tmp_path / "consumer"
+        consumer.mkdir()
+        _write_marketplace_package(marketplace, LINTER, "name: linter\non: push\n")
+        custom_source = "custom-owner/community-workflows"
+        manifest = Manifest(
+            source="default-owner/default-repo",
+            workflows=[
+                WorkflowEntry(name=LINTER, version="1.0.0", source=custom_source),
+            ],
+        )
+
+        # Act
+        with (
+            patch("ghwm.install.is_public_repository", return_value=True) as mock_public,
+            patch("ghwm.install.track_installation") as mock_track,
+        ):
+            install_workflows(consumer, manifest, local_path=marketplace)
+
+        # Assert: Verified against custom-owner/community-workflows, not default-owner/default-repo
+        mock_public.assert_called_once_with("custom-owner", "community-workflows")
+        assert len(mock_track.call_args_list) == 1
+        assert mock_track.call_args_list[0].kwargs["source"] == custom_source
+        assert mock_track.call_args_list[0].kwargs["metadata"]["source"] == custom_source
+
+    def test_install_workflows_should_suppress_unexpected_telemetry_exceptions_when_failure_occurs(
+        self, tmp_path: Path
+    ) -> None:
+        # Arrange
+        marketplace = tmp_path / "marketplace"
+        consumer = tmp_path / "consumer"
+        consumer.mkdir()
+        _write_marketplace_package(marketplace, LINTER, "name: linter\non: push\n")
+        manifest = _marketplace_manifest([{"name": LINTER, "version": VERSION_1_2_3}])
+
+        # Act & Assert: unexpected telemetry exception must not fail the install
+        with (
+            patch("ghwm.install.is_public_repository", return_value=True),
+            patch("ghwm.install.track_installation", side_effect=RuntimeError("telemetry server down")),
+        ):
+            result = install_workflows(consumer, manifest, local_path=marketplace)
+
+        assert result.installed == [LINTER]

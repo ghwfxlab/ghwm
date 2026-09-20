@@ -94,6 +94,8 @@ C4Component
 | `lock.py`          | Read and write `ghwm.lock` (JSON); in-memory lockfile operations            |
 | `package_names.py` | Helpers to compute scoped npm package names from org and workflow name      |
 | `paths.py`         | Path security utilities including path traversal checks                     |
+| `metadata.py`      | Package metadata extraction from frontmatter, manifests, and package.json   |
+| `telemetry.py`     | Privacy-gated anonymous usage telemetry and registry visibility checks      |
 
 ## Workflow lifecycle
 
@@ -185,7 +187,7 @@ Both paths return an `_InstalledFileResult` with `changed` and an optional
 2. Call `download_workflows()` to obtain `WorkflowSource` objects.
 3. For each `WorkflowEntry`, call `_install_one()`:
    - Sort files so workflow files are processed before config files.
-   - Delegate each file to `_sync_workflow_file` or `_sync_config_file`.
+   - Delegate each file to `sync_workflow_file` or `sync_config_file`.
    - Accumulate `LockFileEntry` objects and upsert into the lockfile.
 4. If `prune=True`, call `_prune_stale()` to remove managed workflow files no
    longer in the manifest.
@@ -261,6 +263,30 @@ The lockfile is deleted automatically when all packages are removed.
    - **Informational**: 1 point
 6. If any High or Medium severity findings are present, exit with code `1` to fail CI builds.
 
+### 7 — Telemetry and metadata extraction (`telemetry.py`, `metadata.py`)
+
+Usage telemetry is privacy-gated and tracks workflow adoption from public registries:
+
+1. **Metadata Extraction (`metadata.py`)**:
+   During workflow package download or local reading, metadata is extracted from:
+   - Commented YAML frontmatter delimited by `# ---` or leading `#` comment blocks in `workflow.yml` or the workflow YAML file.
+   - Fallbacks from `package.json` (`description`, `version`) and manifest keys.
+   - Enriched fields include: `title`, `description`, `tags`, `icon`, `owner`, `version`, `source`, and optional `created_at`.
+2. **Per-Workflow Privacy Gate (`install.py`, `telemetry.py`)**:
+   - Each workflow's specific resolved source (`entry.source or manifest.source`) is checked against GitHub API (`GET /repos/{owner}/{repo}`) without credentials.
+   - Any private repository, 404, 401, 403 (rate limited), timeout, or network error immediately halts telemetry for that workflow (fail-closed).
+   - Private workflows never emit telemetry, protecting proprietary workflow IP even in mixed-source manifests.
+3. **Event Emission (`telemetry.py`)**:
+   - Resolves the telemetry endpoint via `get_telemetry_url()`: defaults to the production Cloudflare Workers endpoint (`https://ghwm-deployment-prd.ghwfxlab.workers.dev/installations`), with automatic routing to the staging/test endpoint (`https://ghwm-deployment-tst.ghwfxlab.workers.dev/installations`) in test suites, CI environments, and local development checkouts, or via `GHWM_TELEMETRY_URL` override.
+   - Emits a `POST` request with JSON payload containing `source`, `workflow_name`, `version`, `event_type`, and enriched `metadata`.
+   - Honors opt-outs: `--no-telemetry`, `DO_NOT_TRACK=1`, and `GHWM_NO_TELEMETRY=1`.
+   - Telemetry operations are strictly non-blocking and fail-silent: strict 2.0-second timeout, with all network or server errors suppressed so installs never fail or hang.
+4. **Opt-Out Architecture and Rationale**:
+   `ghwm` provides distinct mechanisms to opt out of telemetry, balancing ecosystem consistency with tool-specific control:
+   - **`DO_NOT_TRACK=1` (Universal Standard)**: Follows the cross-tool open standard ([consoledonottrack.com](https://consoledonottrack.com/)), allowing users and CI systems to configure a single global environment variable that disables telemetry across all compliant command-line tools.
+   - **`GHWM_NO_TELEMETRY=1` (Scoped Override)**: Provides a tool-specific environment variable for environments where telemetry should be disabled strictly for `ghwm` without altering the global `DO_NOT_TRACK` setting for other tools in the process tree.
+   - **`--no-telemetry` (Ad-Hoc Flag)**: Allows users to bypass telemetry for a single command execution without persisting environment variables.
+
 ## CLI command flow
 
 ```text
@@ -274,8 +300,8 @@ argv
               │     ├─▶ download_workflows()  → [WorkflowSource]
               │     │     └─▶ download_npm_tarball() / read_local()
               │     ├─▶ _install_one() × N
-              │     │     ├─▶ _sync_workflow_file()
-              │     │     └─▶ _sync_config_file()
+              │     │     ├─▶ sync_workflow_file()
+              │     │     └─▶ sync_config_file()
               │     ├─▶ _prune_stale()
               │     └─▶ write_lockfile()
               ├─▶ update_workflows()   (install_workflows, prune=False)

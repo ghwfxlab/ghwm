@@ -33,6 +33,7 @@ Agents should read and follow these standards for all contributions.
 - `src/ghwm/install.py` - install/update/prune orchestration
 - `src/ghwm/managed_files.py` - low-level workflow/config sync, trigger merge, and prune checks
 - `src/ghwm/lock.py` - lockfile read/write and in-memory lockfile operations
+- `src/ghwm/metadata.py` - package metadata extraction (frontmatter, manifest keys, package.json)
 - `src/ghwm/telemetry.py` - privacy-gated telemetry: public-repo check and installation event emission
 - `src/ghwm/__main__.py` - `python -m ghwm` entry point
 - `tests/` - module-aligned pytest suite
@@ -121,13 +122,16 @@ When changing code, preserve these unless the task explicitly changes them:
 
 ### Telemetry
 
-- Telemetry is emitted only when the source registry repository is confirmed publicly visible.
-- Public visibility is checked by calling `GET /repos/{owner}/{repo}` without authentication; any error is treated as private.
+- Telemetry is emitted only when each workflow's specific source registry is confirmed publicly visible.
+- Public visibility is checked by calling `GET /repos/{owner}/{repo}` without authentication; any error (404, 401, 403, timeout, drop) is treated as private.
+- Workflows from private registries are strictly excluded from telemetry (zero leakage), even in mixed manifests.
+- Enriched workflow metadata (`title`, `description`, `tags`, `icon`, `owner`, `version`, `source`, `created_at`) is extracted from commented frontmatter (`# ---`), `package.json`, or manifest keys.
+- Missing metadata fields safely default to `null` or `[]`.
 - Telemetry must never break the install: `_emit_telemetry` must not propagate exceptions.
 - `install` emits an `"install"` event for each newly installed workflow.
 - `update` (and install that detects a change) emits an `"updated"` event for each changed workflow.
 - Already-up-to-date (skipped) workflows emit no telemetry events.
-- `--no-telemetry` skips both the public-repo check and all event emission.
+- `--no-telemetry`, `DO_NOT_TRACK=1`, and `GHWM_NO_TELEMETRY=1` skip both the public-repo check and all event emission.
 
 ### Lockfile
 

@@ -31,6 +31,7 @@ FORCE_HELP = "Overwrite unmanaged or modified files."
 LOCAL_HELP = "Path to local registry checkout."
 UPDATE_TRIGGERS_HELP = "Replace workflow triggers with the packaged version during updates."
 UPDATE_ENVS_HELP = "Replace workflow env variables with the packaged version during updates."
+NO_TELEMETRY_HELP = "Disable telemetry for this run. Also honoured via DO_NOT_TRACK=1 or GHWM_NO_TELEMETRY=1."
 
 
 def add_install_cmd_to_parser(subcommands: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
@@ -38,7 +39,11 @@ def add_install_cmd_to_parser(subcommands: argparse._SubParsersAction[argparse.A
     install_cmd.add_argument("--manifest", default=DEFAULT_MANIFEST_PATH, help=MANIFEST_HELP)
     install_cmd.add_argument("--cwd", default=DEFAULT_CWD, help=CWD_HELP)
     install_cmd.add_argument("--force", action="store_true", help=FORCE_HELP)
-    install_cmd.add_argument("--no-prune", action="store_true", help="Skip removal of stale workflows.")
+    install_cmd.add_argument(
+        "--no-prune",
+        action="store_true",
+        help="Do not remove workflows that are no longer listed in the manifest.",
+    )
     install_cmd.add_argument("--local", default=None, help=LOCAL_HELP)
     install_cmd.add_argument(
         "--update-triggers",
@@ -53,7 +58,7 @@ def add_install_cmd_to_parser(subcommands: argparse._SubParsersAction[argparse.A
     install_cmd.add_argument(
         "--no-telemetry",
         action="store_true",
-        help="Disable telemetry for this run. Also honoured via DO_NOT_TRACK=1.",
+        help=NO_TELEMETRY_HELP,
     )
 
 
@@ -82,7 +87,7 @@ def add_update_cmd_to_parser(subcommands: argparse._SubParsersAction[argparse.Ar
     update_cmd.add_argument(
         "--no-telemetry",
         action="store_true",
-        help="Disable telemetry for this run. Also honoured via DO_NOT_TRACK=1.",
+        help=NO_TELEMETRY_HELP,
     )
 
 
@@ -112,7 +117,7 @@ def add_upgrade_cmd_to_parser(subcommands: argparse._SubParsersAction[argparse.A
     upgrade_cmd.add_argument(
         "--no-telemetry",
         action="store_true",
-        help="Disable telemetry for this run. Also honoured via DO_NOT_TRACK=1.",
+        help=NO_TELEMETRY_HELP,
     )
 
 
@@ -351,6 +356,10 @@ def run_audit(cwd: Path) -> None:
     _print_findings(files_to_audit, active_findings, severity_counts, score)
 
 
+def _resolve_no_telemetry(flag: bool) -> bool:
+    return flag or os.environ.get("DO_NOT_TRACK") == "1" or os.environ.get("GHWM_NO_TELEMETRY") == "1"
+
+
 def main(argv: list[str] | None = None) -> None:
     parser = build_parser()
     args = parser.parse_args(argv)
@@ -396,8 +405,9 @@ def main(argv: list[str] | None = None) -> None:
 
         print(f"Found {len(manifest.workflows)} workflow(s) in {manifest_path}")
 
+        no_telemetry = _resolve_no_telemetry(args.no_telemetry)
+
         if command == "install":
-            no_telemetry = args.no_telemetry or os.environ.get("DO_NOT_TRACK") == "1"
             result = install_workflows(
                 cwd,
                 manifest,
@@ -409,7 +419,6 @@ def main(argv: list[str] | None = None) -> None:
                 no_telemetry=no_telemetry,
             )
         elif command in ("update", "upgrade"):
-            no_telemetry = args.no_telemetry or os.environ.get("DO_NOT_TRACK") == "1"
             result = update_workflows(
                 cwd,
                 manifest,

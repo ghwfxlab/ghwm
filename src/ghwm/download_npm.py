@@ -16,7 +16,9 @@ from urllib.request import Request, urlopen
 
 import yaml
 
+from ghwm.metadata import extract_workflow_metadata, find_workflow_file_content
 from ghwm.package_names import scoped_package_name
+from ghwm.paths import is_workflow_target
 
 REGISTRY_URL = "https://npm.pkg.github.com"
 
@@ -216,3 +218,70 @@ def extract_npm_package(tarball_path: Path, manifest_data: dict[str, Any]) -> li
             manifest_data,
             lambda source: _read_tar_member(tar, f"package/{source}"),
         )
+
+
+def find_primary_workflow_source(manifest_data: dict[str, Any]) -> str | None:
+    """Find the source path of the primary workflow file declared in manifest files."""
+    for raw_file in manifest_data.get("files", []):
+        if isinstance(raw_file, dict):
+            raw_file_source = raw_file.get("source")
+            raw_file_target = raw_file.get("target")
+            if (
+                isinstance(raw_file_source, str)
+                and isinstance(raw_file_target, str)
+                and is_workflow_target(raw_file_target)
+            ):
+                return raw_file_source
+    return None
+
+
+def extract_tarball_metadata(
+    tarball_path: Path,
+    source: str,
+    version: str | None,
+    manifest_data: dict[str, Any],
+    *,
+    files: list[InstalledFile] | None = None,
+) -> dict[str, Any]:
+    """Extract metadata for a workflow package from an npm tarball."""
+    workflow_yml_content: str | None = None
+    package_json_content: str | None = None
+    workflow_file_content: str | None = None
+
+    if files is not None:
+        workflow_file_content = find_workflow_file_content(files)
+
+    try:
+        with tarfile.open(tarball_path, "r:gz") as tar:
+            try:
+                workflow_yml_content = _read_tar_member(tar, "package/workflow.yml").decode("utf-8", errors="replace")
+            except FileNotFoundError:
+                workflow_yml_content = None
+
+            try:
+                package_json_content = _read_tar_member(tar, "package/package.json").decode("utf-8", errors="replace")
+            except FileNotFoundError:
+                package_json_content = None
+
+            if workflow_file_content is None:
+                primary_source = find_primary_workflow_source(manifest_data)
+                if primary_source is not None:
+                    try:
+                        workflow_file_content = _read_tar_member(tar, f"package/{primary_source}").decode(
+                            "utf-8", errors="replace"
+                        )
+                    except FileNotFoundError:
+                        # Primary workflow file might be missing or under a different name
+                        workflow_file_content = None
+    except (tarfile.TarError, FileNotFoundError, OSError):
+        # Corrupted or unreadable tarball falls back to default metadata
+        pass
+
+    return extract_workflow_metadata(
+        source=source,
+        version=version,
+        workflow_yml_content=workflow_yml_content,
+        workflow_file_content=workflow_file_content,
+        package_json_content=package_json_content,
+        manifest_data=manifest_data,
+    )
