@@ -351,6 +351,10 @@ def run_audit(cwd: Path) -> None:
     _print_findings(files_to_audit, active_findings, severity_counts, score)
 
 
+def _resolve_no_telemetry(flag: bool) -> bool:
+    return flag or os.environ.get("DO_NOT_TRACK") == "1" or os.environ.get("GHWM_NO_TELEMETRY") == "1"
+
+
 def main(argv: list[str] | None = None) -> None:
     parser = build_parser()
     args = parser.parse_args(argv)
@@ -396,8 +400,9 @@ def main(argv: list[str] | None = None) -> None:
 
         print(f"Found {len(manifest.workflows)} workflow(s) in {manifest_path}")
 
+        no_telemetry = _resolve_no_telemetry(args.no_telemetry)
+
         if command == "install":
-            no_telemetry = args.no_telemetry or os.environ.get("DO_NOT_TRACK") == "1"
             result = install_workflows(
                 cwd,
                 manifest,
@@ -409,7 +414,6 @@ def main(argv: list[str] | None = None) -> None:
                 no_telemetry=no_telemetry,
             )
         elif command in ("update", "upgrade"):
-            no_telemetry = args.no_telemetry or os.environ.get("DO_NOT_TRACK") == "1"
             result = update_workflows(
                 cwd,
                 manifest,

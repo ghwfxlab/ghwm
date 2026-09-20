@@ -18,12 +18,11 @@ from ghwm.download_npm import (
     download_npm_tarball,
     extract_npm_package,
     extract_tarball_metadata,
-    find_workflow_file_content,
     parse_workflow_manifest_data,
     read_workflow_manifest,
 )
 from ghwm.manifest import Manifest
-from ghwm.metadata import extract_workflow_metadata
+from ghwm.metadata import extract_workflow_metadata, find_workflow_file_content
 from ghwm.package_names import scoped_package_name
 from ghwm.paths import safe_resolve_path
 

@@ -13,10 +13,10 @@ from ghwm.download import WorkflowSource
 from ghwm.download_npm import InstalledFile
 from ghwm.lock import LockEntry, LockFileEntry
 from ghwm.manifest import WorkflowEntry
-from ghwm.paths import safe_resolve_path
+from ghwm.paths import is_workflow_target, safe_resolve_path
 
 
-class _WorkflowBlockedError(Exception):
+class WorkflowBlockedError(Exception):
     """Raised when a managed workflow file cannot be updated safely."""
 
 
@@ -44,7 +44,7 @@ _TOP_LEVEL_MAPPING_KEY = re.compile(
 
 
 @dataclass
-class _InstalledFileResult:
+class InstalledFileResult:
     changed: bool
     lock_file: LockFileEntry | None
 
@@ -77,27 +77,18 @@ def _is_managed(content: str, name: str) -> bool:
     return content.startswith(f"# Managed by ghwm ({name}@")
 
 
-def _is_workflow_target(target: str) -> bool:
-    return target.startswith(".github/workflows/")
-
-
-def _extract_body(content: str) -> str:
+def extract_body(content: str) -> str:
     """Strip the generated header, return the body."""
-    idx = 0
-    length = len(content)
-    while idx < length:
-        next_new_line = content.find("\n", idx)
-        line = content[idx:next_new_line] if next_new_line != -1 else content[idx:]
-        if line.startswith("#"):
-            idx = length if next_new_line == -1 else next_new_line + 1
-        elif not line.strip():
-            idx = length if next_new_line == -1 else next_new_line + 1
-        else:
-            break
-    return content[idx:]
+    lines = content.split("\n")
+    line_index = 0
+    while line_index < len(lines) and lines[line_index].startswith("#"):
+        line_index += 1
+    while line_index < len(lines) and not lines[line_index].strip():
+        line_index += 1
+    return "\n".join(lines[line_index:])
 
 
-def _load_workflow_yaml(content: str) -> object:
+def load_workflow_yaml(content: str) -> object:
     return yaml.load(content, Loader=_GitHubActionsLoader)  # noqa: S506
 
 
@@ -119,8 +110,8 @@ def _preserve_existing_top_level_value(
     key: str,
     description: str,
 ) -> str:
-    existing_data = _load_workflow_yaml(_extract_body(existing_content))
-    new_data = _load_workflow_yaml(new_content)
+    existing_data = load_workflow_yaml(extract_body(existing_content))
+    new_data = load_workflow_yaml(new_content)
 
     if not isinstance(existing_data, dict) or not isinstance(new_data, dict):
         raise ValueError(f"Workflow YAML must be a mapping to preserve {description} configuration.")
@@ -131,7 +122,7 @@ def _preserve_existing_top_level_value(
     if new_data.get(key) == existing_data[key]:
         return new_content
 
-    existing_body = _extract_body(existing_content)
+    existing_body = extract_body(existing_content)
     existing_section = _find_top_level_section(existing_body, key)
     if existing_section is None:
         raise ValueError(f"Could not find the existing {description} section in the workflow YAML.")
@@ -163,8 +154,8 @@ def _preserve_existing_envs(existing_content: str, new_content: str) -> str:
     )
 
 
-def _resolve_target(cwd: Path, entry: WorkflowEntry, installed_file: InstalledFile) -> str:
-    if _is_workflow_target(installed_file.target) and entry.target:
+def resolve_target(cwd: Path, entry: WorkflowEntry, installed_file: InstalledFile) -> str:
+    if is_workflow_target(installed_file.target) and entry.target:
         raw_target = f".github/workflows/{entry.target}"
     else:
         raw_target = installed_file.target
@@ -172,7 +163,7 @@ def _resolve_target(cwd: Path, entry: WorkflowEntry, installed_file: InstalledFi
     return str(safe_path.relative_to(cwd))
 
 
-def _sync_workflow_file(
+def sync_workflow_file(
     cwd: Path,
     entry: WorkflowEntry,
     workflow_source: WorkflowSource,
@@ -182,13 +173,13 @@ def _sync_workflow_file(
     is_update: bool,
     update_triggers: bool,
     update_envs: bool,
-) -> _InstalledFileResult:
-    target = _resolve_target(cwd, entry, installed_file)
+) -> InstalledFileResult:
+    target = resolve_target(cwd, entry, installed_file)
     target_path = cwd / target
     existing_content = target_path.read_text(encoding="utf-8") if target_path.is_file() else None
 
     if existing_content is not None and not _is_managed(existing_content, entry.name) and not force:
-        raise _WorkflowBlockedError("unmanaged file exists")
+        raise WorkflowBlockedError("unmanaged file exists")
 
     workflow_body = installed_file.content.decode("utf-8")
     if existing_content is not None and is_update:
@@ -212,38 +203,38 @@ def _sync_workflow_file(
         target_path.parent.mkdir(parents=True, exist_ok=True)
         target_path.write_text(rendered, encoding="utf-8")
 
-    return _InstalledFileResult(
+    return InstalledFileResult(
         changed=changed,
         lock_file=LockFileEntry(target=target, source_hash=source_hash),
     )
 
 
-def _sync_config_file(
+def sync_config_file(
     cwd: Path,
     entry: WorkflowEntry,
     installed_file: InstalledFile,
     *,
     is_update: bool,
     previous_lock_file: LockFileEntry | None,
-) -> _InstalledFileResult:
-    target = _resolve_target(cwd, entry, installed_file)
+) -> InstalledFileResult:
+    target = resolve_target(cwd, entry, installed_file)
     target_path = cwd / target
     source_hash = _sha256_bytes(installed_file.content)
 
     if not is_update:
         if target_path.exists():
-            return _InstalledFileResult(changed=False, lock_file=None)
+            return InstalledFileResult(changed=False, lock_file=None)
         target_path.parent.mkdir(parents=True, exist_ok=True)
         target_path.write_bytes(installed_file.content)
-        return _InstalledFileResult(
+        return InstalledFileResult(
             changed=True,
             lock_file=LockFileEntry(target=target, source_hash=source_hash, overwrite=False),
         )
 
     if not entry.update_config_files:
         if previous_lock_file is not None and target_path.exists():
-            return _InstalledFileResult(changed=False, lock_file=previous_lock_file)
-        return _InstalledFileResult(changed=False, lock_file=None)
+            return InstalledFileResult(changed=False, lock_file=previous_lock_file)
+        return InstalledFileResult(changed=False, lock_file=None)
 
     existing_content = target_path.read_bytes() if target_path.exists() else None
     changed = existing_content != installed_file.content
@@ -251,15 +242,15 @@ def _sync_config_file(
         target_path.parent.mkdir(parents=True, exist_ok=True)
         target_path.write_bytes(installed_file.content)
 
-    return _InstalledFileResult(
+    return InstalledFileResult(
         changed=changed,
         lock_file=LockFileEntry(target=target, source_hash=source_hash, overwrite=True),
     )
 
 
-def _prune_workflow_files(cwd: Path, entry: LockEntry, *, force: bool) -> str | None:
+def prune_workflow_files(cwd: Path, entry: LockEntry, *, force: bool) -> str | None:
     for file_entry in entry.files:
-        if not _is_workflow_target(file_entry.target):
+        if not is_workflow_target(file_entry.target):
             continue
 
         target_path = safe_resolve_path(cwd, file_entry.target)
@@ -270,7 +261,7 @@ def _prune_workflow_files(cwd: Path, entry: LockEntry, *, force: bool) -> str | 
         if not _is_managed(content, entry.name) and not force:
             return "unmanaged"
 
-        body = _extract_body(content)
+        body = extract_body(content)
         if file_entry.source_hash and _sha256(_normalize_workflow_body(body)) != file_entry.source_hash and not force:
             return "modified"
 

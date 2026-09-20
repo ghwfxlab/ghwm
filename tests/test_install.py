@@ -12,7 +12,7 @@ from ghwm.download import WorkflowSource
 from ghwm.download_npm import InstalledFile
 from ghwm.install import install_workflows, update_workflows
 from ghwm.lock import read_lockfile
-from ghwm.managed_files import _extract_body, _load_workflow_yaml
+from ghwm.managed_files import extract_body, load_workflow_yaml
 from ghwm.manifest import Manifest, WorkflowEntry, parse_manifest
 from tests.shared import (
     AUTO_ASSIGN_PR,
@@ -186,7 +186,7 @@ class TestInstallWorkflows:
 
         update_workflows(consumer, manifest, local_path=marketplace)
 
-        body = cast(dict[str, object], _load_workflow_yaml(_extract_body(installed_path.read_text())))
+        body = cast(dict[str, object], load_workflow_yaml(extract_body(installed_path.read_text())))
         assert body["name"] == "v2"
         assert body["on"] == {"push": {"branches": ["release/*"]}}
 
@@ -258,7 +258,7 @@ class TestInstallWorkflows:
         installed_path = consumer / ".github" / "workflows" / "linter.yaml"
         body = cast(
             dict[str, object],
-            _load_workflow_yaml(_extract_body(installed_path.read_text())),
+            load_workflow_yaml(extract_body(installed_path.read_text())),
         )
         assert body["on"] == "pull_request"
 
@@ -288,7 +288,7 @@ class TestInstallWorkflows:
 
         update_workflows(consumer, manifest, local_path=marketplace)
 
-        body = cast(dict[str, object], _load_workflow_yaml(_extract_body(installed_path.read_text())))
+        body = cast(dict[str, object], load_workflow_yaml(extract_body(installed_path.read_text())))
         assert body["name"] == "v2"
         assert body["on"] == {"pull_request": None}
 
@@ -318,7 +318,7 @@ class TestInstallWorkflows:
 
         update_workflows(consumer, manifest, local_path=marketplace, update_triggers=True)
 
-        body = cast(dict[str, object], _load_workflow_yaml(_extract_body(installed_path.read_text())))
+        body = cast(dict[str, object], load_workflow_yaml(extract_body(installed_path.read_text())))
         assert body["on"] == {"pull_request": None}
 
     def test_update_workflows_should_preserve_existing_envs_when_updating_by_default(self, tmp_path: Path) -> None:
@@ -347,7 +347,7 @@ class TestInstallWorkflows:
 
         update_workflows(consumer, manifest, local_path=marketplace)
 
-        body = cast(dict[str, object], _load_workflow_yaml(_extract_body(installed_path.read_text())))
+        body = cast(dict[str, object], load_workflow_yaml(extract_body(installed_path.read_text())))
         assert body["name"] == "v2"
         assert body["env"] == {"MY_VAR": "consumer_changed"}
 
@@ -377,7 +377,7 @@ class TestInstallWorkflows:
 
         update_workflows(consumer, manifest, local_path=marketplace)
 
-        body = cast(dict[str, object], _load_workflow_yaml(_extract_body(installed_path.read_text())))
+        body = cast(dict[str, object], load_workflow_yaml(extract_body(installed_path.read_text())))
         assert body["name"] == "v2"
         assert body["env"] == {"MY_VAR": "new"}
 
@@ -407,7 +407,7 @@ class TestInstallWorkflows:
 
         update_workflows(consumer, manifest, local_path=marketplace, update_envs=True)
 
-        body = cast(dict[str, object], _load_workflow_yaml(_extract_body(installed_path.read_text())))
+        body = cast(dict[str, object], load_workflow_yaml(extract_body(installed_path.read_text())))
         assert body["env"] == {"MY_VAR": "new"}
 
     def test_update_workflows_should_leave_config_file_untouched_when_update_config_files_is_false(
@@ -676,7 +676,7 @@ class TestTelemetry:
             install_workflows(consumer, manifest, local_path=marketplace)
 
         # Assert
-        calls = [(c.kwargs["event_type"], c.kwargs["workflow_name"]) for c in mock_track.call_args_list]
+        calls = [(call.kwargs["event_type"], call.kwargs["workflow_name"]) for call in mock_track.call_args_list]
         assert ("install", LINTER) in calls
         assert len(mock_track.call_args_list) == 1
 
@@ -764,7 +764,7 @@ class TestTelemetry:
             install_workflows(consumer, manifest, local_path=marketplace)
 
         # Assert
-        event_types = [c.kwargs["event_type"] for c in mock_track.call_args_list]
+        event_types = [call.kwargs["event_type"] for call in mock_track.call_args_list]
         assert "install" not in event_types
         assert "run" not in event_types
 
@@ -799,7 +799,7 @@ class TestTelemetry:
             update_workflows(consumer, manifest, local_path=marketplace)
 
         # Assert
-        event_types = [c.kwargs["event_type"] for c in mock_track.call_args_list]
+        event_types = [call.kwargs["event_type"] for call in mock_track.call_args_list]
         assert "updated" in event_types
         assert "install" not in event_types
 
@@ -821,7 +821,7 @@ class TestTelemetry:
             install_workflows(consumer, manifest, local_path=marketplace)
 
         # Assert
-        install_call = next(c for c in mock_track.call_args_list if c.kwargs["event_type"] == "install")
+        install_call = next(call for call in mock_track.call_args_list if call.kwargs["event_type"] == "install")
         assert install_call.kwargs["version"] == VERSION_1_2_3
         assert install_call.kwargs["source"] == MARKETPLACE_SOURCE
         assert install_call.kwargs["metadata"]["version"] == VERSION_1_2_3
@@ -861,7 +861,7 @@ class TestTelemetry:
             install_workflows(consumer, manifest, local_path=marketplace)
 
         # Assert
-        install_call = next(c for c in mock_track.call_args_list if c.kwargs["event_type"] == "install")
+        install_call = next(call for call in mock_track.call_args_list if call.kwargs["event_type"] == "install")
         meta = install_call.kwargs["metadata"]
         assert meta["title"] == "Super Linter"
         assert meta["description"] == "Lint all the things"
@@ -903,7 +903,7 @@ class TestTelemetry:
         call_kwargs = mock_track.call_args_list[0].kwargs
         assert call_kwargs["workflow_name"] == LINTER
         assert call_kwargs["source"] == MARKETPLACE_SOURCE
-        tracked_names = [c.kwargs["workflow_name"] for c in mock_track.call_args_list]
+        tracked_names = [call.kwargs["workflow_name"] for call in mock_track.call_args_list]
         assert "private-flow" not in tracked_names
 
     def test_install_workflows_should_track_against_overridden_source_when_workflow_specifies_custom_source(

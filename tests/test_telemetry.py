@@ -9,7 +9,7 @@ from urllib.request import Request, urlopen
 
 import pytest
 
-from ghwm.telemetry import is_public_repository, track_installation
+from ghwm.telemetry import build_telemetry_payload, is_public_repository, track_installation
 
 
 def _mock_http_response(body: bytes) -> MagicMock:
@@ -119,7 +119,9 @@ def _is_rate_limited() -> bool:
         with urlopen(request, timeout=5) as response:  # noqa: S310
             data = json.loads(response.read())
             return bool(data.get("resources", {}).get("core", {}).get("remaining", 0) == 0)
-    except (HTTPError, URLError, OSError, json.JSONDecodeError, KeyError):
+    except HTTPError as exc:
+        return exc.code in {403, 429}
+    except (URLError, OSError, json.JSONDecodeError, KeyError):
         return True
 
 
@@ -192,3 +194,29 @@ class TestTrackInstallation:
             event_type="install",
             metadata=metadata,
         )
+
+
+class TestBuildTelemetryPayload:
+    def test_build_telemetry_payload_should_include_metadata_when_metadata_is_provided(self) -> None:
+        # Arrange
+        metadata = {"title": "Linter", "version": "1.0.0"}
+
+        # Act
+        payload = build_telemetry_payload(workflow_name="linter", action="install", metadata=metadata)
+
+        # Assert
+        assert payload == {
+            "workflow_name": "linter",
+            "action": "install",
+            "metadata": {"title": "Linter", "version": "1.0.0"},
+        }
+
+    def test_build_telemetry_payload_should_omit_metadata_when_metadata_is_none(self) -> None:
+        # Arrange / Act
+        payload = build_telemetry_payload(workflow_name="linter", action="updated", metadata=None)
+
+        # Assert
+        assert payload == {
+            "workflow_name": "linter",
+            "action": "updated",
+        }

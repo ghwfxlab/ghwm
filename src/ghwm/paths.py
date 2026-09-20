@@ -15,3 +15,8 @@ def safe_resolve_path(base_dir: Path, target: str) -> Path:
     if not abs_target.startswith(prefix):
         raise ValueError(f"Path traversal detected: '{target}' resolves outside of base directory '{base_dir}'")
     return Path(abs_target)
+
+
+def is_workflow_target(target: str) -> bool:
+    """Check whether a target path is under .github/workflows/."""
+    return target.startswith(".github/workflows/")

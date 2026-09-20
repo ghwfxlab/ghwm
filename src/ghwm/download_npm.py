@@ -16,8 +16,9 @@ from urllib.request import Request, urlopen
 
 import yaml
 
-from ghwm.metadata import extract_workflow_metadata
+from ghwm.metadata import extract_workflow_metadata, find_workflow_file_content
 from ghwm.package_names import scoped_package_name
+from ghwm.paths import is_workflow_target
 
 REGISTRY_URL = "https://npm.pkg.github.com"
 
@@ -219,11 +220,18 @@ def extract_npm_package(tarball_path: Path, manifest_data: dict[str, Any]) -> li
         )
 
 
-def find_workflow_file_content(files: list[InstalledFile]) -> str | None:
-    """Find and decode the primary workflow file content from installed files."""
-    for installed_file in files:
-        if installed_file.target.startswith(".github/workflows/"):
-            return installed_file.content.decode("utf-8", errors="replace")
+def find_primary_workflow_source(manifest_data: dict[str, Any]) -> str | None:
+    """Find the source path of the primary workflow file declared in manifest files."""
+    for raw_file in manifest_data.get("files", []):
+        if isinstance(raw_file, dict):
+            raw_file_source = raw_file.get("source")
+            raw_file_target = raw_file.get("target")
+            if (
+                isinstance(raw_file_source, str)
+                and isinstance(raw_file_target, str)
+                and is_workflow_target(raw_file_target)
+            ):
+                return raw_file_source
     return None
 
 
@@ -256,23 +264,15 @@ def extract_tarball_metadata(
                 package_json_content = None
 
             if workflow_file_content is None:
-                for raw_file in manifest_data.get("files", []):
-                    if isinstance(raw_file, dict):
-                        raw_file_source = raw_file.get("source")
-                        raw_file_target = raw_file.get("target")
-                        if (
-                            isinstance(raw_file_source, str)
-                            and isinstance(raw_file_target, str)
-                            and raw_file_target.startswith(".github/workflows/")
-                        ):
-                            try:
-                                workflow_file_content = _read_tar_member(tar, f"package/{raw_file_source}").decode(
-                                    "utf-8", errors="replace"
-                                )
-                                break
-                            except FileNotFoundError:
-                                # Primary workflow file might be missing or under a different name
-                                workflow_file_content = None
+                primary_source = find_primary_workflow_source(manifest_data)
+                if primary_source is not None:
+                    try:
+                        workflow_file_content = _read_tar_member(tar, f"package/{primary_source}").decode(
+                            "utf-8", errors="replace"
+                        )
+                    except FileNotFoundError:
+                        # Primary workflow file might be missing or under a different name
+                        workflow_file_content = None
     except (tarfile.TarError, FileNotFoundError, OSError):
         # Corrupted or unreadable tarball falls back to default metadata
         pass

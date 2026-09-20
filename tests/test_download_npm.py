@@ -19,7 +19,7 @@ from ghwm.download_npm import (
     download_npm_tarball,
     extract_npm_package,
     extract_tarball_metadata,
-    find_workflow_file_content,
+    find_primary_workflow_source,
     manifest_files,
     npm_package_metadata_url,
     npm_tarball_url,
@@ -622,6 +622,27 @@ class TestExtractTarballMetadata:
         assert meta["title"] is None
         assert meta["source"] == "owner/repo"
 
+    def test_extract_tarball_metadata_should_return_defaults_when_primary_workflow_source_is_missing(
+        self, tmp_path: Path
+    ) -> None:
+        # Arrange: tarball without files declared and no workflow target in manifest
+        workflow_yml = "name: no-target\n"
+        tarball_bytes = _make_tarball_bytes({"workflow.yml": workflow_yml})
+        tarball_path = tmp_path / "pkg.tgz"
+        tarball_path.write_bytes(tarball_bytes)
+
+        # Act: files is None and manifest files have no workflow targets
+        meta = extract_tarball_metadata(
+            tarball_path=tarball_path,
+            source="owner/repo",
+            version="1.0.0",
+            manifest_data={"files": [{"source": "readme.md", "target": "readme.md"}]},
+        )
+
+        # Assert
+        assert meta["title"] is None
+        assert meta["source"] == "owner/repo"
+
     def test_extract_tarball_metadata_should_use_pre_extracted_files_when_provided(self, tmp_path: Path) -> None:
         # Arrange: tarball with workflow.yml but without primary workflow file in tarball
         workflow_yml = "name: my-flow\n"
@@ -650,29 +671,33 @@ class TestExtractTarballMetadata:
         assert meta["title"] == "Pre-Extracted Title"
 
 
-class TestFindWorkflowFileContent:
-    def test_find_workflow_file_content_should_return_content_when_target_is_in_workflows_dir(self) -> None:
+class TestFindPrimaryWorkflowSource:
+    def test_find_primary_workflow_source_should_return_source_when_workflow_target_exists(self) -> None:
         # Arrange
-        files = [
-            InstalledFile(source="config.json", content=b"{}", target="config.json"),
-            InstalledFile(source="main.yml", content=b"name: main\n", target=".github/workflows/main.yml"),
-        ]
+        manifest_data = {
+            "files": [
+                {"source": "config.json", "target": "config.json"},
+                {"source": "linter.yaml", "target": ".github/workflows/linter.yaml"},
+            ]
+        }
 
         # Act
-        content = find_workflow_file_content(files)
+        result = find_primary_workflow_source(manifest_data)
 
         # Assert
-        assert content == "name: main\n"
+        assert result == "linter.yaml"
 
-    def test_find_workflow_file_content_should_return_none_when_no_file_targets_workflows_dir(self) -> None:
+    def test_find_primary_workflow_source_should_return_none_when_no_workflow_target_exists(self) -> None:
         # Arrange
-        files = [
-            InstalledFile(source="config.json", content=b"{}", target="config.json"),
-            InstalledFile(source="README.md", content=b"# Docs", target="README.md"),
-        ]
+        manifest_data = {
+            "files": [
+                "invalid-item",
+                {"source": "config.json", "target": "config.json"},
+            ]
+        }
 
         # Act
-        content = find_workflow_file_content(files)
+        result = find_primary_workflow_source(manifest_data)
 
         # Assert
-        assert content is None
+        assert result is None

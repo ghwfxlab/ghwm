@@ -1,10 +1,10 @@
 import pytest
 
 from ghwm.managed_files import (
-    _extract_body,
     _find_top_level_section,
     _preserve_existing_envs,
     _preserve_existing_triggers,
+    extract_body,
 )
 
 
@@ -164,13 +164,33 @@ def test_preserve_existing_triggers_should_preserve_quoted_on_key_when_values_di
 
 
 def test_extract_body_should_return_empty_string_when_content_is_empty() -> None:
-    assert _extract_body("") == ""
+    # Arrange
+    content = ""
+
+    # Act
+    result = extract_body(content)
+
+    # Assert
+    assert result == ""
 
 
 def test_extract_body_should_return_empty_string_when_content_has_only_comments() -> None:
-    assert _extract_body("# header 1\n# header 2\n") == ""
+    # Arrange
+    content = "# header 1\n# header 2\n"
+
+    # Act
+    result = extract_body(content)
+
+    # Assert
+    assert result == ""
 
 
-def test_extract_body_should_strip_header_and_preserve_workflow_body() -> None:
+def test_extract_body_should_strip_header_and_preserve_workflow_body_when_header_is_present() -> None:
+    # Arrange
     content = "# Managed by ghwm\n# Hash: 123\n\nname: my-workflow\n"
-    assert _extract_body(content) == "name: my-workflow\n"
+
+    # Act
+    result = extract_body(content)
+
+    # Assert
+    assert result == "name: my-workflow\n"
