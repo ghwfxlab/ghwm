@@ -676,7 +676,7 @@ class TestTelemetry:
             install_workflows(consumer, manifest, local_path=marketplace)
 
         # Assert
-        calls = [(c.kwargs["event_type"], c.kwargs["workflow_name"]) for c in mock_track.call_args_list]
+        calls = [(call.kwargs["event_type"], call.kwargs["workflow_name"]) for call in mock_track.call_args_list]
         assert ("install", LINTER) in calls
         assert len(mock_track.call_args_list) == 1
 
@@ -764,7 +764,7 @@ class TestTelemetry:
             install_workflows(consumer, manifest, local_path=marketplace)
 
         # Assert
-        event_types = [c.kwargs["event_type"] for c in mock_track.call_args_list]
+        event_types = [call.kwargs["event_type"] for call in mock_track.call_args_list]
         assert "install" not in event_types
         assert "run" not in event_types
 
@@ -799,7 +799,7 @@ class TestTelemetry:
             update_workflows(consumer, manifest, local_path=marketplace)
 
         # Assert
-        event_types = [c.kwargs["event_type"] for c in mock_track.call_args_list]
+        event_types = [call.kwargs["event_type"] for call in mock_track.call_args_list]
         assert "updated" in event_types
         assert "install" not in event_types
 
@@ -821,7 +821,7 @@ class TestTelemetry:
             install_workflows(consumer, manifest, local_path=marketplace)
 
         # Assert
-        install_call = next(c for c in mock_track.call_args_list if c.kwargs["event_type"] == "install")
+        install_call = next(call for call in mock_track.call_args_list if call.kwargs["event_type"] == "install")
         assert install_call.kwargs["version"] == VERSION_1_2_3
         assert install_call.kwargs["source"] == MARKETPLACE_SOURCE
         assert install_call.kwargs["metadata"]["version"] == VERSION_1_2_3
@@ -861,7 +861,7 @@ class TestTelemetry:
             install_workflows(consumer, manifest, local_path=marketplace)
 
         # Assert
-        install_call = next(c for c in mock_track.call_args_list if c.kwargs["event_type"] == "install")
+        install_call = next(call for call in mock_track.call_args_list if call.kwargs["event_type"] == "install")
         meta = install_call.kwargs["metadata"]
         assert meta["title"] == "Super Linter"
         assert meta["description"] == "Lint all the things"
@@ -903,7 +903,7 @@ class TestTelemetry:
         call_kwargs = mock_track.call_args_list[0].kwargs
         assert call_kwargs["workflow_name"] == LINTER
         assert call_kwargs["source"] == MARKETPLACE_SOURCE
-        tracked_names = [c.kwargs["workflow_name"] for c in mock_track.call_args_list]
+        tracked_names = [call.kwargs["workflow_name"] for call in mock_track.call_args_list]
         assert "private-flow" not in tracked_names
 
     def test_install_workflows_should_track_against_overridden_source_when_workflow_specifies_custom_source(
