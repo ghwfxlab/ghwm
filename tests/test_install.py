@@ -753,7 +753,10 @@ class TestTelemetry:
         _write_marketplace_package(marketplace, LINTER, "name: linter\non: push\n")
         manifest = _marketplace_manifest([{"name": LINTER, "version": VERSION_1_2_3}])
 
-        with patch("ghwm.install.is_public_repository", return_value=True):
+        with (
+            patch("ghwm.install.is_public_repository", return_value=True),
+            patch("ghwm.install.track_installation"),
+        ):
             install_workflows(consumer, manifest, local_path=marketplace)
 
         # Act: second run — workflow is already up to date (skipped, not installed/updated)
@@ -782,7 +785,10 @@ class TestTelemetry:
         )
         manifest = _marketplace_manifest([{"name": LINTER, "version": VERSION_1_2_3}])
 
-        with patch("ghwm.install.is_public_repository", return_value=True):
+        with (
+            patch("ghwm.install.is_public_repository", return_value=True),
+            patch("ghwm.install.track_installation"),
+        ):
             install_workflows(consumer, manifest, local_path=marketplace)
 
         _write_marketplace_package(

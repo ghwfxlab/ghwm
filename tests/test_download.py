@@ -276,7 +276,12 @@ class TestDownloadWorkflowsRemote:
         self,
     ) -> None:
         # Arrange / Act & Assert
-        # Since it defaults to latest, it will attempt to download from the registry.
-        # We expect a FileNotFoundError because the dummy package @owner/linter doesn't exist.
-        with pytest.raises(FileNotFoundError):
+        with (
+            patch("ghwm.download.github_token", return_value="token"),
+            patch(
+                "ghwm.download.download_npm_tarball",
+                side_effect=FileNotFoundError("Package @owner/linter not found in registry"),
+            ),
+            pytest.raises(FileNotFoundError),
+        ):
             download_workflows(Manifest(source=MARKETPLACE_SOURCE, workflows=[WorkflowEntry(name=LINTER)]))

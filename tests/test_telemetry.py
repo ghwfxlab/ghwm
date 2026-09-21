@@ -17,6 +17,7 @@ from ghwm.telemetry import (
     build_telemetry_payload,
     get_telemetry_url,
     is_public_repository,
+    is_telemetry_disabled,
     track_installation,
 )
 
@@ -103,6 +104,41 @@ class TestIsPublicRepository:
 
         # Assert
         assert result is False
+
+    def test_is_public_repository_should_return_false_and_skip_network_when_do_not_track_is_set(self) -> None:
+        # Arrange / Act
+        with (
+            patch.dict(os.environ, {"DO_NOT_TRACK": "1"}),
+            patch("ghwm.telemetry.urlopen") as mock_urlopen,
+        ):
+            result = is_public_repository("owner", "some-repo")
+
+        # Assert
+        assert result is False
+        mock_urlopen.assert_not_called()
+
+    def test_is_public_repository_should_return_false_and_skip_network_when_ghwm_no_telemetry_is_set(self) -> None:
+        # Arrange / Act
+        with (
+            patch.dict(os.environ, {"GHWM_NO_TELEMETRY": "1"}),
+            patch("ghwm.telemetry.urlopen") as mock_urlopen,
+        ):
+            result = is_public_repository("owner", "some-repo")
+
+        # Assert
+        assert result is False
+        mock_urlopen.assert_not_called()
+
+    def test_is_telemetry_disabled_should_return_true_when_env_flags_are_present(self) -> None:
+        # Arrange / Act / Assert
+        with patch.dict(os.environ, {"DO_NOT_TRACK": "1"}, clear=True):
+            assert is_telemetry_disabled() is True
+
+        with patch.dict(os.environ, {"GHWM_NO_TELEMETRY": "1"}, clear=True):
+            assert is_telemetry_disabled() is True
+
+        with patch.dict(os.environ, {}, clear=True):
+            assert is_telemetry_disabled() is False
 
     def test_is_public_repository_should_omit_auth_header_when_request_is_sent(self) -> None:
         # Arrange
@@ -413,6 +449,7 @@ class TestTrackInstallation:
             )
 
 
+@pytest.mark.integration
 class TestPrivateRepositoryIsolationLive:
     """Live verification against the test telemetry endpoint for private repository isolation."""
 

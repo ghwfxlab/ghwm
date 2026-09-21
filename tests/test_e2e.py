@@ -596,5 +596,3 @@ class TestGhwmEndToEnd:
         assert exit_code == 0
         assert "✓ Installed ghwm-auto-assign-pr" in output
         assert workspace.file_exists(".github/workflows/auto-assign-pr.yaml")
-
-
