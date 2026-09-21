@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from typing import cast
 from unittest.mock import patch
@@ -10,7 +11,7 @@ import pytest
 
 from ghwm.download import WorkflowSource
 from ghwm.download_npm import InstalledFile
-from ghwm.install import install_workflows, update_workflows
+from ghwm.install import InstallResult, _emit_telemetry, install_workflows, update_workflows
 from ghwm.lock import read_lockfile
 from ghwm.managed_files import extract_body, load_workflow_yaml
 from ghwm.manifest import Manifest, WorkflowEntry, parse_manifest
@@ -712,6 +713,45 @@ class TestTelemetry:
             patch("ghwm.install.track_installation") as mock_track,
         ):
             install_workflows(consumer, manifest, local_path=marketplace, no_telemetry=True)
+
+        # Assert
+        mock_check.assert_not_called()
+        mock_track.assert_not_called()
+
+    def test_install_workflows_should_not_emit_telemetry_when_telemetry_is_disabled_via_env(
+        self, tmp_path: Path
+    ) -> None:
+        # Arrange
+        marketplace = tmp_path / "marketplace"
+        consumer = tmp_path / "consumer"
+        consumer.mkdir()
+        _write_marketplace_package(marketplace, LINTER, "name: linter\non: push\n")
+        manifest = _marketplace_manifest([{"name": LINTER, "version": VERSION_1_2_3}])
+
+        # Act
+        with (
+            patch.dict(os.environ, {"GHWM_NO_TELEMETRY": "1"}),
+            patch("ghwm.install.is_public_repository") as mock_check,
+            patch("ghwm.install.track_installation") as mock_track,
+        ):
+            install_workflows(consumer, manifest, local_path=marketplace)
+
+        # Assert
+        mock_check.assert_not_called()
+        mock_track.assert_not_called()
+
+    def test_emit_telemetry_should_return_early_when_telemetry_is_disabled(self) -> None:
+        # Arrange
+        manifest = _marketplace_manifest([{"name": LINTER, "version": VERSION_1_2_3}])
+        result = InstallResult(installed=[LINTER], updated=[], pruned=[], skipped=[])
+
+        # Act
+        with (
+            patch.dict(os.environ, {"DO_NOT_TRACK": "1"}),
+            patch("ghwm.install.is_public_repository") as mock_check,
+            patch("ghwm.install.track_installation") as mock_track,
+        ):
+            _emit_telemetry(MARKETPLACE_SOURCE, manifest, result)
 
         # Assert
         mock_check.assert_not_called()
