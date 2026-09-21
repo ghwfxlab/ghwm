@@ -45,6 +45,7 @@ Use the existing Make targets:
 
 - `make install` - sync dependencies with `uv`
 - `make test` - run pytest with coverage
+- `make test-e2e` - run end-to-end tests using testcontainers
 - `make lint` - run Ruff
 - `make type-check` - run mypy in strict mode
 - `make format` - run Ruff formatter

@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help check-env install dev test lint format type-check clean build
+.PHONY: help check-env install dev test test-integration test-e2e lint format type-check clean build
 .PHONY: lang lang-fix setup-precommit precommit super-linter super-linter-fix
 
 SHELL := /usr/bin/env bash
@@ -19,6 +19,8 @@ help:
 	@echo "  install       - Install package with dev deps (uv sync)"
 	@echo "  dev           - Alias for install"
 	@echo "  test          - Run pytest"
+	@echo "  test-integration - Run integration tests"
+	@echo "  test-e2e      - Run end-to-end tests using testcontainers"
 	@echo "  lint          - Run ruff linter"
 	@echo "  format        - Run ruff formatter"
 	@echo "  type-check    - Run mypy"
@@ -56,6 +58,10 @@ test: install
 test-integration: install
 	@echo "[test-integration] Running pytest including integration tests..."
 	@$(UV) run pytest -m "integration" --no-header -rN
+
+test-e2e: install
+	@echo "[test-e2e] Running pytest e2e tests..."
+	@$(UV) run pytest -m "e2e" --no-header -rN
 lint: install
 	@echo "[lint] Running ruff check..."
 	@$(UV) run ruff check src/ tests/

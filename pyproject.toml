@@ -28,6 +28,7 @@ classifiers = [
 test = [
   "pytest>=8.0",
   "pytest-cov>=6.0",
+  "testcontainers>=4.0",
 ]
 
 lint = [
@@ -78,9 +79,12 @@ packages = ["src/ghwm"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "--cov=ghwm --cov-report=term-missing --cov-report=xml --junitxml=junit.xml -m 'not integration'"
+addopts = "--cov=ghwm --cov-report=term-missing --cov-report=xml --junitxml=junit.xml -m 'not integration and not e2e'"
 junit_family = "legacy"
-markers = ["integration: marks tests that call the real GitHub API (run with: make test-integration)"]
+markers = [
+  "integration: marks tests that call the real GitHub API (run with: make test-integration)",
+  "e2e: marks end-to-end tests using testcontainers (run with: make test-e2e)",
+]
 
 [tool.ruff]
 target-version = "py312"
