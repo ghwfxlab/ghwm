@@ -10,7 +10,7 @@
 
 > Install managed GitHub workflow files from a central marketplace repository.
 
-Workflows can be sourced from the official [ghwfxlab/ghwm-registry](https://github.com/ghwfxlab/ghwm-registry) or custom registry repositories, which can be created using the [ghwfxlab/ghwm-registry-template](https://github.com/ghwfxlab/ghwm-registry-template) repository template.
+Workflows can be sourced from the official [ghwfxlab/ghwm-registry](https://github.com/ghwfxlab/ghwm-registry) or custom registry repositories, which can be created using the [ghwfxlab/ghwm-registry-template](https://github.com/ghwfxlab/ghwm-registry-template) repository template. Workflow authors can annotate packages with presentation metadata using [commented YAML frontmatter](docs/reference/frontmatter.md).
 
 ## Install
 
@@ -244,7 +244,7 @@ downloading the npm package tarball.
 | Workflow name | `linter` |
 | Workflow version | `1.2.3` |
 | Event type | `install` (first time added) or `updated` (workflow changed on re-install) |
-| Workflow metadata (optional) | Title, description, tags, icon, owner, version, source, created_at |
+| Workflow metadata (optional) | Title, description, tags, icon, owner, version, source, created_at (see [Workflow Frontmatter Specification](docs/reference/frontmatter.md)) |
 
 **What is never tracked:** IP addresses, hostnames, usernames, file paths, repository names, environment variables, or any other system or user information.
 

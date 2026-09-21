@@ -269,7 +269,7 @@ Usage telemetry is privacy-gated and tracks workflow adoption from public regist
 
 1. **Metadata Extraction (`metadata.py`)**:
    During workflow package download or local reading, metadata is extracted from:
-   - Commented YAML frontmatter delimited by `# ---` or leading `#` comment blocks in `workflow.yml` or the workflow YAML file.
+   - Commented YAML frontmatter delimited by `# ---` or leading `#` comment blocks in `workflow.yml` or the workflow YAML file (see [Workflow Frontmatter Specification](reference/frontmatter.md)).
    - Fallbacks from `package.json` (`description`, `version`) and manifest keys.
    - Enriched fields include: `title`, `description`, `tags`, `icon`, `owner`, `version`, `source`, and optional `created_at`.
 2. **Per-Workflow Privacy Gate (`install.py`, `telemetry.py`)**:
