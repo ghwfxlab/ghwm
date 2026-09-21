@@ -55,8 +55,8 @@ jobs:
 - **Line Prefixing**: Every line within the frontmatter block must begin with `#` (optionally followed by a space).
 - **YAML Content**: The text following the `#` prefix (and optional space) forms standard YAML mapping syntax.
 
-> [!NOTE]
-> `ghwm` also supports top-of-file comments without explicit `# ---` delimiters as a graceful fallback. However, registry authors must use the explicit `# ---` delimiters for clarity and deterministic parsing across external tools.
+> [!WARNING]
+> While `ghwm` provides graceful fallback tolerance for top-of-file comments without explicit `# ---` delimiters, this format is non-standard. Registry authors must always use explicit `# ---` delimiters to ensure compatibility with registry publishing linters and external parsers.
 
 ---
 
@@ -66,17 +66,19 @@ The following table defines the supported metadata fields, data types, length co
 
 | Field | Type | Required | Max Length | Description | Default / Fallback |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| `title` | string | No | 128 chars | Human-readable workflow display title. | Fallback to manifest `title` or prettified workflow name. |
-| `description` | string | No | 2048 chars | Concise summary of the workflow purpose and capabilities. | Fallback to manifest `description` or `package.json` `description`. |
-| `tags` | string[] | No | 20 items (64 chars each) | Categories, keywords, or topics for search and filtering. | Fallback to manifest `tags` or empty list `[]`. |
+| `title` | string | No | 128 chars | Human-readable workflow display title. | Fallback to manifest `title`, or `null` in CLI (prettified by registry UI). |
+| `description` | string | No | 2048 chars | Concise summary of the workflow purpose and capabilities. | Fallback to manifest `description`, `package.json` `description`, or `"N/A"` in UI (`null` in CLI). |
+| `tags` | string[] | No | 20 items (64 chars each) | Categories, keywords, or topics for search and filtering. | Fallback to manifest `tags`, empty list `[]` in CLI, or `['N/A']` in UI. |
 | `icon` | string | No | 64 chars | Google Material Symbols icon identifier. | Fallback to manifest `icon` or default icon (e.g., `extension`). |
 | `owner` | string | No | 128 chars | Workflow publisher, maintainer, or organization name. | Fallback to manifest `owner` or derived registry owner segment (`owner/repo`). |
 | `version` | string | No | 64 chars | Semantic version of the workflow package. | Fallback to resolved CLI version, manifest `version`, or `package.json` `version`. |
-| `created_at` | string | No | 64 chars | ISO 8601 creation or publication timestamp. | Fallback to manifest `created_at` / `createdAt` or omitted (`null`). |
+| `created_at` | string | No | 64 chars | ISO 8601 creation or publication timestamp. | Fallback to manifest `created_at` / `createdAt`, Git history in registry pipelines, or `null`. |
 
 ---
 
 ## Field Details and Constraints
+
+This section provides expanded specifications, validation constraints, and authoring guidance for each field declared in the [Metadata Schema](#metadata-schema) summary table above.
 
 ### `title`
 
@@ -163,13 +165,13 @@ The creation or initial release timestamp.
 - **Type**: `string`
 - **Max Length**: 64 characters.
 - **Format**: ISO 8601 UTC timestamp format (e.g., `2026-09-20T10:00:00Z`).
-- **Aliases**: Supported under either `created_at` (snake_case) or `createdAt` (camelCase).
+- **Aliases**: Supported under either `created_at` (canonical snake_case in `ghwm`) or `createdAt` (camelCase alias for JavaScript/npm ecosystem compatibility).
 
 ---
 
 ## Resolution Precedence Hierarchy
 
-When `ghwm` extracts metadata for a workflow package during download or local read operations, it applies a four-tier precedence hierarchy:
+When `ghwm` extracts metadata for a workflow package during download or local read operations (e.g., for privacy-gated telemetry or local inspection), it enforces length sanitization bounds and applies a four-tier precedence hierarchy:
 
 ```mermaid
 flowchart TD

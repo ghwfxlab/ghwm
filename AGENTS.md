@@ -176,7 +176,7 @@ When changing code, preserve these unless the task explicitly changes them:
 - Update `README.md` for user-facing CLI behavior, flags, or workflow examples, and call it the readme in prose.
 - Update `docs/ARCHITECTURE.md` for lifecycle, module-boundary, or data-flow changes.
 - If you change the managed header, package manifest semantics, or lockfile shape, update both the readme and the architecture docs.
-- If you change frontmatter parsing or metadata extraction semantics, update `docs/reference/frontmatter.md`.
+- If you change frontmatter parsing, metadata extraction semantics, or telemetry payload schemas, update `docs/reference/frontmatter.md`.
 
 ## Useful manual smoke test
 
