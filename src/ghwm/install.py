@@ -17,7 +17,7 @@ from ghwm.managed_files import (
 from ghwm.manifest import Manifest, WorkflowEntry
 from ghwm.metadata import extract_workflow_metadata
 from ghwm.paths import is_workflow_target
-from ghwm.telemetry import is_public_repository, track_installation
+from ghwm.telemetry import is_public_repository, is_telemetry_disabled, track_installation
 
 
 @dataclass
@@ -62,7 +62,7 @@ def install_workflows(
     if prune:
         _prune_stale(cwd, manifest, lockfile, result, force=force)
 
-    if not no_telemetry:
+    if not (no_telemetry or is_telemetry_disabled()):
         _emit_telemetry(manifest.source, manifest, result, workflow_sources_by_name=workflow_sources_by_name)
 
     write_lockfile(cwd, lockfile)
@@ -100,6 +100,8 @@ def _emit_telemetry(
     workflow_sources_by_name: dict[str, WorkflowSource] | None = None,
 ) -> None:
     """Emit telemetry events for installs and updates if the workflow source registry is public."""
+    if is_telemetry_disabled():
+        return
     try:
         entry_by_name = {entry.name: entry for entry in manifest.workflows}
         workflow_sources_map = workflow_sources_by_name or {}

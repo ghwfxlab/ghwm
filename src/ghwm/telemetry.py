@@ -53,6 +53,11 @@ def get_telemetry_url() -> str:
     return PRODUCTION_TELEMETRY_URL
 
 
+def is_telemetry_disabled() -> bool:
+    """Return True if telemetry is explicitly disabled by environment configuration."""
+    return os.environ.get("DO_NOT_TRACK") == "1" or os.environ.get("GHWM_NO_TELEMETRY") == "1"
+
+
 def is_public_repository(owner: str, repo: str) -> bool:
     """Return True iff the GitHub repository is publicly visible.
 
@@ -61,6 +66,9 @@ def is_public_repository(owner: str, repo: str) -> bool:
     on any error (including 401, 403 rate limits, network drops, and timeouts)
     so telemetry is always skipped safely on failure.
     """
+    if is_telemetry_disabled():
+        return False
+
     url = f"{_GITHUB_API_BASE}/repos/{owner}/{repo}"
     headers = {
         "Accept": "application/vnd.github+json",
@@ -110,7 +118,7 @@ def track_installation(
     Telemetry emission is strictly fail-silent and non-blocking: any
     network error, timeout, or unexpected failure is suppressed.
     """
-    if os.environ.get("DO_NOT_TRACK") == "1" or os.environ.get("GHWM_NO_TELEMETRY") == "1":
+    if is_telemetry_disabled():
         return
 
     payload: dict[str, Any] = {
