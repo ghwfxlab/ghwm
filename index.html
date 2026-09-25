@@ -1,0 +1,225 @@
+<!DOCTYPE html><html class="dark" lang="en"><head><meta charset="utf-8"><link rel="icon" type="image/svg+xml" href="/ghwm/favicon.svg"><link rel="icon" href="/ghwm/favicon.ico"><meta name="viewport" content="width=device-width"><meta name="generator" content="Astro v7.2.8"><title>GHWM Marketplace - Manage GitHub Workflows</title><!-- Design System Fonts (Inter & JetBrains Mono) --><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Fira+Sans:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Source+Code+Pro:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><!-- Material Symbols Outlined for UI Icons --><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"><link rel="stylesheet" href="/ghwm/_astro/usage._KYShrAJ.css"></head><body class="font-body-lg text-body-lg min-h-screen flex flex-col bg-background text-on-background antialiased"><!-- Shared Top Menu Bar Component --><header class="bg-surface w-full top-0 sticky border-b border-outline-variant z-50"><div class="flex justify-between items-center px-lg py-md max-w-7xl mx-auto w-full"><!-- Brand Logo --><div class="flex items-center gap-lg"><a href="/ghwm/" class="font-headline-md text-headline-md font-bold text-primary flex items-center gap-sm hover:opacity-90 transition-opacity"><span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">terminal</span><span>GHWM</span></a><!-- Desktop Navigation --><nav class="hidden font-body-lg md:flex gap-md items-center"><a class="font-body-sm text-body-sm transition-colors px-sm py-xs rounded duration-100 active:scale-95 text-primary border-b-2 border-primary rounded-none pb-1 font-semibold" href="/ghwm/">Explore</a><a class="font-body-sm text-body-sm transition-colors px-sm py-xs rounded duration-100 active:scale-95 text-on-surface-variant hover:text-primary hover:bg-surface-container" href="/ghwm/registry">Registry</a><a class="font-body-sm text-body-sm transition-colors px-sm py-xs rounded duration-100 active:scale-95 text-on-surface-variant hover:text-primary hover:bg-surface-container" href="/ghwm/official">Official</a><a class="font-body-sm text-body-sm transition-colors px-sm py-xs rounded duration-100 active:scale-95 text-on-surface-variant hover:text-primary hover:bg-surface-container" href="https://github.com/ghwfxlab/ghwm" target="_blank" rel="noopener noreferrer">Docs</a></nav></div><!-- Search Bar & Controls --><div class="flex items-center gap-md"><form action="/ghwm/registry" method="GET" class="hidden md:flex items-center bg-surface-container-low rounded-default border border-outline-variant px-sm py-xs input-focus"><span class="material-symbols-outlined text-outline text-[18px] mr-2">search</span><input id="menu-search-input" name="q" type="text" class="menu-search-input bg-transparent border-none outline-none text-body-sm font-body-sm text-on-surface w-48 focus:ring-0 p-0 placeholder-outline" placeholder="Search workflows..." autocomplete="off"></form><!-- Mobile Menu Toggle Button (For high-fidelity responsiveness) --><button id="mobile-menu-toggle" class="md:hidden flex items-center justify-center p-sm rounded-default text-on-surface-variant hover:text-primary hover:bg-surface-container transition-colors active:scale-95" aria-label="Toggle Navigation Menu"><span class="material-symbols-outlined text-[24px]">menu</span></button></div></div><!-- Mobile Drawer Menu (Hidden by default, toggled via script below) --><div id="mobile-menu" class="hidden md:hidden w-full border-t border-outline-variant bg-surface px-lg py-md flex flex-col gap-sm"><a class="block py-xs px-sm rounded text-body-sm font-body-sm text-primary bg-surface-container font-semibold" href="/ghwm/">Explore</a><a class="block py-xs px-sm rounded text-body-sm font-body-sm text-on-surface-variant" href="/ghwm/registry">Registry</a><a class="block py-xs px-sm rounded text-body-sm font-body-sm text-on-surface-variant" href="/ghwm/official">Official</a><a class="block py-xs px-sm rounded text-body-sm font-body-sm text-on-surface-variant" href="https://github.com/ghwfxlab/ghwm" target="_blank" rel="noopener noreferrer">Docs</a><!-- Mobile Search --><form action="/ghwm/registry" method="GET" class="flex items-center bg-surface-container-low rounded-default border border-outline-variant px-sm py-xs input-focus mt-xs"><span class="material-symbols-outlined text-outline text-[18px] mr-2">search</span><input id="mobile-search-input" name="q" type="text" class="menu-search-input bg-transparent border-none outline-none text-body-sm font-body-sm text-on-surface w-full focus:ring-0 p-0 placeholder-outline" placeholder="Search workflows..." autocomplete="off"></form></div></header><script type="module">try{let e=new URLSearchParams(window.location.search).get(`q`);e&&document.querySelectorAll(`.menu-search-input`).forEach(t=>{t.value=e})}catch{}var e=document.getElementById(`mobile-menu-toggle`),t=document.getElementById(`mobile-menu`);e&&t&&e.addEventListener(`click`,()=>{t.classList.contains(`hidden`)?(t.classList.remove(`hidden`),e.querySelector(`span`).textContent=`close`):(t.classList.add(`hidden`),e.querySelector(`span`).textContent=`menu`)});</script><!-- Content Slot --><main class="flex-grow w-full max-w-7xl mx-auto px-margin md:px-lg py-2xl flex flex-col gap-2xl"><!-- Hero Section --><section class="flex flex-col items-center text-center py-xl gap-lg w-full"><h1 class="font-display-lg text-display-lg max-w-3xl leading-tight">Manage your GitHub Workflows as Packages</h1><p class="font-body-lg text-body-lg max-w-4/5 text-on-surface-variant">Install, update, and audit managed workflow files from a central marketplace.</p><!-- Explore Search Component --><!-- Prominent Search in Hero --><form action="/ghwm/registry" method="GET" class="w-full max-w-4/5 mt-md relative" id="hero-search-form"><div class="flex items-center card-surface rounded-default px-md py-sm shadow-sm border border-outline-variant focus-within:border-primary transition-colors w-full"><span class="material-symbols-outlined text-outline mr-sm select-none">search</span><input id="hero-search-input" name="q" class="bg-transparent border-none outline-none text-body-lg font-body-lg text-on-surface w-full focus:ring-0 p-0 placeholder-outline" placeholder="Search linter, ci/cd, deployment..." type="text" autocomplete="off"><button type="submit" class="ml-auto font-label-caps text-label-caps bg-surface-container-high px-sm py-xs rounded border border-outline-variant text-outline hover:text-on-surface hover:border-outline transition-colors cursor-pointer shrink-0" title="Search catalog">↵ ENTER</button></div><!-- Live Dropdown Suggestions (Client-Side) --><div id="hero-search-dropdown" class="absolute left-0 right-0 top-full mt-1.5 card-surface border border-outline-variant rounded-default shadow-xl overflow-hidden hidden z-50 text-left"><div id="hero-search-results" class="py-1 divide-y divide-outline-variant divide-opacity-30 max-h-72 overflow-y-auto"><!-- Suggestions rendered dynamically via script --></div><div class="px-md py-sm bg-surface-container-low border-t border-outline-variant flex items-center justify-between font-code-sm text-xs text-on-surface-variant"><span>Press <kbd class="px-1.5 py-0.5 rounded bg-surface-container-high border border-outline-variant font-mono text-[10px]">Enter</kbd> to search full catalog</span><a id="hero-search-view-all" href="/ghwm/registry" class="text-primary hover:underline flex items-center gap-1 font-medium"><span>View all results</span><span class="material-symbols-outlined text-[14px]">arrow_forward</span></a></div></div></form><script>(function(){const catalog = [{"name":"ghwm-auto-assign-pr","packageName":"N/A","version":"N/A","title":"Ghwm Auto Assign Pr","description":"N/A","tags":["N/A"],"icon":"extension","owner":"N/A","createdAt":null,"sourceUrl":null,"installs":3,"updates":0,"total":3,"lastInstalledAt":"2026-09-24T18:30:45.360Z"},{"name":"ghwm-super-linter","packageName":"N/A","version":"N/A","title":"Ghwm Super Linter","description":"N/A","tags":["N/A"],"icon":"extension","owner":"N/A","createdAt":null,"sourceUrl":null,"installs":3,"updates":0,"total":3,"lastInstalledAt":"2026-09-24T18:30:44.497Z"},{"name":"auto-assign-pr","packageName":"@ghwfxlab/ghwm-auto-assign-pr","version":"1.0.1","title":"Auto Assign PR","description":"Automatically add pull request reviewers and assignees to streamline pull request triage and reviews.","tags":["automation","pr","review"],"icon":"person_add","owner":"ghwfxlab","createdAt":"2026-06-12T10:23:34+02:00","sourceUrl":null,"installs":1,"updates":0,"total":1,"lastInstalledAt":"2026-09-12T07:57:19.356Z"},{"name":"super-linter","packageName":"@ghwfxlab/ghwm-super-linter","version":"1.0.1","title":"Super-Linter","description":"Code linting workflow using Super-Linter and pre-commit hooks for code quality.","tags":["lint","actions","pre-commit"],"icon":"fact_check","owner":"ghwfxlab","createdAt":"2026-06-12T10:23:34+02:00","sourceUrl":null,"installs":1,"updates":0,"total":1,"lastInstalledAt":"2026-09-11T14:46:54.367Z"}];
+const baseUrl = "/ghwm";
+
+  const form = document.getElementById('hero-search-form');
+  const input = document.getElementById('hero-search-input');
+  const dropdown = document.getElementById('hero-search-dropdown');
+  const resultsContainer = document.getElementById('hero-search-results');
+  const viewAllLink = document.getElementById('hero-search-view-all');
+
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  function renderSuggestions(rawQuery) {
+    const query = rawQuery.trim().toLowerCase();
+    if (!query) {
+      dropdown?.classList.add('hidden');
+      return;
+    }
+
+    const matches = (catalog || []).filter((w) => {
+      const nameMatch = w.name && w.name.toLowerCase().includes(query);
+      const titleMatch = w.title && w.title.toLowerCase().includes(query);
+      const pkgMatch = w.packageName && w.packageName.toLowerCase().includes(query);
+      const descMatch = w.description && w.description.toLowerCase().includes(query);
+      const tagMatch = Array.isArray(w.tags) && w.tags.some((t) => t.toLowerCase().includes(query));
+      return nameMatch || titleMatch || pkgMatch || descMatch || tagMatch;
+    });
+
+    if (viewAllLink) {
+      viewAllLink.href = `${baseUrl}/registry?q=${encodeURIComponent(rawQuery.trim())}`;
+    }
+
+    if (matches.length === 0) {
+      if (resultsContainer) {
+        resultsContainer.innerHTML = `
+          <div class="px-md py-lg text-center text-body-sm text-on-surface-variant">
+            No workflows directly matching "<span class="text-on-surface font-semibold">${escapeHtml(rawQuery.trim())}</span>".
+            <div class="mt-1">
+              <a href="${baseUrl}/registry?q=${encodeURIComponent(rawQuery.trim())}" class="text-primary hover:underline font-code-sm text-xs">
+                Search full registry &rarr;
+              </a>
+            </div>
+          </div>
+        `;
+      }
+    } else {
+      if (resultsContainer) {
+        resultsContainer.innerHTML = matches.slice(0, 5).map((w) => `
+          <a
+            href="${baseUrl}/workflows/${encodeURIComponent(w.name)}"
+            class="flex items-center justify-between px-md py-sm hover:bg-surface-container transition-colors group cursor-pointer"
+          >
+            <div class="flex items-center gap-sm min-w-0">
+              <div class="w-8 h-8 rounded bg-surface-container-high border border-outline-variant flex items-center justify-center shrink-0 group-hover:border-primary transition-colors">
+                <span class="material-symbols-outlined text-primary text-[18px]">${escapeHtml(w.icon || 'terminal')}</span>
+              </div>
+              <div class="flex flex-col min-w-0">
+                <div class="flex items-center gap-2">
+                  <span class="font-headline-md text-[13px] font-semibold text-on-surface group-hover:text-primary transition-colors truncate">
+                    ${escapeHtml(w.title)}
+                  </span>
+                  <span class="font-code-sm text-[10px] text-secondary font-mono bg-surface-container-high border border-outline-variant px-1.5 rounded shrink-0">
+                    v${escapeHtml(w.version)}
+                  </span>
+                </div>
+                <span class="font-body-sm text-[11px] text-on-surface-variant truncate">
+                  ${escapeHtml(w.description)}
+                </span>
+              </div>
+            </div>
+            <span class="material-symbols-outlined text-outline group-hover:text-primary text-[16px] transition-colors shrink-0 ml-sm">
+              arrow_forward
+            </span>
+          </a>
+        `).join('');
+      }
+    }
+
+    dropdown?.classList.remove('hidden');
+  }
+
+  if (input) {
+    input.addEventListener('input', (e) => {
+      renderSuggestions(e.target.value);
+    });
+
+    input.addEventListener('focus', (e) => {
+      if (e.target.value.trim()) {
+        renderSuggestions(e.target.value);
+      }
+    });
+
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        dropdown?.classList.add('hidden');
+      }
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('#hero-search-form')) {
+        dropdown?.classList.add('hidden');
+      }
+    });
+  }
+})();</script><!-- Get Started & Installation Component --><!-- Get Started Installation Section --><div class="flex flex-col items-center justify-center mt-lg w-full px-md md:px-0 mx-auto max-w-[460px]"><!-- Get Started Header --><h2 class="font-headline-md text-headline-md font-bold text-on-surface mb-xs text-center">Get Started</h2><!-- Vertical Container --><div class="flex flex-col gap-sm w-full"><!-- Button Group Wrapper (Relative to hold badge) --><div class="relative w-full mt-4"><!-- Small Recommended badge above "uv (pinned)" button --><div class="absolute -top-5 left-2 font-mono uppercase font-bold tracking-wider text-[9px] text-primary select-none px-1.5">★ RECOMMENDED</div><!-- Button Group (Top) - Parent holds common styles for clean simplicity --><div class="flex items-center w-full border border-outline-variant rounded-default bg-surface [&amp;_button]:flex-1 [&amp;_button]:py-2 [&amp;_button]:font-mono [&amp;_button]:text-xs [&amp;_button]:hover:bg-surface-container [&amp;_button]:transition-all [&amp;_button]:cursor-pointer [&amp;_button]:whitespace-nowrap [&amp;_button]:text-center [&amp;_button]:border-r [&amp;_button]:border-outline-variant [&amp;_button:last-child]:border-r-0 [&amp;_button:first-child]:rounded-l-default [&amp;_button:last-child]:rounded-r-default h-[36px] overflow-hidden" id="method-button-group"><button data-method="uv-pinned" class="method-btn bg-surface-container-low text-primary font-bold" title="Install latest tagged release (v1.8.0)">uv (pinned)</button><button data-method="uv" class="method-btn text-on-surface-variant">uv</button><button data-method="pipx" class="method-btn text-on-surface-variant">pipx</button><button data-method="pip" class="method-btn text-on-surface-variant">pip</button></div></div><!-- Interactive Clipboard Box (Bottom) - Flex align & Wordwrap to avoid overlap --><div class="w-full terminal-bg border border-outline-variant rounded-default px-sm py-2 flex items-center justify-between shadow-sm min-h-[42px] gap-sm group"><div class="flex-1 text-left pr-2 flex items-center"><code id="install-command" class="font-code-md text-code-md text-secondary select-all whitespace-normal break-all">uv tool install git+https://github.com/ghwfxlab/ghwm.git@v1.8.0</code></div><button id="copy-command-btn" aria-label="Copy install command" class="text-outline hover:text-on-surface transition-colors cursor-pointer rounded bg-[#010409] flex items-center justify-center h-[32px] w-[56px] shrink-0"><span id="copy-icon" class="material-symbols-outlined text-[16px] select-none">content_copy</span></button></div></div></div><script>(function(){const installCommands = {"uv-pinned":"uv tool install git+https://github.com/ghwfxlab/ghwm.git@v1.8.0","uv":"uv tool install git+https://github.com/ghwfxlab/ghwm.git","pipx":"pipx install git+https://github.com/ghwfxlab/ghwm.git","pip":"pip install git+https://github.com/ghwfxlab/ghwm.git"};
+const repo = "ghwfxlab/ghwm";
+
+  // Select selectors
+  const buttons = document.querySelectorAll('.method-btn');
+  const codeDisplay = document.getElementById('install-command');
+
+  buttons.forEach(button => {
+    button.addEventListener('click', () => {
+      const method = button.getAttribute('data-method');
+      if (method && codeDisplay) {
+        // Update code snippet content using the dynamically bound frontmatter variable
+        codeDisplay.textContent = installCommands[method];
+
+        // Revert active states on buttons
+        buttons.forEach(btn => {
+          btn.classList.remove('bg-surface-container-low', 'text-primary', 'font-bold');
+          btn.classList.add('bg-surface', 'text-on-surface-variant');
+        });
+
+        // Apply active state on clicked button
+        button.classList.remove('bg-surface', 'text-on-surface-variant');
+        button.classList.add('bg-surface-container-low', 'text-primary', 'font-bold');
+      }
+    });
+  });
+
+  // Client-side fetch to ensure the pinned version is always the latest even if published after build
+  (async () => {
+    try {
+      const isValidCliTag = (tag) => {
+        if (!tag) return false;
+        const clean = String(tag).trim().replace(/^@+/, '');
+        if (clean.startsWith('ui-') || clean.startsWith('registry-')) return false;
+        return /^v?\d+(\.\d+)*(-[a-zA-Z0-9.]+)?$/.test(clean);
+      };
+
+      let freshTag = null;
+      const res = await fetch(`https://api.github.com/repos/${repo}/releases?per_page=5`, {
+        headers: { Accept: 'application/vnd.github+json' }
+      });
+      if (res.ok) {
+        const releases = await res.json();
+        if (Array.isArray(releases)) {
+          for (const rel of releases) {
+            if (rel && typeof rel.tag_name === 'string' && isValidCliTag(rel.tag_name)) {
+              freshTag = rel.tag_name.trim().replace(/^@+/, '');
+              break;
+            }
+          }
+        }
+      }
+
+      if (!freshTag) {
+        const tagsRes = await fetch(`https://api.github.com/repos/${repo}/tags?per_page=10`, {
+          headers: { Accept: 'application/vnd.github+json' }
+        });
+        if (tagsRes.ok) {
+          const tags = await tagsRes.json();
+          if (Array.isArray(tags)) {
+            for (const t of tags) {
+              if (t && typeof t.name === 'string' && isValidCliTag(t.name)) {
+                freshTag = t.name.trim().replace(/^@+/, '');
+                break;
+              }
+            }
+          }
+        }
+      }
+
+      if (freshTag) {
+        const freshCommand = `uv tool install git+https://github.com/${repo}.git@${freshTag}`;
+        installCommands['uv-pinned'] = freshCommand;
+
+        // If uv-pinned is currently active, update the code display immediately
+        const pinnedBtn = document.querySelector('.method-btn[data-method="uv-pinned"]');
+        if (pinnedBtn && pinnedBtn.classList.contains('font-bold') && codeDisplay) {
+          codeDisplay.textContent = freshCommand;
+        }
+        if (pinnedBtn) {
+          pinnedBtn.setAttribute('title', `Install latest tagged release (${freshTag})`);
+        }
+      }
+    } catch {
+      // Offline or rate-limited: graceful fallback to build-time tag
+    }
+  })();
+
+  // Material Tailwind interactive Clipboard logic
+  const copyBtn = document.getElementById('copy-command-btn');
+  const copyIcon = document.getElementById('copy-icon');
+
+  if (copyBtn && copyIcon && codeDisplay) {
+    copyBtn.addEventListener('click', async () => {
+      const textToCopy = codeDisplay.textContent.trim();
+      try {
+        await navigator.clipboard.writeText(textToCopy);
+
+        // Switch to checkmark state
+        copyIcon.textContent = 'check';
+        copyIcon.classList.remove('text-outline');
+        copyIcon.classList.add('text-secondary');
+
+        // Revert icon and style after 2s
+        setTimeout(() => {
+          copyIcon.textContent = 'content_copy';
+          copyIcon.classList.remove('text-secondary');
+          copyIcon.classList.add('text-outline');
+        }, 2000);
+      } catch (err) {
+        console.error('Failed to copy CLI command: ', err);
+      }
+    });
+  }
+})();</script></section><!-- Trending Workflows Component --><!-- Trending Workflows Section (10 items, 5 per row max on desktop, 2 per row on mobile) --><section class="flex flex-col gap-md"><div class="flex justify-between items-end border-b border-outline-variant pb-sm mb-xs"><h2 class="font-headline-lg text-headline-lg flex items-center gap-sm"><span class="material-symbols-outlined text-tertiary">local_fire_department</span>Trending Workflows</h2><div class="flex items-center gap-md"><span class="font-code-sm text-[11px] text-secondary bg-surface-container-low border border-secondary border-opacity-35 px-2 py-0.5 rounded flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></span><span>8 installs</span></span><a class="font-body-sm text-body-sm text-primary hover:underline" href="/ghwm/registry?sort=installs_desc">View all &rarr;</a></div></div><div class="grid grid-cols-2 md:grid-cols-5 gap-gutter" id="trending-workflows-grid"><a href="/ghwm/workflows/ghwm-auto-assign-pr" class="card-surface rounded-lg p-md flex flex-col gap-sm transition-all group cursor-pointer h-full hover:border-primary block" data-workflow-name="ghwm-auto-assign-pr"><div class="flex justify-between items-start gap-xs"><div class="w-8 h-8 bg-surface-container-high border border-outline-variant rounded flex items-center justify-center shrink-0 group-hover:border-primary transition-colors"><span class="material-symbols-outlined text-primary text-[18px]">extension</span></div><div class="font-code-sm text-code-sm bg-surface-container-low text-secondary border border-secondary border-opacity-35 px-1.5 py-0.5 rounded flex items-center gap-0.5 shrink-0 scale-90" title="3 installations recorded"><span class="material-symbols-outlined text-[10px]" style="font-variation-settings: 'FILL' 1;">download</span><span class="workflow-install-count font-mono">3</span></div></div><div class="mt-xs"><h3 class="font-headline-md text-[14px] leading-[20px] font-semibold group-hover:text-primary transition-colors line-clamp-1">Ghwm Auto Assign Pr</h3><p class="font-body-sm text-[12px] leading-[16px] text-on-surface-variant line-clamp-1 mt-0.5 mb-1">N/A</p><p class="font-code-sm text-[10px] text-on-surface-variant opacity-60 mb-1">Active Sep 24, 2026</p><p class="font-body-sm text-[11px] leading-[15px] text-on-surface-variant mt-1 opacity-80 line-clamp-3">N/A</p></div><div class="flex gap-xs mt-auto pt-sm flex-wrap items-center justify-between"><div class="flex gap-xs flex-wrap"><span class="font-code-sm text-[10px] leading-[14px] border border-outline-variant px-1.5 py-0.5 rounded text-outline bg-surface-container-lowest">N/A</span></div><span class="font-code-sm text-[10px] text-primary opacity-0 group-hover:opacity-100 transition-opacity">&rarr;</span></div></a><a href="/ghwm/workflows/ghwm-super-linter" class="card-surface rounded-lg p-md flex flex-col gap-sm transition-all group cursor-pointer h-full hover:border-primary block" data-workflow-name="ghwm-super-linter"><div class="flex justify-between items-start gap-xs"><div class="w-8 h-8 bg-surface-container-high border border-outline-variant rounded flex items-center justify-center shrink-0 group-hover:border-primary transition-colors"><span class="material-symbols-outlined text-primary text-[18px]">extension</span></div><div class="font-code-sm text-code-sm bg-surface-container-low text-secondary border border-secondary border-opacity-35 px-1.5 py-0.5 rounded flex items-center gap-0.5 shrink-0 scale-90" title="3 installations recorded"><span class="material-symbols-outlined text-[10px]" style="font-variation-settings: 'FILL' 1;">download</span><span class="workflow-install-count font-mono">3</span></div></div><div class="mt-xs"><h3 class="font-headline-md text-[14px] leading-[20px] font-semibold group-hover:text-primary transition-colors line-clamp-1">Ghwm Super Linter</h3><p class="font-body-sm text-[12px] leading-[16px] text-on-surface-variant line-clamp-1 mt-0.5 mb-1">N/A</p><p class="font-code-sm text-[10px] text-on-surface-variant opacity-60 mb-1">Active Sep 24, 2026</p><p class="font-body-sm text-[11px] leading-[15px] text-on-surface-variant mt-1 opacity-80 line-clamp-3">N/A</p></div><div class="flex gap-xs mt-auto pt-sm flex-wrap items-center justify-between"><div class="flex gap-xs flex-wrap"><span class="font-code-sm text-[10px] leading-[14px] border border-outline-variant px-1.5 py-0.5 rounded text-outline bg-surface-container-lowest">N/A</span></div><span class="font-code-sm text-[10px] text-primary opacity-0 group-hover:opacity-100 transition-opacity">&rarr;</span></div></a><a href="/ghwm/workflows/auto-assign-pr" class="card-surface rounded-lg p-md flex flex-col gap-sm transition-all group cursor-pointer h-full hover:border-primary block" data-workflow-name="auto-assign-pr"><div class="flex justify-between items-start gap-xs"><div class="w-8 h-8 bg-surface-container-high border border-outline-variant rounded flex items-center justify-center shrink-0 group-hover:border-primary transition-colors"><span class="material-symbols-outlined text-primary text-[18px]">person_add</span></div><div class="font-code-sm text-code-sm bg-surface-container-low text-secondary border border-secondary border-opacity-35 px-1.5 py-0.5 rounded flex items-center gap-0.5 shrink-0 scale-90" title="1 installations recorded"><span class="material-symbols-outlined text-[10px]" style="font-variation-settings: 'FILL' 1;">download</span><span class="workflow-install-count font-mono">1</span></div></div><div class="mt-xs"><h3 class="font-headline-md text-[14px] leading-[20px] font-semibold group-hover:text-primary transition-colors line-clamp-1">Auto Assign PR</h3><p class="font-body-sm text-[12px] leading-[16px] text-on-surface-variant line-clamp-1 mt-0.5 mb-1">@ghwfxlab/ghwm-auto-assign-pr</p><p class="font-code-sm text-[10px] text-on-surface-variant opacity-60 mb-1">Active Sep 12, 2026</p><p class="font-body-sm text-[11px] leading-[15px] text-on-surface-variant mt-1 opacity-80 line-clamp-3">Automatically add pull request reviewers and assignees to streamline pull request triage and reviews.</p></div><div class="flex gap-xs mt-auto pt-sm flex-wrap items-center justify-between"><div class="flex gap-xs flex-wrap"><span class="font-code-sm text-[10px] leading-[14px] border border-outline-variant px-1.5 py-0.5 rounded text-outline bg-surface-container-lowest">automation</span><span class="font-code-sm text-[10px] leading-[14px] border border-outline-variant px-1.5 py-0.5 rounded text-outline bg-surface-container-lowest">pr</span><span class="font-code-sm text-[10px] leading-[14px] border border-outline-variant px-1.5 py-0.5 rounded text-outline bg-surface-container-lowest">review</span></div><span class="font-code-sm text-[10px] text-primary opacity-0 group-hover:opacity-100 transition-opacity">&rarr;</span></div></a><a href="/ghwm/workflows/super-linter" class="card-surface rounded-lg p-md flex flex-col gap-sm transition-all group cursor-pointer h-full hover:border-primary block" data-workflow-name="super-linter"><div class="flex justify-between items-start gap-xs"><div class="w-8 h-8 bg-surface-container-high border border-outline-variant rounded flex items-center justify-center shrink-0 group-hover:border-primary transition-colors"><span class="material-symbols-outlined text-primary text-[18px]">fact_check</span></div><div class="font-code-sm text-code-sm bg-surface-container-low text-secondary border border-secondary border-opacity-35 px-1.5 py-0.5 rounded flex items-center gap-0.5 shrink-0 scale-90" title="1 installations recorded"><span class="material-symbols-outlined text-[10px]" style="font-variation-settings: 'FILL' 1;">download</span><span class="workflow-install-count font-mono">1</span></div></div><div class="mt-xs"><h3 class="font-headline-md text-[14px] leading-[20px] font-semibold group-hover:text-primary transition-colors line-clamp-1">Super-Linter</h3><p class="font-body-sm text-[12px] leading-[16px] text-on-surface-variant line-clamp-1 mt-0.5 mb-1">@ghwfxlab/ghwm-super-linter</p><p class="font-code-sm text-[10px] text-on-surface-variant opacity-60 mb-1">Active Sep 11, 2026</p><p class="font-body-sm text-[11px] leading-[15px] text-on-surface-variant mt-1 opacity-80 line-clamp-3">Code linting workflow using Super-Linter and pre-commit hooks for code quality.</p></div><div class="flex gap-xs mt-auto pt-sm flex-wrap items-center justify-between"><div class="flex gap-xs flex-wrap"><span class="font-code-sm text-[10px] leading-[14px] border border-outline-variant px-1.5 py-0.5 rounded text-outline bg-surface-container-lowest">lint</span><span class="font-code-sm text-[10px] leading-[14px] border border-outline-variant px-1.5 py-0.5 rounded text-outline bg-surface-container-lowest">actions</span><span class="font-code-sm text-[10px] leading-[14px] border border-outline-variant px-1.5 py-0.5 rounded text-outline bg-surface-container-lowest">pre-commit</span></div><span class="font-code-sm text-[10px] text-primary opacity-0 group-hover:opacity-100 transition-opacity">&rarr;</span></div></a></div></section><!-- New Arrivals Component --><!-- New Arrivals Section --><section class="flex flex-col gap-md"><div class="flex justify-between items-end border-b border-outline-variant pb-sm mb-xs"><h2 class="font-headline-lg text-headline-lg flex items-center gap-sm"><span class="material-symbols-outlined text-primary">new_releases</span>New Arrivals</h2><div class="flex items-center gap-md"><span class="font-code-sm text-code-sm text-on-surface-variant">Latest published workflows</span><a class="font-body-sm text-body-sm text-primary hover:underline" href="/ghwm/registry?sort=added_desc">View all &rarr;</a></div></div><div class="grid grid-cols-2 md:grid-cols-5 gap-gutter" id="new-arrivals-grid"><a href="/ghwm/workflows/ghwm-auto-assign-pr" class="card-surface rounded-lg p-md flex flex-col gap-sm transition-all group cursor-pointer h-full hover:border-primary block" data-workflow-name="ghwm-auto-assign-pr"><div class="flex justify-between items-start gap-xs"><div class="w-8 h-8 bg-surface-container-high border border-outline-variant rounded flex items-center justify-center shrink-0 group-hover:border-primary transition-colors"><span class="material-symbols-outlined text-primary text-[18px]">extension</span></div><div class="font-code-sm text-[10px] font-semibold bg-surface-container-low text-primary border border-primary border-opacity-35 px-1.5 py-0.5 rounded flex items-center gap-1 shrink-0 uppercase tracking-wider" title="Published version N/A"><span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span><span>NEW</span></div></div><div class="mt-xs"><h3 class="font-headline-md text-[14px] leading-[20px] font-semibold group-hover:text-primary transition-colors line-clamp-1">Ghwm Auto Assign Pr</h3><p class="font-body-sm text-[12px] leading-[16px] text-on-surface-variant line-clamp-1 mt-0.5 mb-1">N/A</p><p class="font-code-sm text-[10px] text-on-surface-variant opacity-60 mb-1">Added Sep 24, 2026</p><p class="font-body-sm text-[11px] leading-[15px] text-on-surface-variant mt-1 opacity-80 line-clamp-3">N/A</p></div><div class="flex gap-xs mt-auto pt-sm flex-wrap items-center justify-between"><div class="flex gap-xs flex-wrap"><span class="font-code-sm text-[10px] leading-[14px] border border-outline-variant px-1.5 py-0.5 rounded text-outline bg-surface-container-lowest">N/A</span></div><span class="font-code-sm text-[10px] text-primary opacity-0 group-hover:opacity-100 transition-opacity">&rarr;</span></div></a><a href="/ghwm/workflows/ghwm-super-linter" class="card-surface rounded-lg p-md flex flex-col gap-sm transition-all group cursor-pointer h-full hover:border-primary block" data-workflow-name="ghwm-super-linter"><div class="flex justify-between items-start gap-xs"><div class="w-8 h-8 bg-surface-container-high border border-outline-variant rounded flex items-center justify-center shrink-0 group-hover:border-primary transition-colors"><span class="material-symbols-outlined text-primary text-[18px]">extension</span></div><div class="font-code-sm text-[10px] font-semibold bg-surface-container-low text-primary border border-primary border-opacity-35 px-1.5 py-0.5 rounded flex items-center gap-1 shrink-0 uppercase tracking-wider" title="Published version N/A"><span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span><span>NEW</span></div></div><div class="mt-xs"><h3 class="font-headline-md text-[14px] leading-[20px] font-semibold group-hover:text-primary transition-colors line-clamp-1">Ghwm Super Linter</h3><p class="font-body-sm text-[12px] leading-[16px] text-on-surface-variant line-clamp-1 mt-0.5 mb-1">N/A</p><p class="font-code-sm text-[10px] text-on-surface-variant opacity-60 mb-1">Added Sep 24, 2026</p><p class="font-body-sm text-[11px] leading-[15px] text-on-surface-variant mt-1 opacity-80 line-clamp-3">N/A</p></div><div class="flex gap-xs mt-auto pt-sm flex-wrap items-center justify-between"><div class="flex gap-xs flex-wrap"><span class="font-code-sm text-[10px] leading-[14px] border border-outline-variant px-1.5 py-0.5 rounded text-outline bg-surface-container-lowest">N/A</span></div><span class="font-code-sm text-[10px] text-primary opacity-0 group-hover:opacity-100 transition-opacity">&rarr;</span></div></a><a href="/ghwm/workflows/auto-assign-pr" class="card-surface rounded-lg p-md flex flex-col gap-sm transition-all group cursor-pointer h-full hover:border-primary block" data-workflow-name="auto-assign-pr"><div class="flex justify-between items-start gap-xs"><div class="w-8 h-8 bg-surface-container-high border border-outline-variant rounded flex items-center justify-center shrink-0 group-hover:border-primary transition-colors"><span class="material-symbols-outlined text-primary text-[18px]">person_add</span></div><div class="font-code-sm text-[10px] font-semibold bg-surface-container-low text-primary border border-primary border-opacity-35 px-1.5 py-0.5 rounded flex items-center gap-1 shrink-0 uppercase tracking-wider" title="Published version 1.0.1"><span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span><span>NEW</span></div></div><div class="mt-xs"><h3 class="font-headline-md text-[14px] leading-[20px] font-semibold group-hover:text-primary transition-colors line-clamp-1">Auto Assign PR</h3><p class="font-body-sm text-[12px] leading-[16px] text-on-surface-variant line-clamp-1 mt-0.5 mb-1">@ghwfxlab/ghwm-auto-assign-pr</p><p class="font-code-sm text-[10px] text-on-surface-variant opacity-60 mb-1">Added Jun 12, 2026</p><p class="font-body-sm text-[11px] leading-[15px] text-on-surface-variant mt-1 opacity-80 line-clamp-3">Automatically add pull request reviewers and assignees to streamline pull request triage and reviews.</p></div><div class="flex gap-xs mt-auto pt-sm flex-wrap items-center justify-between"><div class="flex gap-xs flex-wrap"><span class="font-code-sm text-[10px] leading-[14px] border border-outline-variant px-1.5 py-0.5 rounded text-outline bg-surface-container-lowest">automation</span><span class="font-code-sm text-[10px] leading-[14px] border border-outline-variant px-1.5 py-0.5 rounded text-outline bg-surface-container-lowest">pr</span><span class="font-code-sm text-[10px] leading-[14px] border border-outline-variant px-1.5 py-0.5 rounded text-outline bg-surface-container-lowest">review</span></div><span class="font-code-sm text-[10px] text-primary opacity-0 group-hover:opacity-100 transition-opacity">&rarr;</span></div></a><a href="/ghwm/workflows/super-linter" class="card-surface rounded-lg p-md flex flex-col gap-sm transition-all group cursor-pointer h-full hover:border-primary block" data-workflow-name="super-linter"><div class="flex justify-between items-start gap-xs"><div class="w-8 h-8 bg-surface-container-high border border-outline-variant rounded flex items-center justify-center shrink-0 group-hover:border-primary transition-colors"><span class="material-symbols-outlined text-primary text-[18px]">fact_check</span></div><div class="font-code-sm text-[10px] font-semibold bg-surface-container-low text-primary border border-primary border-opacity-35 px-1.5 py-0.5 rounded flex items-center gap-1 shrink-0 uppercase tracking-wider" title="Published version 1.0.1"><span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span><span>NEW</span></div></div><div class="mt-xs"><h3 class="font-headline-md text-[14px] leading-[20px] font-semibold group-hover:text-primary transition-colors line-clamp-1">Super-Linter</h3><p class="font-body-sm text-[12px] leading-[16px] text-on-surface-variant line-clamp-1 mt-0.5 mb-1">@ghwfxlab/ghwm-super-linter</p><p class="font-code-sm text-[10px] text-on-surface-variant opacity-60 mb-1">Added Jun 12, 2026</p><p class="font-body-sm text-[11px] leading-[15px] text-on-surface-variant mt-1 opacity-80 line-clamp-3">Code linting workflow using Super-Linter and pre-commit hooks for code quality.</p></div><div class="flex gap-xs mt-auto pt-sm flex-wrap items-center justify-between"><div class="flex gap-xs flex-wrap"><span class="font-code-sm text-[10px] leading-[14px] border border-outline-variant px-1.5 py-0.5 rounded text-outline bg-surface-container-lowest">lint</span><span class="font-code-sm text-[10px] leading-[14px] border border-outline-variant px-1.5 py-0.5 rounded text-outline bg-surface-container-lowest">actions</span><span class="font-code-sm text-[10px] leading-[14px] border border-outline-variant px-1.5 py-0.5 rounded text-outline bg-surface-container-lowest">pre-commit</span></div><span class="font-code-sm text-[10px] text-primary opacity-0 group-hover:opacity-100 transition-opacity">&rarr;</span></div></a></div></section></main><!-- Shared Footer Component --><footer class="bg-surface border-t border-outline-variant mt-2xl w-full"><div class="max-w-7xl mx-auto px-lg py-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-md"><!-- Left Logo and Green Copyright --><div class="flex flex-col"><div class="font-code-sm text-code-sm text-secondary mt-1">&copy; 2026 GHWM Registry. Built for the open source community.</div></div><!-- Right Navigation Links --><div class="flex flex-wrap gap-md md:gap-lg font-code-sm text-code-sm text-on-surface-variant"><a href="https://github.com/ghwfxlab/ghwm" class="hover:text-primary transition-colors" target="_blank" rel="noopener noreferrer">Documentation</a><a href="https://github.com/ghwfxlab/ghwm#telemetry--privacy" class="hover:text-primary transition-colors" target="_blank" rel="noopener noreferrer">Privacy</a></div></div></footer></body></html>
