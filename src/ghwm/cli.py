@@ -3,24 +3,17 @@
 from __future__ import annotations
 
 import argparse
-import json
-import math
 import os
 import subprocess
 import sys
-import tarfile
-from dataclasses import replace
 from pathlib import Path
-from typing import Any, cast
-from urllib.error import HTTPError, URLError
-
-import yaml
+from typing import TYPE_CHECKING, Any, cast
 
 from ghwm import __version__
-from ghwm.download import github_token
-from ghwm.download_npm import resolve_latest_version
-from ghwm.install import InstallResult, install_workflows, update_workflows
-from ghwm.manifest import read_manifest, rewrite_manifest_versions
+
+if TYPE_CHECKING:
+    from ghwm.install import InstallResult
+
 
 DEFAULT_COMMAND = "install"
 DEFAULT_MANIFEST_PATH = "ghwm.yml"
@@ -211,6 +204,8 @@ def _run_zizmor(files_to_audit: list[str]) -> subprocess.CompletedProcess[str]:
 
 
 def _get_findings(res: subprocess.CompletedProcess[str]) -> list[dict[str, Any]]:
+    import json
+
     if res.returncode != 0 and not res.stdout.strip().startswith("["):
         error_msg = res.stderr.strip() or res.stdout.strip()
         raise RuntimeError(f"zizmor execution failed: {error_msg}")
@@ -226,6 +221,8 @@ def _get_findings(res: subprocess.CompletedProcess[str]) -> list[dict[str, Any]]
 
 
 def _get_score_from_findings(severity_counts: dict[str, int]) -> int:
+    import math
+
     deductions = (
         severity_counts.get("High", 0) * HIGH_DEDUCTION
         + severity_counts.get("Medium", 0) * MEDIUM_DEDUCTION
@@ -360,6 +357,29 @@ def _resolve_no_telemetry(flag: bool) -> bool:
     return flag or os.environ.get("DO_NOT_TRACK") == "1" or os.environ.get("GHWM_NO_TELEMETRY") == "1"
 
 
+def _is_handled_exception(exc: Exception) -> bool:
+    handled_types: list[type[BaseException]] = [
+        FileNotFoundError,
+        ValueError,
+        RuntimeError,
+        subprocess.CalledProcessError,
+    ]
+    for mod_name, attr_name in (
+        ("tarfile", "TarError"),
+        ("urllib.error", "HTTPError"),
+        ("urllib.error", "URLError"),
+        ("yaml", "YAMLError"),
+    ):
+        mod = sys.modules.get(mod_name)
+        if mod is not None:
+            err_type = getattr(mod, attr_name, None)
+            if isinstance(err_type, type) and issubclass(err_type, BaseException):
+                handled_types.append(err_type)
+    if isinstance(exc, tuple(handled_types)):
+        return True
+    return exc.__class__.__module__.startswith(("yaml", "urllib.error", "tarfile"))
+
+
 def main(argv: list[str] | None = None) -> None:
     parser = build_parser()
     args = parser.parse_args(argv)
@@ -370,10 +390,32 @@ def main(argv: list[str] | None = None) -> None:
         manifest_path = args.manifest
         local_path = Path(args.local) if args.local else None
 
+        if command == "audit":
+            run_audit(cwd)
+            return
+
+        from ghwm.manifest import read_manifest
+
         manifest = read_manifest(cwd, manifest_path)
 
+        if command == "list":
+            print(f"Source: {manifest.source}")
+            print(f"\nWorkflows ({len(manifest.workflows)}):")
+            for entry in manifest.workflows:
+                print(f"  - {entry.install_spec}")
+            return
+
         latest_flag = command == "upgrade"
-        if command in ("install", "update", "upgrade") and not local_path:
+        needs_resolution = latest_flag or any(
+            not entry.version or entry.version == "latest" for entry in manifest.workflows
+        )
+        if command in ("install", "update", "upgrade") and not local_path and needs_resolution:
+            from dataclasses import replace
+
+            from ghwm.download import github_token
+            from ghwm.download_npm import resolve_latest_version
+            from ghwm.manifest import rewrite_manifest_versions
+
             token = github_token()
             resolved = {}
             new_workflows = []
@@ -392,22 +434,13 @@ def main(argv: list[str] | None = None) -> None:
                 rewrite_manifest_versions(cwd, manifest_path, resolved)
                 manifest = replace(manifest, workflows=new_workflows)
 
-        if command == "list":
-            print(f"Source: {manifest.source}")
-            print(f"\nWorkflows ({len(manifest.workflows)}):")
-            for entry in manifest.workflows:
-                print(f"  - {entry.install_spec}")
-            return
-
-        if command == "audit":
-            run_audit(cwd)
-            return
-
         print(f"Found {len(manifest.workflows)} workflow(s) in {manifest_path}")
 
         no_telemetry = _resolve_no_telemetry(args.no_telemetry)
 
         if command == "install":
+            from ghwm.install import install_workflows
+
             result = install_workflows(
                 cwd,
                 manifest,
@@ -419,6 +452,8 @@ def main(argv: list[str] | None = None) -> None:
                 no_telemetry=no_telemetry,
             )
         elif command in ("update", "upgrade"):
+            from ghwm.install import update_workflows
+
             result = update_workflows(
                 cwd,
                 manifest,
@@ -435,15 +470,8 @@ def main(argv: list[str] | None = None) -> None:
         print_result(result)
         print("\nDone.")
 
-    except (
-        FileNotFoundError,
-        ValueError,
-        RuntimeError,
-        subprocess.CalledProcessError,
-        tarfile.TarError,
-        HTTPError,
-        URLError,
-        yaml.YAMLError,
-    ) as exc:
-        print(f"Error: {exc}", file=sys.stderr)
-        sys.exit(1)
+    except Exception as exc:
+        if _is_handled_exception(exc):
+            print(f"Error: {exc}", file=sys.stderr)
+            sys.exit(1)
+        raise

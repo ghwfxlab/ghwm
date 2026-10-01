@@ -1058,9 +1058,9 @@ class TestNoTelemetryFlag:
 
 
 class TestCliUpgrade:
-    @patch("ghwm.cli.update_workflows")
-    @patch("ghwm.cli.resolve_latest_version")
-    @patch("ghwm.cli.rewrite_manifest_versions")
+    @patch("ghwm.install.update_workflows")
+    @patch("ghwm.download_npm.resolve_latest_version")
+    @patch("ghwm.manifest.rewrite_manifest_versions")
     def test_upgrade_resolves_and_updates_manifest(self, mock_rewrite, mock_resolve, mock_update_workflows, tmp_path):
         manifest_file = tmp_path / "ghwm.yml"
         manifest_file.write_text("source: owner/repo\nworkflows:\n  - name: linter", encoding="utf-8")
@@ -1079,8 +1079,8 @@ class TestCliUpgrade:
         # Verify update_workflows was called
         mock_update_workflows.assert_called_once()
 
-    @patch("ghwm.cli.update_workflows")
-    @patch("ghwm.cli.resolve_latest_version")
+    @patch("ghwm.install.update_workflows")
+    @patch("ghwm.download_npm.resolve_latest_version")
     def test_upgrade_fails_when_resolve_fails(self, mock_resolve, mock_update, tmp_path):
         manifest_file = tmp_path / "ghwm.yml"
         manifest_file.write_text("source: owner/repo\nworkflows:\n  - name: linter", encoding="utf-8")
@@ -1092,8 +1092,8 @@ class TestCliUpgrade:
 
         assert exc.value.code == 1
 
-    @patch("ghwm.cli.install_workflows")
-    @patch("ghwm.cli.resolve_latest_version")
+    @patch("ghwm.install.install_workflows")
+    @patch("ghwm.download_npm.resolve_latest_version")
     def test_install_skips_resolution_for_pinned_version(self, mock_resolve, mock_install, tmp_path):
         manifest_file = tmp_path / "ghwm.yml"
         manifest_file.write_text(
@@ -1108,3 +1108,127 @@ class TestCliUpgrade:
 
         # Verify install_workflows was called
         mock_install.assert_called_once()
+
+    @patch("ghwm.install.install_workflows")
+    @patch("ghwm.download_npm.resolve_latest_version")
+    @patch("ghwm.manifest.rewrite_manifest_versions")
+    def test_install_resolves_only_unpinned_workflows_when_manifest_has_mixed_versions(
+        self, mock_rewrite, mock_resolve, mock_install, tmp_path
+    ):
+        manifest_file = tmp_path / "ghwm.yml"
+        manifest_file.write_text(
+            "source: owner/repo\nworkflows:\n  - name: pinned\n    version: 1.0.0\n  - name: unpinned",
+            encoding="utf-8",
+        )
+        mock_resolve.return_value = ("2.0.0", "abcdef")
+
+        main(["install", "--cwd", str(tmp_path)])
+
+        mock_resolve.assert_called_once_with("owner", "unpinned", ANY)
+        mock_rewrite.assert_called_once()
+        mock_install.assert_called_once()
+
+
+class TestCliLazyImports:
+    def test_cli_import_should_not_import_heavy_dependencies_when_module_is_imported(self) -> None:
+        code = (
+            "import sys, ghwm.cli\n"
+            "heavy = ['yaml', 'urllib.request', 'ghwm.download', 'ghwm.download_npm', 'ghwm.install']\n"
+            "loaded = [m for m in heavy if m in sys.modules]\n"
+            "assert not loaded, f'Heavy modules unexpectedly loaded: {loaded}'\n"
+        )
+        result = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, check=False)  # noqa: S603
+        assert result.returncode == 0, f"STDOUT: {result.stdout}\nSTDERR: {result.stderr}"
+
+    def test_cli_help_should_not_import_heavy_dependencies_when_help_flag_is_passed(self) -> None:
+        code = (
+            "import subprocess, sys\n"
+            "res = subprocess.run([sys.executable, '-X', 'importtime', '-m', 'ghwm', '--help'], "
+            "capture_output=True, text=True)\n"
+            "heavy = ['yaml', 'urllib.request', 'ghwm.download', 'ghwm.install']\n"
+            "loaded = [m for m in heavy if f'|   {m}' in res.stderr or f'| {m}' in res.stderr]\n"
+            "assert not loaded, f'Heavy modules imported during --help: {loaded}\\n{res.stderr}'\n"
+        )
+        result = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, check=False)  # noqa: S603
+        assert result.returncode == 0, f"STDOUT: {result.stdout}\nSTDERR: {result.stderr}"
+
+    def test_cli_version_should_not_import_heavy_dependencies_when_version_flag_is_passed(self) -> None:
+        code = (
+            "import subprocess, sys\n"
+            "res = subprocess.run([sys.executable, '-X', 'importtime', '-m', 'ghwm', '--version'], "
+            "capture_output=True, text=True)\n"
+            "heavy = ['yaml', 'urllib.request', 'ghwm.download', 'ghwm.install']\n"
+            "loaded = [m for m in heavy if f'|   {m}' in res.stderr or f'| {m}' in res.stderr]\n"
+            "assert not loaded, f'Heavy modules imported during --version: {loaded}\\n{res.stderr}'\n"
+        )
+        result = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, check=False)  # noqa: S603
+        assert result.returncode == 0, f"STDOUT: {result.stdout}\nSTDERR: {result.stderr}"
+
+    def test_cli_list_should_not_import_network_or_install_dependencies_when_list_command_is_run(
+        self, tmp_path: Path
+    ) -> None:
+        manifest_file = tmp_path / "ghwm.yml"
+        manifest_file.write_text("source: owner/repo\nworkflows:\n  - name: linter\n    version: 1.0.0\n")
+        code = (
+            "import subprocess, sys\n"
+            f"res = subprocess.run([sys.executable, '-X', 'importtime', '-m', 'ghwm', 'list', "
+            f"'--cwd', r'{tmp_path}'], capture_output=True, text=True)\n"
+            "heavy = ['urllib.request', 'ghwm.download', 'ghwm.download_npm', 'ghwm.install']\n"
+            "loaded = [m for m in heavy if f'|   {m}' in res.stderr or f'| {m}' in res.stderr]\n"
+            "assert not loaded, f'Heavy modules imported during list: {loaded}\\n{res.stderr}'\n"
+        )
+        result = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, check=False)  # noqa: S603
+        assert result.returncode == 0, f"STDOUT: {result.stdout}\nSTDERR: {result.stderr}"
+
+
+class TestCliErrorHandling:
+    def test_main_should_reraise_unexpected_exception_when_unhandled_error_occurs(self, tmp_path: Path) -> None:
+        with patch("ghwm.manifest.read_manifest", side_effect=TypeError("unexpected type error")):
+            with pytest.raises(TypeError, match="unexpected type error"):
+                main(["install", "--cwd", str(tmp_path)])
+
+    def test_main_should_exit_one_when_yaml_error_occurs(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        manifest_file = tmp_path / "ghwm.yml"
+        manifest_file.write_text("workflows:\n  - [invalid yaml syntax", encoding="utf-8")
+
+        with pytest.raises(SystemExit) as exc:
+            main(["install", "--cwd", str(tmp_path)])
+
+        assert exc.value.code == 1
+        assert "Error:" in capsys.readouterr().err
+
+    def test_main_should_exit_one_when_network_error_occurs(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        import urllib.error
+
+        manifest_file = tmp_path / "ghwm.yml"
+        manifest_file.write_text(
+            "source: owner/repo\nworkflows:\n  - name: linter\n    version: 1.0.0", encoding="utf-8"
+        )
+
+        with patch("ghwm.install.install_workflows", side_effect=urllib.error.URLError("connection refused")):
+            with pytest.raises(SystemExit) as exc:
+                main(["install", "--cwd", str(tmp_path)])
+
+        assert exc.value.code == 1
+        assert "Error: <urlopen error connection refused>" in capsys.readouterr().err
+
+    def test_main_should_exit_one_when_tar_error_occurs(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        import tarfile
+
+        manifest_file = tmp_path / "ghwm.yml"
+        manifest_file.write_text(
+            "source: owner/repo\nworkflows:\n  - name: linter\n    version: 1.0.0", encoding="utf-8"
+        )
+
+        with patch("ghwm.install.install_workflows", side_effect=tarfile.TarError("corrupted archive")):
+            with pytest.raises(SystemExit) as exc:
+                main(["install", "--cwd", str(tmp_path)])
+
+        assert exc.value.code == 1
+        assert "Error: corrupted archive" in capsys.readouterr().err
