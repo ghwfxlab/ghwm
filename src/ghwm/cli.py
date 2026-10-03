@@ -7,12 +7,18 @@ import os
 import subprocess
 import sys
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, cast
+from typing import Any, Protocol, cast
 
 from ghwm import __version__
 
-if TYPE_CHECKING:
-    from ghwm.install import InstallResult
+
+class InstallResultLike(Protocol):
+    """Protocol for installation results consumed by print_result."""
+
+    installed: list[str]
+    updated: list[str]
+    pruned: list[str]
+    skipped: list[tuple[str, str]]
 
 
 DEFAULT_COMMAND = "install"
@@ -157,7 +163,7 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def print_result(result: InstallResult) -> None:
+def print_result(result: InstallResultLike) -> None:
     for name in result.installed:
         print(f"  ✓ Installed {name}")
     for name in result.updated:
@@ -358,24 +364,15 @@ def _resolve_no_telemetry(flag: bool) -> bool:
 
 
 def _is_handled_exception(exc: Exception) -> bool:
-    handled_types: list[type[BaseException]] = [
-        FileNotFoundError,
-        ValueError,
-        RuntimeError,
-        subprocess.CalledProcessError,
-    ]
-    for mod_name, attr_name in (
-        ("tarfile", "TarError"),
-        ("urllib.error", "HTTPError"),
-        ("urllib.error", "URLError"),
-        ("yaml", "YAMLError"),
+    if isinstance(
+        exc,
+        (
+            FileNotFoundError,
+            ValueError,
+            RuntimeError,
+            subprocess.CalledProcessError,
+        ),
     ):
-        mod = sys.modules.get(mod_name)
-        if mod is not None:
-            err_type = getattr(mod, attr_name, None)
-            if isinstance(err_type, type) and issubclass(err_type, BaseException):
-                handled_types.append(err_type)
-    if isinstance(exc, tuple(handled_types)):
         return True
     return exc.__class__.__module__.startswith(("yaml", "urllib.error", "tarfile"))
 
@@ -430,9 +427,8 @@ def main(argv: list[str] | None = None) -> None:
                 else:
                     new_workflows.append(entry)
 
-            if resolved:
-                rewrite_manifest_versions(cwd, manifest_path, resolved)
-                manifest = replace(manifest, workflows=new_workflows)
+            rewrite_manifest_versions(cwd, manifest_path, resolved)
+            manifest = replace(manifest, workflows=new_workflows)
 
         print(f"Found {len(manifest.workflows)} workflow(s) in {manifest_path}")
 
