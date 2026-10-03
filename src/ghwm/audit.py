@@ -55,9 +55,7 @@ def _get_findings(res: subprocess.CompletedProcess[str]) -> list[dict[str, Any]]
         return cast(list[dict[str, Any]], data)
     except json.JSONDecodeError as exc:
         error_msg = res.stderr.strip() or res.stdout.strip()
-        if error_msg:
-            raise RuntimeError(f"zizmor execution failed: {error_msg}") from exc
-        return []
+        raise RuntimeError(f"zizmor execution failed: {error_msg}") from exc
 
 
 def _get_score_from_findings(severity_counts: dict[str, int]) -> int:
