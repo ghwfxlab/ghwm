@@ -21,7 +21,7 @@ coverage:
     # --------------------------------------------------------------------------
     project:
       default:
-        target: auto          # Overall coverage must not decrease compared to base commit
+        target: 90%           # Overall codebase coverage must be at least 90%
         threshold: 1%         # 1% tolerance buffer for minor fluctuations / refactoring
         if_ci_failed: error
         informational: false
@@ -33,8 +33,8 @@ coverage:
     # --------------------------------------------------------------------------
     patch:
       default:
-        target: auto          # Patch coverage must meet or exceed base branch coverage
-        threshold: 1%         # 1% tolerance for defensive branches or typing guards
+        target: 90%           # PR diff patch coverage must be at least 90%
+        threshold: 0%
         if_ci_failed: error
         informational: false
         paths:
