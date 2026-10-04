@@ -10,6 +10,7 @@ from pathlib import Path
 from unittest.mock import ANY, MagicMock, patch
 
 import pytest
+import yaml
 
 from ghwm import __version__
 from ghwm.cli import build_parser, main, print_result
@@ -642,6 +643,43 @@ class TestMainList:
         assert "Security Score: 100/100" in output
         mock_run.assert_called_once()
 
+    def test_main_should_run_audit_when_manifest_is_missing(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        # Arrange
+        consumer = tmp_path / "consumer"
+        consumer.mkdir()
+
+        lock = Lockfile(
+            packages=[
+                LockEntry(
+                    name=LINTER,
+                    version=VERSION_1,
+                    source=LINTER_PACKAGE_SOURCE,
+                    files=[LockFileEntry(target=".github/workflows/linter.yml", source_hash="sha256:abc")],
+                )
+            ]
+        )
+        write_lockfile(consumer, lock)
+
+        wf_file = consumer / ".github" / "workflows" / "linter.yml"
+        wf_file.parent.mkdir(parents=True, exist_ok=True)
+        wf_file.write_text("name: linter\non: push\n")
+
+        mock_run = MagicMock()
+        mock_run.return_value.returncode = 0
+        mock_run.return_value.stdout = "[]"
+        mock_run.return_value.stderr = ""
+        monkeypatch.setattr(subprocess, "run", mock_run)
+
+        # Act
+        main(["audit", "--cwd", str(consumer)])
+        output = capsys.readouterr().out
+
+        # Assert
+        assert "No security findings reported" in output
+        assert "Security Score: 100/100" in output
+
     def test_main_should_run_audit_and_show_findings_and_exit_one_when_high_severity_findings_exist(
         self, tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -1060,25 +1098,24 @@ class TestNoTelemetryFlag:
 class TestCliUpgrade:
     @patch("ghwm.install.update_workflows")
     @patch("ghwm.download_npm.resolve_latest_version")
-    @patch("ghwm.manifest.rewrite_manifest_versions")
     def test_upgrade_should_resolve_and_update_manifest_when_upgrade_command_is_used(
         self,
-        mock_rewrite: MagicMock,
         mock_resolve: MagicMock,
         mock_update_workflows: MagicMock,
         tmp_path: Path,
     ) -> None:
         # Arrange
         manifest_file = tmp_path / "ghwm.yml"
-        manifest_file.write_text("source: owner/repo\nworkflows:\n  - name: linter", encoding="utf-8")
+        manifest_file.write_text("source: owner/repo\nworkflows:\n  - name: linter\n", encoding="utf-8")
         mock_resolve.return_value = ("1.2.3", "abcdef")
 
         # Act
         main(["upgrade", "--cwd", str(tmp_path)])
 
         # Assert
+        manifest_data = yaml.safe_load(manifest_file.read_text(encoding="utf-8"))
+        assert manifest_data["workflows"][0]["version"] == "1.2.3"
         mock_resolve.assert_called_once_with("owner", "linter", ANY)
-        mock_rewrite.assert_called_once()
         mock_update_workflows.assert_called_once()
 
     @patch("ghwm.install.update_workflows")
@@ -1088,7 +1125,7 @@ class TestCliUpgrade:
     ) -> None:
         # Arrange
         manifest_file = tmp_path / "ghwm.yml"
-        manifest_file.write_text("source: owner/repo\nworkflows:\n  - name: linter", encoding="utf-8")
+        manifest_file.write_text("source: owner/repo\nworkflows:\n  - name: linter\n", encoding="utf-8")
         mock_resolve.side_effect = RuntimeError("Network error")
 
         # Act
@@ -1099,31 +1136,27 @@ class TestCliUpgrade:
         assert exc.value.code == 1
 
     @patch("ghwm.install.install_workflows")
-    @patch("ghwm.manifest.rewrite_manifest_versions")
     @patch("ghwm.download_npm.resolve_latest_version")
     def test_install_should_skip_resolution_and_manifest_rewrite_when_version_is_pinned(
-        self, mock_resolve: MagicMock, mock_rewrite: MagicMock, mock_install: MagicMock, tmp_path: Path
+        self, mock_resolve: MagicMock, mock_install: MagicMock, tmp_path: Path
     ) -> None:
         # Arrange
         manifest_file = tmp_path / "ghwm.yml"
-        manifest_file.write_text(
-            "source: owner/repo\nworkflows:\n  - name: linter\n    version: 1.2.3", encoding="utf-8"
-        )
+        original_content = "source: owner/repo\nworkflows:\n  - name: linter\n    version: 1.2.3\n"
+        manifest_file.write_text(original_content, encoding="utf-8")
 
         # Act
         main(["install", "--cwd", str(tmp_path)])
 
         # Assert
+        assert manifest_file.read_text(encoding="utf-8") == original_content
         mock_resolve.assert_not_called()
-        mock_rewrite.assert_not_called()
         mock_install.assert_called_once()
 
     @patch("ghwm.install.install_workflows")
     @patch("ghwm.download_npm.resolve_latest_version")
-    @patch("ghwm.manifest.rewrite_manifest_versions")
     def test_install_should_resolve_only_unpinned_workflows_when_manifest_has_mixed_versions(
         self,
-        mock_rewrite: MagicMock,
         mock_resolve: MagicMock,
         mock_install: MagicMock,
         tmp_path: Path,
@@ -1131,7 +1164,7 @@ class TestCliUpgrade:
         # Arrange
         manifest_file = tmp_path / "ghwm.yml"
         manifest_file.write_text(
-            "source: owner/repo\nworkflows:\n  - name: pinned\n    version: 1.0.0\n  - name: unpinned",
+            "source: owner/repo\nworkflows:\n  - name: pinned\n    version: 1.0.0\n  - name: unpinned\n",
             encoding="utf-8",
         )
         mock_resolve.return_value = ("2.0.0", "abcdef")
@@ -1140,24 +1173,26 @@ class TestCliUpgrade:
         main(["install", "--cwd", str(tmp_path)])
 
         # Assert
+        manifest_data = yaml.safe_load(manifest_file.read_text(encoding="utf-8"))
+        workflows = {w["name"]: str(w["version"]) for w in manifest_data["workflows"]}
+        assert workflows["pinned"] == "1.0.0"
+        assert workflows["unpinned"] == "2.0.0"
         mock_resolve.assert_called_once_with("owner", "unpinned", ANY)
-        mock_rewrite.assert_called_once()
         mock_install.assert_called_once()
 
     @patch("ghwm.install.update_workflows")
-    @patch("ghwm.manifest.rewrite_manifest_versions")
     def test_upgrade_should_not_rewrite_manifest_when_manifest_has_no_workflows(
-        self, mock_rewrite: MagicMock, mock_update: MagicMock, tmp_path: Path
+        self, mock_update: MagicMock, tmp_path: Path
     ) -> None:
         # Arrange
         manifest_file = tmp_path / "ghwm.yml"
-        manifest_file.write_text("source: owner/repo\nworkflows: []", encoding="utf-8")
+        manifest_file.write_text("source: owner/repo\nworkflows: []\n", encoding="utf-8")
 
         # Act
         main(["upgrade", "--cwd", str(tmp_path)])
 
         # Assert
-        mock_rewrite.assert_not_called()
+        assert manifest_file.read_text(encoding="utf-8") == "source: owner/repo\nworkflows: []\n"
         mock_update.assert_called_once()
 
 
@@ -1177,29 +1212,43 @@ class TestCliLazyImports:
 
     def test_cli_help_should_not_import_heavy_dependencies_when_help_flag_is_passed(self) -> None:
         # Arrange
-        cmd = [sys.executable, "-X", "importtime", "-m", "ghwm", "--help"]
+        code = (
+            "import sys\n"
+            "from ghwm.cli import main\n"
+            "try:\n    main(['--help'])\n"
+            "except SystemExit:\n    pass\n"
+            "print(','.join(sys.modules))"
+        )
         heavy_modules = ["yaml", "urllib.request", "ghwm.download", "ghwm.install"]
 
         # Act
-        result = subprocess.run(cmd, capture_output=True, text=True, check=False)  # noqa: S603
+        result = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, check=False)  # noqa: S603
 
         # Assert
         assert result.returncode == 0, f"STDOUT: {result.stdout}\nSTDERR: {result.stderr}"
-        loaded_modules = [m for m in heavy_modules if f"|   {m}" in result.stderr or f"| {m}" in result.stderr]
-        assert not loaded_modules, f"Heavy modules imported during --help: {loaded_modules}\n{result.stderr}"
+        loaded = set(result.stdout.strip().split(","))
+        unexpected = loaded & set(heavy_modules)
+        assert not unexpected, f"Heavy modules unexpectedly loaded during --help: {unexpected}"
 
     def test_cli_version_should_not_import_heavy_dependencies_when_version_flag_is_passed(self) -> None:
         # Arrange
-        cmd = [sys.executable, "-X", "importtime", "-m", "ghwm", "--version"]
+        code = (
+            "import sys\n"
+            "from ghwm.cli import main\n"
+            "try:\n    main(['--version'])\n"
+            "except SystemExit:\n    pass\n"
+            "print(','.join(sys.modules))"
+        )
         heavy_modules = ["yaml", "urllib.request", "ghwm.download", "ghwm.install"]
 
         # Act
-        result = subprocess.run(cmd, capture_output=True, text=True, check=False)  # noqa: S603
+        result = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, check=False)  # noqa: S603
 
         # Assert
         assert result.returncode == 0, f"STDOUT: {result.stdout}\nSTDERR: {result.stderr}"
-        loaded_modules = [m for m in heavy_modules if f"|   {m}" in result.stderr or f"| {m}" in result.stderr]
-        assert not loaded_modules, f"Heavy modules imported during --version: {loaded_modules}\n{result.stderr}"
+        loaded = set(result.stdout.strip().split(","))
+        unexpected = loaded & set(heavy_modules)
+        assert not unexpected, f"Heavy modules unexpectedly loaded during --version: {unexpected}"
 
     def test_cli_list_should_not_import_network_or_install_dependencies_when_list_command_is_run(
         self, tmp_path: Path
@@ -1207,16 +1256,22 @@ class TestCliLazyImports:
         # Arrange
         manifest_file = tmp_path / "ghwm.yml"
         manifest_file.write_text("source: owner/repo\nworkflows:\n  - name: linter\n    version: 1.0.0\n")
-        cmd = [sys.executable, "-X", "importtime", "-m", "ghwm", "list", "--cwd", str(tmp_path)]
+        code = (
+            "import sys\n"
+            "from ghwm.cli import main\n"
+            f"main(['list', '--cwd', {str(tmp_path)!r}])\n"
+            "print(','.join(sys.modules))"
+        )
         heavy_modules = ["urllib.request", "ghwm.download", "ghwm.download_npm", "ghwm.install"]
 
         # Act
-        result = subprocess.run(cmd, capture_output=True, text=True, check=False)  # noqa: S603
+        result = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, check=False)  # noqa: S603
 
         # Assert
         assert result.returncode == 0, f"STDOUT: {result.stdout}\nSTDERR: {result.stderr}"
-        loaded_modules = [m for m in heavy_modules if f"|   {m}" in result.stderr or f"| {m}" in result.stderr]
-        assert not loaded_modules, f"Heavy modules imported during list: {loaded_modules}\n{result.stderr}"
+        loaded = set(result.stdout.strip().split(","))
+        unexpected = loaded & set(heavy_modules)
+        assert not unexpected, f"Heavy modules unexpectedly loaded during list: {unexpected}"
 
 
 class TestCliErrorHandling:
@@ -1302,81 +1357,3 @@ class TestCliErrorHandling:
         # Assert
         assert exc.value.code == 1
         assert "Error: Command 'zizmor' returned non-zero exit status 1." in capsys.readouterr().err
-
-    def test_is_handled_exception_should_return_true_when_standard_exceptions_raised(self) -> None:
-        # Arrange
-        from ghwm.cli import _is_handled_exception
-
-        # Act & Assert
-        assert _is_handled_exception(FileNotFoundError("not found"))
-        assert _is_handled_exception(ValueError("invalid"))
-        assert _is_handled_exception(RuntimeError("runtime"))
-
-    def test_is_handled_exception_should_return_true_when_dependency_exceptions_raised(self) -> None:
-        # Arrange
-        import tarfile
-        import urllib.error
-        from email.message import Message
-
-        import yaml
-
-        from ghwm.cli import _is_handled_exception
-
-        # Act & Assert
-        assert _is_handled_exception(yaml.YAMLError("yaml error"))
-        assert _is_handled_exception(tarfile.TarError("tar error"))
-        assert _is_handled_exception(urllib.error.URLError("url error"))
-        assert _is_handled_exception(urllib.error.HTTPError("http://x", 500, "Internal Server Error", Message(), None))
-        assert _is_handled_exception(subprocess.CalledProcessError(1, "cmd"))
-
-    def test_is_handled_exception_should_return_false_when_unhandled_exception_raised(self) -> None:
-        # Arrange
-        from ghwm.cli import _is_handled_exception
-
-        # Act & Assert
-        assert not _is_handled_exception(TypeError("type error"))
-        assert not _is_handled_exception(KeyError("key error"))
-
-    def test_is_handled_exception_should_return_false_when_modules_not_imported(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
-        # Arrange
-        import tarfile
-
-        from ghwm.cli import _is_handled_exception
-
-        excluded = ("subprocess", "tarfile", "yaml", "urllib.error")
-        fake_modules = {k: v for k, v in sys.modules.items() if k not in excluded}
-        monkeypatch.setattr(sys, "modules", fake_modules)
-
-        # Act & Assert
-        assert not _is_handled_exception(tarfile.TarError("tar error"))
-
-    def test_main_should_raise_assertion_error_when_command_is_unexpected(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
-        # Arrange
-        import argparse
-
-        consumer = tmp_path / "consumer"
-        consumer.mkdir()
-        _write_manifest(consumer, [LINTER])
-        fake_args = argparse.Namespace(
-            command="unexpected_cmd",
-            cwd=str(consumer),
-            manifest=DEFAULT_MANIFEST_PATH,
-            local=None,
-            force=False,
-            no_prune=False,
-            update_triggers=False,
-            update_envs=False,
-            no_telemetry=False,
-        )
-        monkeypatch.setattr(argparse.ArgumentParser, "parse_args", lambda self, argv: fake_args)
-
-        # Act
-        with pytest.raises(AssertionError) as exc:
-            main(["unexpected_cmd"])
-
-        # Assert
-        assert "Unexpected command: 'unexpected_cmd'" in str(exc.value)

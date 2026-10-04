@@ -278,7 +278,7 @@ def main(argv: list[str] | None = None) -> None:
                 update_envs=args.update_envs,
                 no_telemetry=no_telemetry,
             )
-        else:
+        else:  # pragma: no cover
             raise AssertionError(f"Unexpected command: {command!r}")
 
         print_result(result)

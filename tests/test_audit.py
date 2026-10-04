@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import subprocess
 from pathlib import Path
 
@@ -75,15 +76,34 @@ class TestGetFindings:
         assert findings == []
 
 
+@pytest.fixture
+def audited_consumer(tmp_path: Path) -> Path:
+    consumer = tmp_path / "consumer"
+    consumer.mkdir()
+    lock = Lockfile(
+        packages=[
+            LockEntry(
+                name="linter",
+                version="1.0.0",
+                source="owner/repo",
+                files=[LockFileEntry(target=".github/workflows/linter.yml", source_hash="sha256:abc")],
+            )
+        ]
+    )
+    write_lockfile(consumer, lock)
+    wf_file = consumer / ".github" / "workflows" / "linter.yml"
+    wf_file.parent.mkdir(parents=True, exist_ok=True)
+    wf_file.write_text("name: linter\non: push\n")
+    return consumer
+
+
 class TestRunAudit:
-    def test_run_audit_should_exit_one_when_lockfile_has_no_packages(
+    def test_run_audit_should_exit_one_when_lockfile_is_missing(
         self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
     ) -> None:
         # Arrange
         consumer = tmp_path / "consumer"
         consumer.mkdir()
-        lock = Lockfile(packages=[])
-        write_lockfile(consumer, lock)
 
         # Act
         with pytest.raises(SystemExit) as exc:
@@ -117,30 +137,13 @@ class TestRunAudit:
         # Assert
         assert "No managed workflow files found to audit." in capsys.readouterr().out
 
-    def test_run_audit_should_ignore_ignored_findings_and_handle_unknown_severity(
-        self, tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+    def test_run_audit_should_count_unknown_severity_as_low_and_exclude_ignored_findings(
+        self, audited_consumer: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
     ) -> None:
         # Arrange
         import sys
 
-        consumer = tmp_path / "consumer"
-        consumer.mkdir()
-        lock = Lockfile(
-            packages=[
-                LockEntry(
-                    name="linter",
-                    version="1.0.0",
-                    source="owner/repo",
-                    files=[LockFileEntry(target=".github/workflows/linter.yml", source_hash="sha256:abc")],
-                )
-            ]
-        )
-        write_lockfile(consumer, lock)
-        wf_file = consumer / ".github" / "workflows" / "linter.yml"
-        wf_file.parent.mkdir(parents=True, exist_ok=True)
-        wf_file.write_text("content")
-
-        mock_findings = [
+        findings = [
             {"ignored": True, "ident": "ignored-rule"},
             {
                 "ident": "custom-rule",
@@ -150,12 +153,15 @@ class TestRunAudit:
                 "ignored": False,
             },
         ]
-        monkeypatch.setattr(subprocess, "run", lambda *a, **kw: subprocess.CompletedProcess([], 0, stdout=""))
-        monkeypatch.setattr("ghwm.audit._get_findings", lambda res: mock_findings)
+        monkeypatch.setattr(
+            subprocess,
+            "run",
+            lambda *a, **kw: subprocess.CompletedProcess([], 0, stdout=json.dumps(findings), stderr=""),
+        )
         monkeypatch.setattr(sys.stdout, "isatty", lambda: False)
 
         # Act
-        run_audit(consumer)
+        run_audit(audited_consumer)
         output = capsys.readouterr().out
 
         # Assert
@@ -165,29 +171,12 @@ class TestRunAudit:
         assert "Security Score: 95/100" in output
 
     def test_run_audit_should_show_yellow_score_and_exit_one_when_medium_severity_finding_with_atty(
-        self, tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+        self, audited_consumer: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
     ) -> None:
         # Arrange
         import sys
 
-        consumer = tmp_path / "consumer"
-        consumer.mkdir()
-        lock = Lockfile(
-            packages=[
-                LockEntry(
-                    name="linter",
-                    version="1.0.0",
-                    source="owner/repo",
-                    files=[LockFileEntry(target=".github/workflows/linter.yml", source_hash="sha256:abc")],
-                )
-            ]
-        )
-        write_lockfile(consumer, lock)
-        wf_file = consumer / ".github" / "workflows" / "linter.yml"
-        wf_file.parent.mkdir(parents=True, exist_ok=True)
-        wf_file.write_text("content")
-
-        mock_findings = [
+        findings = [
             {
                 "ident": "medium-rule",
                 "desc": "medium severity finding",
@@ -196,13 +185,16 @@ class TestRunAudit:
                 "ignored": False,
             }
         ]
-        monkeypatch.setattr(subprocess, "run", lambda *a, **kw: subprocess.CompletedProcess([], 0, stdout=""))
-        monkeypatch.setattr("ghwm.audit._get_findings", lambda res: mock_findings)
+        monkeypatch.setattr(
+            subprocess,
+            "run",
+            lambda *a, **kw: subprocess.CompletedProcess([], 0, stdout=json.dumps(findings), stderr=""),
+        )
         monkeypatch.setattr(sys.stdout, "isatty", lambda: True)
 
         # Act
         with pytest.raises(SystemExit) as exc:
-            run_audit(consumer)
+            run_audit(audited_consumer)
         output = capsys.readouterr().out
 
         # Assert
@@ -210,29 +202,12 @@ class TestRunAudit:
         assert "\033[33mSecurity Score: 90/100\033[0m" in output
 
     def test_run_audit_should_show_green_score_and_exit_zero_when_only_low_findings_with_atty(
-        self, tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+        self, audited_consumer: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
     ) -> None:
         # Arrange
         import sys
 
-        consumer = tmp_path / "consumer"
-        consumer.mkdir()
-        lock = Lockfile(
-            packages=[
-                LockEntry(
-                    name="linter",
-                    version="1.0.0",
-                    source="owner/repo",
-                    files=[LockFileEntry(target=".github/workflows/linter.yml", source_hash="sha256:abc")],
-                )
-            ]
-        )
-        write_lockfile(consumer, lock)
-        wf_file = consumer / ".github" / "workflows" / "linter.yml"
-        wf_file.parent.mkdir(parents=True, exist_ok=True)
-        wf_file.write_text("content")
-
-        mock_findings = [
+        findings = [
             {
                 "ident": "low-rule",
                 "desc": "low severity finding",
@@ -241,12 +216,15 @@ class TestRunAudit:
                 "ignored": False,
             }
         ]
-        monkeypatch.setattr(subprocess, "run", lambda *a, **kw: subprocess.CompletedProcess([], 0, stdout=""))
-        monkeypatch.setattr("ghwm.audit._get_findings", lambda res: mock_findings)
+        monkeypatch.setattr(
+            subprocess,
+            "run",
+            lambda *a, **kw: subprocess.CompletedProcess([], 0, stdout=json.dumps(findings), stderr=""),
+        )
         monkeypatch.setattr(sys.stdout, "isatty", lambda: True)
 
         # Act
-        run_audit(consumer)
+        run_audit(audited_consumer)
         output = capsys.readouterr().out
 
         # Assert
