@@ -1,0 +1,74 @@
+# ==============================================================================
+# Codecov Configuration for ghwm
+# Reference: https://docs.codecov.com/docs/codecovyml-reference
+# ==============================================================================
+
+# Global Codecov behavior
+codecov:
+  require_ci_to_pass: true
+  notify:
+    wait_for_ci: true
+
+# Coverage processing & visualization options
+coverage:
+  precision: 2
+  round: down
+  range: "70...100"
+
+  status:
+    # --------------------------------------------------------------------------
+    # Project Coverage: Tracks total repo coverage health over time
+    # --------------------------------------------------------------------------
+    project:
+      default:
+        target: 90%           # Overall codebase coverage must be at least 90%
+        threshold: 1%         # 1% tolerance buffer for minor fluctuations / refactoring
+        if_ci_failed: error
+        informational: false
+        paths:
+          - "src/"
+
+    # --------------------------------------------------------------------------
+    # Patch Coverage: Enforces testing on new / modified lines in PR diffs
+    # --------------------------------------------------------------------------
+    patch:
+      default:
+        target: 90%           # PR diff patch coverage must be at least 90%
+        threshold: 0%
+        if_ci_failed: error
+        informational: false
+        paths:
+          - "src/"
+
+# ------------------------------------------------------------------------------
+# Pull Request Comment Configuration
+# Keeps PR conversations clean and avoids bot spam
+# ------------------------------------------------------------------------------
+comment:
+  layout: "condensed_header, diff, files"
+  behavior: default           # Update existing comment on push instead of posting new ones
+  require_changes: true       # Only comment if coverage actually changed
+  require_base: false         # Post even if base branch has no previous report
+  require_head: true          # Ensure head commit report has uploaded before commenting
+
+# ------------------------------------------------------------------------------
+# Path Exclusions
+# Prevents non-production files from being counted as uncovered patch lines
+# ------------------------------------------------------------------------------
+ignore:
+  - "tests/**"                # Test suite
+  - "conftest.py"
+  - "**/conftest.py"
+  - "docs/**"                 # Documentation
+  - "*.md"                    # Documentation and specs
+  - "**/*.md"
+  - ".github/**"              # GitHub Actions workflows and configs
+  - ".agents/**"              # Agent skills and configurations
+  - "dist/**"                 # Build artifacts
+  - "build/**"
+  - "*.egg-info/**"
+  - "*.toml"                  # Config files
+  - "*.yaml"
+  - "*.yml"
+  - "*.lock"                  # Lockfiles
+  - "Makefile"
