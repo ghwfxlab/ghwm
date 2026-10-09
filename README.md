@@ -26,6 +26,9 @@ Or pin to a specific version tag:
 uv tool install git+https://github.com/ghwfxlab/ghwm.git@vX.Y.Z
 ```
 
+> [!IMPORTANT]
+> `ghwm` downloads workflow packages from GitHub Packages, which requires a GitHub token even when the registry is public. Run `gh auth login` and `gh auth refresh -s read:packages`, or export a `GH_TOKEN` with the `read:packages` scope. In GitHub Actions, use `GITHUB_TOKEN` with `packages: read`. See [Authentication](#authentication) for the lookup order.
+
 ### Alternatives
 
 If you prefer to install using [pipx](https://github.com/pypa/pipx):
