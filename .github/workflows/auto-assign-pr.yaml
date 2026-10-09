@@ -1,3 +1,18 @@
+# Managed by ghwm (auto-assign-pr@1.0.2)
+# Source: @ghwfxlab/auto-assign-pr:auto-assign-pr.yaml
+# Hash: sha256:df611208e35122e380e6636b72c2cdb5374859770c3849805d07f48fa1b58d45
+# Re-run `ghwm install` to refresh this file.
+
+# ---
+# title: Auto Assign PR
+# description: Automatically add pull request reviewers and assignees to streamline pull request triage and reviews.
+# tags:
+#   - automation
+#   - pr
+#   - review
+# icon: person_add
+# owner: ghwfxlab
+# ---
 ---
 name: Add Reviewers and Assignees
 

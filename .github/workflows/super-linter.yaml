@@ -1,0 +1,88 @@
+# Managed by ghwm (super-linter@1.0.2)
+# Source: @ghwfxlab/super-linter:super-linter.yaml
+# Hash: sha256:793b99ae4f87ed55432f0413574e85025dcc80a8ccef885c52dec0ace046f519
+# Re-run `ghwm install` to refresh this file.
+
+# ---
+# title: Super-Linter
+# description: Code linting workflow using Super-Linter and pre-commit hooks for code quality.
+# tags:
+#   - lint
+#   - actions
+#   - pre-commit
+# icon: fact_check
+# owner: ghwfxlab
+# ---
+---
+name: Lint Code Base
+
+on: # yamllint disable-line rule:truthy
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+permissions: {}
+
+env:
+  # Set the default value for the input variable
+  PRE_SUPER_LINTER_CUSTOM_SCRIPT_PATH: ""
+  SUPER_LINTER_CONFIG_PATH: .github/super-linter.env
+  SUPER_LINTER_FIX_CONFIG_PATH: .github/super-linter-fix.env
+  RUN_SUPER_LINTER_SLIM: true
+  RUN_SUPER_LINTER_FIXES: false
+
+jobs:
+  super-linter:
+    name: Run Super-Linter
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      issues: write
+      statuses: write
+      pull-requests: write
+      packages: read
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Load Super-Linter configuration
+        run: |
+          echo "Loading Super-Linter configuration from ${{ env.SUPER_LINTER_CONFIG_PATH }}"
+          grep -v '^#' ${{ env.SUPER_LINTER_CONFIG_PATH }} >> "$GITHUB_ENV"
+      - name: Load Super-Linter Fix configuration
+        if: ${{ env.RUN_SUPER_LINTER_FIXES == 'true' }}
+        run: |
+          echo "Loading Super-Linter Fix configuration from ${{ env.SUPER_LINTER_FIX_CONFIG_PATH }}"
+          grep -v '^#' ${{ env.SUPER_LINTER_FIX_CONFIG_PATH }} >> "$GITHUB_ENV"
+      - name: Run custom scripts before linting
+        if: ${{ env.PRE_SUPER_LINTER_CUSTOM_SCRIPT_PATH != '' }}
+        run: |
+          echo "Running custom script from ${{ env.PRE_SUPER_LINTER_CUSTOM_SCRIPT_PATH }}..."
+          ${{ env.PRE_SUPER_LINTER_CUSTOM_SCRIPT_PATH }}
+      - name: Run Slim Super-Linter
+        if: ${{ env.RUN_SUPER_LINTER_SLIM == 'true' }}
+        uses: super-linter/super-linter/slim@9e863354e3ff62e0727d37183162c4a88873df41 # v8.6.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Run Super-Linter
+        if: ${{ env.RUN_SUPER_LINTER_SLIM != 'true' }}
+        uses: super-linter/super-linter@9e863354e3ff62e0727d37183162c4a88873df41 # v8.6.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Commit and push linting fixes
+        # Run only on:
+        # - Pull requests
+        # - Not on the default branch
+        if: >
+          github.event_name == 'pull_request' &&
+          github.ref_name != github.event.repository.default_branch && env.RUN_SUPER_LINTER_FIXES == 'true'
+        uses: stefanzweifel/git-auto-commit-action@04702edda442b2e678b25b537cec683a1493fcb9 # v7.1.0
+        with:
+          branch: ${{ github.event.pull_request.head.ref || github.head_ref || github.ref }}
+          commit_message: "chore[BOT]: fix linter issues"
+          commit_user_email: github-actions[bot]@users.noreply.github.com

@@ -1,0 +1,27 @@
+{
+  "lockfileVersion": 1,
+  "packages": [
+    {
+      "name": "auto-assign-pr",
+      "source": "@ghwfxlab/auto-assign-pr",
+      "files": [
+        {
+          "target": ".github/workflows/auto-assign-pr.yaml",
+          "source_hash": "sha256:df611208e35122e380e6636b72c2cdb5374859770c3849805d07f48fa1b58d45"
+        }
+      ],
+      "version": "1.0.2"
+    },
+    {
+      "name": "super-linter",
+      "source": "@ghwfxlab/super-linter",
+      "files": [
+        {
+          "target": ".github/workflows/super-linter.yaml",
+          "source_hash": "sha256:793b99ae4f87ed55432f0413574e85025dcc80a8ccef885c52dec0ace046f519"
+        }
+      ],
+      "version": "1.0.2"
+    }
+  ]
+}
