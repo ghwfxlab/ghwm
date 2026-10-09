@@ -10,7 +10,7 @@
 
 > Install managed GitHub workflow files from a central marketplace repository.
 
-Workflows can be sourced from the official [ghwfxlab/ghwm-registry](https://github.com/ghwfxlab/ghwm-registry) or custom registry repositories, which can be created using the [ghwfxlab/ghwm-registry-template](https://github.com/ghwfxlab/ghwm-registry-template) repository template. Workflow authors can annotate packages with presentation metadata using [commented YAML frontmatter](docs/reference/frontmatter.md).
+Workflows can be sourced from the official [ghwfxlab/ghwm-registry](https://github.com/ghwfxlab/ghwm-registry) or your own registry repository (see [Create your own registry](#create-your-own-registry)). Workflow authors can annotate packages with presentation metadata using [commented YAML frontmatter](docs/reference/frontmatter.md).
 
 ## Install
 
@@ -271,6 +271,39 @@ export DO_NOT_TRACK=1
 # or
 export GHWM_NO_TELEMETRY=1
 ```
+
+## Create your own registry
+
+A registry is a GitHub repository whose `workflows/` folder holds one npm package per workflow, published to GitHub Packages. The official [ghwfxlab/ghwm-registry](https://github.com/ghwfxlab/ghwm-registry) is a good reference to copy from.
+
+1. Create a repository, for example `my-org/ghwm-registry`. The owner becomes the npm scope (`@my-org/<name>`).
+2. Add a folder per workflow, such as `workflows/linter/`, containing the workflow file, any config files, a `package.json` and a `workflow.yml`:
+
+   ```yaml
+   # workflows/linter/workflow.yml
+   name: linter
+   files:
+     - source: linter.yaml
+       target: .github/workflows/linter.yaml
+   ```
+
+   Optionally add [commented frontmatter](docs/reference/frontmatter.md) with a title, description and tags.
+
+3. Set `"name": "@my-org/linter"` and `"publishConfig": {"registry": "https://npm.pkg.github.com"}` in `package.json`, and list the same files under `"files"`.
+4. Test locally from a consumer repository, without publishing:
+
+   ```sh
+   ghwm install --local ../ghwm-registry
+   ```
+
+5. Publish each package to GitHub Packages (the official registry does this from a [publish workflow](https://github.com/ghwfxlab/ghwm-registry/blob/main/.github/workflows/publish.yml) on every push to `main`), then set the package visibility to **Public** if consumers outside your organization need it.
+6. Point consumers at it in `ghwm.yml`:
+
+   ```yaml
+   source: my-org/ghwm-registry
+   workflows:
+     - linter@1.0.0
+   ```
 
 ## Development
 
