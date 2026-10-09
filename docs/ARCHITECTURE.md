@@ -92,6 +92,7 @@ C4Component
 | `managed_files.py` | Low-level workflow/config file sync, trigger merge, prune checks            |
 | `install.py`       | Orchestrate install/update/prune; delegate file ops to `managed_files`      |
 | `lock.py`          | Read and write `ghwm.lock` (JSON); in-memory lockfile operations            |
+| `audit.py`         | Static security analysis of managed workflow files using zizmor             |
 | `package_names.py` | Helpers to compute scoped npm package names from org and workflow name      |
 | `paths.py`         | Path security utilities including path traversal checks                     |
 | `metadata.py`      | Package metadata extraction from frontmatter, manifests, and package.json   |
@@ -246,9 +247,9 @@ Old lockfiles (version ≠ 1) are rejected; delete and re-run `ghwm install`.
 
 The lockfile is deleted automatically when all packages are removed.
 
-### 6 — Security auditing (`cli.py`)
+### 6 — Security auditing (`audit.py`)
 
-`run_audit()` performs static security analysis on the managed workflow files:
+`run_audit()` in `audit.py` performs static security analysis on the managed workflow files:
 
 1. Read `ghwm.lock` to find all currently managed files.
 2. Filter the tracked files to locate only workflow files (targets under `.github/workflows/`).
@@ -291,7 +292,7 @@ Usage telemetry is privacy-gated and tracks workflow adoption from public regist
 
 ```text
 argv
-  └─▶ _build_parser()            # argparse setup
+  └─▶ build_parser()             # argparse setup
         └─▶ args                 # parsed namespace
               ├─▶ read_manifest()
               │     └─▶ parse_manifest()      → Manifest
