@@ -170,6 +170,7 @@ Please adhere to the following design patterns and styling guidelines:
   - Keep CLI arguments and command orchestration in [src/ghwm/cli.py](src/ghwm/cli.py).
   - Put low-level workflow/config file interactions in [src/ghwm/managed_files.py](src/ghwm/managed_files.py).
   - Put high-level installation and pruning steps in [src/ghwm/install.py](src/ghwm/install.py).
+  - Put static security analysis and zizmor orchestration in [src/ghwm/audit.py](src/ghwm/audit.py).
 - **Documentation**: If you change any public behavior, flags, or manifest file formats, document them in [README.md](README.md) and update [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) where relevant.
 
 ---
