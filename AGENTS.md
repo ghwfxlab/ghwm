@@ -19,8 +19,11 @@ Read `docs/ARCHITECTURE.md` before making structural changes.
 
 To guide automated developer agents, this repository provides pre-configured workspace skills under `.agents/skills/`:
 
-- [python-coding-standards](.agents/skills/python-coding-standards/SKILL.md): Reusable Python coding standards for implementation, refactoring, and code review (typing, error handling, subprocess safety, etc.).
-- [testing-standards](.agents/skills/testing-standards/SKILL.md): Reusable test-writing and test-review guidance (Arrange/Act/Assert, mock isolation, naming conventions).
+- [`code-review`](.agents/skills/code-review/SKILL.md): Review changes since a fixed point along Standards and Spec axes in parallel sub-agents.
+- [`python-coding-standards`](.agents/skills/python-coding-standards/SKILL.md): Reusable Python coding standards for implementation, refactoring, and code review (typing, error handling, subprocess safety, etc.).
+- [`python-performance-optimization`](.agents/skills/python-performance-optimization/SKILL.md): Profile and optimize Python code using cProfile, memory profilers, and performance best practices.
+- [`tdd`](.agents/skills/tdd/SKILL.md): Test-driven development (red-green-refactor loop, test design, and integration testing).
+- [`testing-standards`](.agents/skills/testing-standards/SKILL.md): Reusable test-writing and test-review guidance (Arrange/Act/Assert, mock isolation, naming conventions).
 
 Agents should read and follow these standards for all contributions.
 
@@ -33,9 +36,14 @@ Agents should read and follow these standards for all contributions.
 - `src/ghwm/install.py` - install/update/prune orchestration
 - `src/ghwm/managed_files.py` - low-level workflow/config sync, trigger merge, and prune checks
 - `src/ghwm/lock.py` - lockfile read/write and in-memory lockfile operations
+- `src/ghwm/audit.py` - static security analysis of managed workflows using zizmor
 - `src/ghwm/metadata.py` - package metadata extraction (frontmatter, manifest keys, package.json)
 - `src/ghwm/telemetry.py` - privacy-gated telemetry: public-repo check and installation event emission
+- `src/ghwm/package_names.py` - helpers to compute scoped npm package names
+- `src/ghwm/paths.py` - path security utilities and traversal checks
 - `src/ghwm/__main__.py` - `python -m ghwm` entry point
+- `ghwm.yml` - repository manifest for self-managed workflows
+- `ghwm.lock` - lockfile for repository's self-managed workflows
 - `tests/` - module-aligned pytest suite
 - `docs/ARCHITECTURE.md` - architecture and lifecycle notes
 - `docs/reference/manifest.md` - manifest and lockfile reference specification
@@ -170,6 +178,12 @@ When changing code, preserve these unless the task explicitly changes them:
 - If you change download orchestration behavior, update `tests/test_download.py`.
 - If you change tarball/package parsing behavior, update `tests/test_download_npm.py`.
 - If you change lockfile semantics, update `tests/test_lock.py`.
+- If you change security audit logic or scoring, update `tests/test_audit.py`.
+- If you change metadata extraction or frontmatter parsing, update `tests/test_metadata.py`.
+- If you change telemetry emission or privacy gating, update `tests/test_telemetry.py`.
+- If you change low-level workflow file sync or trigger/env preservation, update `tests/test_managed_files.py`.
+- If you change path security or traversal validation, update `tests/test_security.py`.
+- If you change end-to-end workflow installation behavior, update `tests/test_e2e.py`.
 
 ## Documentation guidance
 
