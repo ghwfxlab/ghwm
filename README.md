@@ -33,13 +33,13 @@ Run `ghwm audit` to scan every managed workflow with [zizmor](https://docs.zizmo
 The recommended way to install `ghwm` is using [uv](https://docs.astral.sh/uv/) (a fast Python package manager):
 
 ```sh
-uv tool install git+https://github.com/ghwfxlab/ghwm.git
+uv tool install ghwm
 ```
 
-Or pin to a specific version tag:
+Or pin to a specific version:
 
 ```sh
-uv tool install git+https://github.com/ghwfxlab/ghwm.git@vX.Y.Z
+uv tool install ghwm==X.Y.Z
 ```
 
 > [!IMPORTANT]
@@ -50,13 +50,19 @@ uv tool install git+https://github.com/ghwfxlab/ghwm.git@vX.Y.Z
 If you prefer to install using [pipx](https://github.com/pypa/pipx):
 
 ```sh
-pipx install git+https://github.com/ghwfxlab/ghwm.git
+pipx install ghwm
 ```
 
 Or via standard `pip` (into an active virtual environment):
 
 ```sh
-pip install git+https://github.com/ghwfxlab/ghwm.git
+pip install ghwm
+```
+
+To try the latest unreleased code from `main`, install straight from Git:
+
+```sh
+uv tool install git+https://github.com/ghwfxlab/ghwm.git
 ```
 
 ## Usage
