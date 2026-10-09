@@ -9,6 +9,7 @@ Before you begin, please read the [Architecture Documentation](docs/ARCHITECTURE
 ## Table of Contents
 
 - [Code of Conduct](#code-of-conduct)
+- [Getting Help and Finding Work](#getting-help-and-finding-work)
 - [Prerequisites](#prerequisites)
 - [Development Setup](#development-setup)
 - [Development Workflow](#development-workflow)
@@ -31,6 +32,11 @@ Before you begin, please read the [Architecture Documentation](docs/ARCHITECTURE
 ## Code of Conduct
 
 By participating in this project, you agree to maintain a respectful, welcoming, and inclusive environment. Please report any unacceptable behavior to the project maintainers.
+
+## Getting Help and Finding Work
+
+- Have a question or an idea? Start a thread in [GitHub Discussions](https://github.com/ghwfxlab/ghwm/discussions).
+- Looking for a first contribution? Browse issues labelled [good first issue](https://github.com/ghwfxlab/ghwm/labels/good%20first%20issue) or [help wanted](https://github.com/ghwfxlab/ghwm/labels/help%20wanted).
 
 ## Prerequisites
 
