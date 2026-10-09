@@ -59,6 +59,8 @@ exclude-newer = "7 days"
 ghwm = "ghwm.cli:main"
 
 [project.urls]
+Homepage = "https://github.com/ghwfxlab/ghwm"
+Documentation = "https://github.com/ghwfxlab/ghwm#readme"
 Repository = "https://github.com/ghwfxlab/ghwm"
 Issues = "https://github.com/ghwfxlab/ghwm/issues"
 "Pawel's GitHub" = "https://github.com/pljanicki"
