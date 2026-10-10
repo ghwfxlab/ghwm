@@ -1,6 +1,6 @@
 # GitHub Workflow Manager CLI
 
-[![Lint Code Base](https://github.com/ghwfxlab/ghwm/actions/workflows/linter.yaml/badge.svg)](https://github.com/ghwfxlab/ghwm/actions/workflows/linter.yaml)
+[![Lint Code Base](https://github.com/ghwfxlab/ghwm/actions/workflows/super-linter.yaml/badge.svg)](https://github.com/ghwfxlab/ghwm/actions/workflows/super-linter.yaml)
 [![version](https://img.shields.io/github/v/release/ghwfxlab/ghwm)](https://github.com/ghwfxlab/ghwm/releases/latest)
 [![codecov](https://codecov.io/gh/ghwfxlab/ghwm/graph/badge.svg)](https://codecov.io/gh/ghwfxlab/ghwm)
 [![Python](https://img.shields.io/badge/python-3.12-blue?logo=python&logoColor=white)](https://www.python.org/)
@@ -335,6 +335,7 @@ A registry is a GitHub repository whose `workflows/` folder holds one npm packag
 ```sh
 make install          # uv sync (dev deps)
 make test             # pytest
+make test-e2e         # run end-to-end tests using testcontainers
 make lint             # ruff check
 make format           # ruff format
 make type-check       # mypy
