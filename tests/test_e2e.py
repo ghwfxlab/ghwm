@@ -270,9 +270,7 @@ class TestGhwmEndToEnd:
         workspace.write_manifest([{"name": "super-linter", "version": "1.0.2"}])
         install_exit_code, _ = workspace.run_ghwm("install")
         assert install_exit_code == 0
-        assert "# Managed by ghwm (super-linter@1.0.2)" in workspace.read_file(
-            ".github/workflows/super-linter.yaml"
-        )
+        assert "# Managed by ghwm (super-linter@1.0.2)" in workspace.read_file(".github/workflows/super-linter.yaml")
 
         # Act: Update manifest to 1.1.0 and run update
         workspace.write_manifest([{"name": "super-linter", "version": "1.1.0"}])
@@ -294,9 +292,7 @@ class TestGhwmEndToEnd:
         workspace.write_manifest([{"name": "super-linter", "version": "1.1.0"}])
         install_exit_code, _ = workspace.run_ghwm("install")
         assert install_exit_code == 0
-        assert "# Managed by ghwm (super-linter@1.1.0)" in workspace.read_file(
-            ".github/workflows/super-linter.yaml"
-        )
+        assert "# Managed by ghwm (super-linter@1.1.0)" in workspace.read_file(".github/workflows/super-linter.yaml")
 
         # Act: Downgrade manifest to 1.0.2 and run install
         workspace.write_manifest([{"name": "super-linter", "version": "1.0.2"}])
