@@ -201,8 +201,8 @@ class TestGhwmEndToEnd:
         # Arrange
         workspace.write_manifest(
             [
-                {"name": "ghwm-auto-assign-pr", "version": "1.0.0"},
-                {"name": "ghwm-super-linter", "version": "1.0.0"},
+                {"name": "auto-assign-pr", "version": "1.0.2"},
+                {"name": "super-linter", "version": "1.0.2"},
             ]
         )
 
@@ -211,15 +211,15 @@ class TestGhwmEndToEnd:
 
         # Assert
         assert exit_code == 0
-        assert "✓ Installed ghwm-auto-assign-pr" in output
-        assert "✓ Installed ghwm-super-linter" in output
+        assert "✓ Installed auto-assign-pr" in output
+        assert "✓ Installed super-linter" in output
 
         # Verify workflows installed with headers
         auto_assign_content = workspace.read_file(".github/workflows/auto-assign-pr.yaml")
-        assert "# Managed by ghwm (ghwm-auto-assign-pr@1.0.0)" in auto_assign_content
+        assert "# Managed by ghwm (auto-assign-pr@1.0.2)" in auto_assign_content
 
         linter_content = workspace.read_file(".github/workflows/super-linter.yaml")
-        assert "# Managed by ghwm (ghwm-super-linter@1.0.0)" in linter_content
+        assert "# Managed by ghwm (super-linter@1.0.2)" in linter_content
 
         # Verify config files created
         assert workspace.file_exists(".github/auto_assign.yaml")
@@ -229,8 +229,8 @@ class TestGhwmEndToEnd:
         lock_data = workspace.read_lockfile()
         assert lock_data["lockfileVersion"] == 1
         pkg_names = [pkg["name"] for pkg in lock_data["packages"]]
-        assert "ghwm-auto-assign-pr" in pkg_names
-        assert "ghwm-super-linter" in pkg_names
+        assert "auto-assign-pr" in pkg_names
+        assert "super-linter" in pkg_names
 
     def test_e2e_should_install_two_workflows_when_configured_from_two_different_registries(
         self,
@@ -239,7 +239,7 @@ class TestGhwmEndToEnd:
         # Arrange
         workspace.write_manifest(
             [
-                {"name": "ghwm-super-linter", "version": "1.0.0"},
+                {"name": "super-linter", "version": "1.0.2"},
                 {
                     "name": "ghwm-auto-assign-pr",
                     "version": "1.0.0",
@@ -253,72 +253,68 @@ class TestGhwmEndToEnd:
 
         # Assert
         assert exit_code == 0
-        assert "✓ Installed ghwm-super-linter" in output
+        assert "✓ Installed super-linter" in output
         assert "✓ Installed ghwm-auto-assign-pr" in output
 
         # Verify lockfile sources
         lock_data = workspace.read_lockfile()
         sources_by_pkg = {pkg["name"]: pkg["source"] for pkg in lock_data["packages"]}
-        assert sources_by_pkg["ghwm-super-linter"] == "@ghwfxlab/ghwm-super-linter"
+        assert sources_by_pkg["super-linter"] == "@ghwfxlab/super-linter"
         assert sources_by_pkg["ghwm-auto-assign-pr"] == "@pljanicki/ghwm-auto-assign-pr"
 
     def test_e2e_should_update_workflow_version_when_manifest_version_increased(
         self,
         workspace: ContainerWorkspace,
     ) -> None:
-        # Arrange: Install version 1.0.0
-        workspace.write_manifest([{"name": "ghwm-auto-assign-pr", "version": "1.0.0"}])
+        # Arrange: Install version 1.0.2
+        workspace.write_manifest([{"name": "super-linter", "version": "1.0.2"}])
         install_exit_code, _ = workspace.run_ghwm("install")
         assert install_exit_code == 0
-        assert "# Managed by ghwm (ghwm-auto-assign-pr@1.0.0)" in workspace.read_file(
-            ".github/workflows/auto-assign-pr.yaml"
-        )
+        assert "# Managed by ghwm (super-linter@1.0.2)" in workspace.read_file(".github/workflows/super-linter.yaml")
 
-        # Act: Update manifest to 1.0.1 and run update
-        workspace.write_manifest([{"name": "ghwm-auto-assign-pr", "version": "1.0.1"}])
+        # Act: Update manifest to 1.1.0 and run update
+        workspace.write_manifest([{"name": "super-linter", "version": "1.1.0"}])
         update_exit_code, update_output = workspace.run_ghwm("update")
 
         # Assert
         assert update_exit_code == 0
-        assert "↻ Updated ghwm-auto-assign-pr" in update_output
-        updated_content = workspace.read_file(".github/workflows/auto-assign-pr.yaml")
-        assert "# Managed by ghwm (ghwm-auto-assign-pr@1.0.1)" in updated_content
+        assert "↻ Updated super-linter" in update_output
+        updated_content = workspace.read_file(".github/workflows/super-linter.yaml")
+        assert "# Managed by ghwm (super-linter@1.1.0)" in updated_content
         lock_data = workspace.read_lockfile()
-        assert lock_data["packages"][0]["version"] == "1.0.1"
+        assert lock_data["packages"][0]["version"] == "1.1.0"
 
     def test_e2e_should_downgrade_workflow_version_when_manifest_version_decreased(
         self,
         workspace: ContainerWorkspace,
     ) -> None:
-        # Arrange: Install version 1.0.1
-        workspace.write_manifest([{"name": "ghwm-auto-assign-pr", "version": "1.0.1"}])
+        # Arrange: Install version 1.1.0
+        workspace.write_manifest([{"name": "super-linter", "version": "1.1.0"}])
         install_exit_code, _ = workspace.run_ghwm("install")
         assert install_exit_code == 0
-        assert "# Managed by ghwm (ghwm-auto-assign-pr@1.0.1)" in workspace.read_file(
-            ".github/workflows/auto-assign-pr.yaml"
-        )
+        assert "# Managed by ghwm (super-linter@1.1.0)" in workspace.read_file(".github/workflows/super-linter.yaml")
 
-        # Act: Downgrade manifest to 1.0.0 and run install
-        workspace.write_manifest([{"name": "ghwm-auto-assign-pr", "version": "1.0.0"}])
+        # Act: Downgrade manifest to 1.0.2 and run install
+        workspace.write_manifest([{"name": "super-linter", "version": "1.0.2"}])
         downgrade_exit_code, downgrade_output = workspace.run_ghwm("install")
 
         # Assert
         assert downgrade_exit_code == 0
-        assert "↻ Updated ghwm-auto-assign-pr" in downgrade_output
-        downgraded_content = workspace.read_file(".github/workflows/auto-assign-pr.yaml")
-        assert "# Managed by ghwm (ghwm-auto-assign-pr@1.0.0)" in downgraded_content
+        assert "↻ Updated super-linter" in downgrade_output
+        downgraded_content = workspace.read_file(".github/workflows/super-linter.yaml")
+        assert "# Managed by ghwm (super-linter@1.0.2)" in downgraded_content
         lock_data = workspace.read_lockfile()
-        assert lock_data["packages"][0]["version"] == "1.0.0"
+        assert lock_data["packages"][0]["version"] == "1.0.2"
 
     def test_e2e_should_preserve_triggers_when_update_triggers_false_and_overwrite_when_true(
         self,
         workspace: ContainerWorkspace,
     ) -> None:
-        # Arrange: Install 1.0.0 and customize the on: section
-        workspace.write_manifest([{"name": "ghwm-auto-assign-pr", "version": "1.0.0"}])
+        # Arrange: Install 1.0.2 and customize the on: section
+        workspace.write_manifest([{"name": "super-linter", "version": "1.0.2"}])
         workspace.run_ghwm("install")
         workspace.replace_in_file(
-            ".github/workflows/auto-assign-pr.yaml",
+            ".github/workflows/super-linter.yaml",
             "pull_request:",
             "workflow_dispatch: # custom user trigger",
         )
@@ -327,8 +323,8 @@ class TestGhwmEndToEnd:
         workspace.write_manifest(
             [
                 {
-                    "name": "ghwm-auto-assign-pr",
-                    "version": "1.0.1",
+                    "name": "super-linter",
+                    "version": "1.1.0",
                     "update-triggers": False,
                 }
             ]
@@ -337,16 +333,16 @@ class TestGhwmEndToEnd:
 
         # Assert 1: Custom trigger is preserved
         assert exit_code1 == 0
-        content1 = workspace.read_file(".github/workflows/auto-assign-pr.yaml")
+        content1 = workspace.read_file(".github/workflows/super-linter.yaml")
         assert "workflow_dispatch: # custom user trigger" in content1
-        assert "ghwm-auto-assign-pr@1.0.1" in content1
+        assert "super-linter@1.1.0" in content1
 
         # Act 2: Update with update-triggers: true
         workspace.write_manifest(
             [
                 {
-                    "name": "ghwm-auto-assign-pr",
-                    "version": "1.0.1",
+                    "name": "super-linter",
+                    "version": "1.1.0",
                     "update-triggers": True,
                 }
             ]
@@ -355,7 +351,7 @@ class TestGhwmEndToEnd:
 
         # Assert 2: Packaged triggers overwrite custom trigger
         assert exit_code2 == 0
-        content2 = workspace.read_file(".github/workflows/auto-assign-pr.yaml")
+        content2 = workspace.read_file(".github/workflows/super-linter.yaml")
         assert "workflow_dispatch:" not in content2
         assert "pull_request:" in content2
 
@@ -363,8 +359,8 @@ class TestGhwmEndToEnd:
         self,
         workspace: ContainerWorkspace,
     ) -> None:
-        # Arrange: Install ghwm-super-linter 1.0.0 and customize its env: section
-        workspace.write_manifest([{"name": "ghwm-super-linter", "version": "1.0.0"}])
+        # Arrange: Install super-linter 1.0.2 and customize its env: section
+        workspace.write_manifest([{"name": "super-linter", "version": "1.0.2"}])
         workspace.run_ghwm("install")
         workspace.replace_in_file(
             ".github/workflows/super-linter.yaml",
@@ -376,8 +372,8 @@ class TestGhwmEndToEnd:
         workspace.write_manifest(
             [
                 {
-                    "name": "ghwm-super-linter",
-                    "version": "1.0.1",
+                    "name": "super-linter",
+                    "version": "1.1.0",
                     "update-envs": False,
                 }
             ]
@@ -388,14 +384,14 @@ class TestGhwmEndToEnd:
         assert exit_code1 == 0
         content1 = workspace.read_file(".github/workflows/super-linter.yaml")
         assert "CUSTOM_E2E_ENV: custom_val" in content1
-        assert "ghwm-super-linter@1.0.1" in content1
+        assert "super-linter@1.1.0" in content1
 
         # Act 2: Update with update-envs: true
         workspace.write_manifest(
             [
                 {
-                    "name": "ghwm-super-linter",
-                    "version": "1.0.1",
+                    "name": "super-linter",
+                    "version": "1.1.0",
                     "update-envs": True,
                 }
             ]
@@ -411,21 +407,21 @@ class TestGhwmEndToEnd:
         self,
         workspace: ContainerWorkspace,
     ) -> None:
-        # Arrange: Install 1.0.0 and customize .github/auto_assign.yaml
-        workspace.write_manifest([{"name": "ghwm-auto-assign-pr", "version": "1.0.0"}])
+        # Arrange: Install 1.0.2 and customize .github/super-linter.env
+        workspace.write_manifest([{"name": "super-linter", "version": "1.0.2"}])
         workspace.run_ghwm("install")
         workspace.replace_in_file(
-            ".github/auto_assign.yaml",
-            "addReviewers: false",
-            "addReviewers: true # custom user setting",
+            ".github/super-linter.env",
+            "LOG_LEVEL=WARN",
+            "LOG_LEVEL=DEBUG # custom user setting",
         )
 
         # Act 1: Update with update-config-files: false
         workspace.write_manifest(
             [
                 {
-                    "name": "ghwm-auto-assign-pr",
-                    "version": "1.0.1",
+                    "name": "super-linter",
+                    "version": "1.1.0",
                     "update-config-files": False,
                 }
             ]
@@ -434,15 +430,15 @@ class TestGhwmEndToEnd:
 
         # Assert 1: Config customization is preserved
         assert exit_code1 == 0
-        cfg1 = workspace.read_file(".github/auto_assign.yaml")
-        assert "addReviewers: true # custom user setting" in cfg1
+        cfg1 = workspace.read_file(".github/super-linter.env")
+        assert "LOG_LEVEL=DEBUG # custom user setting" in cfg1
 
         # Act 2: Update with update-config-files: true
         workspace.write_manifest(
             [
                 {
-                    "name": "ghwm-auto-assign-pr",
-                    "version": "1.0.1",
+                    "name": "super-linter",
+                    "version": "1.1.0",
                     "update-config-files": True,
                 }
             ]
@@ -451,9 +447,9 @@ class TestGhwmEndToEnd:
 
         # Assert 2: Packaged config file overwrites user modification
         assert exit_code2 == 0
-        cfg2 = workspace.read_file(".github/auto_assign.yaml")
+        cfg2 = workspace.read_file(".github/super-linter.env")
         assert "custom user setting" not in cfg2
-        assert "addReviewers: false" in cfg2
+        assert "LOG_LEVEL=WARN" in cfg2
 
     def test_e2e_should_prune_stale_workflow_and_preserve_config_when_removed_from_manifest(
         self,
@@ -462,8 +458,8 @@ class TestGhwmEndToEnd:
         # Arrange: Install two workflows
         workspace.write_manifest(
             [
-                {"name": "ghwm-auto-assign-pr", "version": "1.0.0"},
-                {"name": "ghwm-super-linter", "version": "1.0.0"},
+                {"name": "auto-assign-pr", "version": "1.0.2"},
+                {"name": "super-linter", "version": "1.0.2"},
             ]
         )
         workspace.run_ghwm("install")
@@ -472,32 +468,32 @@ class TestGhwmEndToEnd:
         assert workspace.file_exists(".github/workflows/super-linter.yaml")
 
         # Act: Remove auto-assign-pr from manifest and run install
-        workspace.write_manifest([{"name": "ghwm-super-linter", "version": "1.0.0"}])
+        workspace.write_manifest([{"name": "super-linter", "version": "1.0.2"}])
         exit_code, output = workspace.run_ghwm("install")
 
         # Assert: auto-assign-pr workflow pruned, config kept, super-linter kept
         assert exit_code == 0
-        assert "✗ Pruned ghwm-auto-assign-pr" in output
+        assert "✗ Pruned auto-assign-pr" in output
         assert not workspace.file_exists(".github/workflows/auto-assign-pr.yaml")
         assert workspace.file_exists(".github/auto_assign.yaml")
         assert workspace.file_exists(".github/workflows/super-linter.yaml")
 
         lock_data = workspace.read_lockfile()
         pkg_names = [pkg["name"] for pkg in lock_data["packages"]]
-        assert "ghwm-auto-assign-pr" not in pkg_names
-        assert "ghwm-super-linter" in pkg_names
+        assert "auto-assign-pr" not in pkg_names
+        assert "super-linter" in pkg_names
 
     def test_e2e_should_refuse_to_prune_modified_workflow_without_force_and_prune_with_force(
         self,
         workspace: ContainerWorkspace,
     ) -> None:
         # Arrange: Install workflow and modify its body locally
-        workspace.write_manifest([{"name": "ghwm-auto-assign-pr", "version": "1.0.0"}])
+        workspace.write_manifest([{"name": "super-linter", "version": "1.0.2"}])
         workspace.run_ghwm("install")
         workspace.replace_in_file(
-            ".github/workflows/auto-assign-pr.yaml",
-            "Add Reviewers and Assignees",
-            "Modified Reviewers and Assignees",
+            ".github/workflows/super-linter.yaml",
+            "Lint Code Base",
+            "Modified Lint Code Base",
         )
 
         # Act 1: Remove from manifest and run install without --force
@@ -506,16 +502,16 @@ class TestGhwmEndToEnd:
 
         # Assert 1: File is kept because it was modified
         assert exit_code1 == 0
-        assert "⊘ Skipped ghwm-auto-assign-pr (modified)" in output1
-        assert workspace.file_exists(".github/workflows/auto-assign-pr.yaml")
+        assert "⊘ Skipped super-linter (modified)" in output1
+        assert workspace.file_exists(".github/workflows/super-linter.yaml")
 
         # Act 2: Run with --force
         exit_code2, output2 = workspace.run_ghwm("install", "--force")
 
         # Assert 2: File is pruned with force
         assert exit_code2 == 0
-        assert "✗ Pruned ghwm-auto-assign-pr" in output2
-        assert not workspace.file_exists(".github/workflows/auto-assign-pr.yaml")
+        assert "✗ Pruned super-linter" in output2
+        assert not workspace.file_exists(".github/workflows/super-linter.yaml")
 
     def test_e2e_should_install_workflow_to_custom_target_when_target_specified(
         self,
@@ -525,8 +521,8 @@ class TestGhwmEndToEnd:
         workspace.write_manifest(
             [
                 {
-                    "name": "ghwm-auto-assign-pr",
-                    "version": "1.0.0",
+                    "name": "auto-assign-pr",
+                    "version": "1.0.2",
                     "target": "custom-auto-assign.yaml",
                 }
             ]
@@ -549,7 +545,7 @@ class TestGhwmEndToEnd:
         workspace: ContainerWorkspace,
     ) -> None:
         # Arrange
-        workspace.write_manifest([{"name": "ghwm-auto-assign-pr", "version": "1.0.0"}])
+        workspace.write_manifest([{"name": "auto-assign-pr", "version": "1.0.2"}])
         workspace.run_ghwm("install")
 
         # Act
@@ -557,7 +553,7 @@ class TestGhwmEndToEnd:
 
         # Assert
         assert exit_code == 0
-        assert "⊘ Skipped ghwm-auto-assign-pr (already up to date)" in output
+        assert "⊘ Skipped auto-assign-pr (already up to date)" in output
 
     def test_e2e_should_display_declared_workflows_when_list_command_executed(
         self,
@@ -566,8 +562,8 @@ class TestGhwmEndToEnd:
         # Arrange
         workspace.write_manifest(
             [
-                {"name": "ghwm-auto-assign-pr", "version": "1.0.0"},
-                {"name": "ghwm-super-linter", "version": "1.0.0"},
+                {"name": "auto-assign-pr", "version": "1.0.2"},
+                {"name": "super-linter", "version": "1.0.2"},
             ]
         )
 
@@ -578,15 +574,15 @@ class TestGhwmEndToEnd:
         assert exit_code == 0
         assert f"Source: {DEFAULT_REGISTRY_SOURCE}" in output
         assert "Workflows (2):" in output
-        assert "- ghwm-auto-assign-pr@1.0.0" in output
-        assert "- ghwm-super-linter@1.0.0" in output
+        assert "- auto-assign-pr@1.0.2" in output
+        assert "- super-linter@1.0.2" in output
 
     def test_e2e_should_honour_telemetry_opt_out_environment_variable(
         self,
         workspace: ContainerWorkspace,
     ) -> None:
         # Arrange: manifest with a workflow from a registry
-        workspace.write_manifest([{"name": "ghwm-auto-assign-pr", "version": "1.0.0"}])
+        workspace.write_manifest([{"name": "auto-assign-pr", "version": "1.0.2"}])
 
         # Act: running install with DO_NOT_TRACK=1 and GHWM_NO_TELEMETRY=1 (already configured in container)
         # Verify both flag and environment variable behavior cleanly without errors
@@ -594,5 +590,5 @@ class TestGhwmEndToEnd:
 
         # Assert
         assert exit_code == 0
-        assert "✓ Installed ghwm-auto-assign-pr" in output
+        assert "✓ Installed auto-assign-pr" in output
         assert workspace.file_exists(".github/workflows/auto-assign-pr.yaml")

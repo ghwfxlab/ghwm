@@ -1,0 +1,9 @@
+# Super-linter Python Ruff configuration
+# References pyproject.toml line-length and rules
+line-length = 120
+
+[lint]
+select = ["E", "F", "I", "W", "B", "S", "UP", "RUF", "N"]
+
+[lint.per-file-ignores]
+"tests/*" = ["S101", "S105", "S106", "S108"]

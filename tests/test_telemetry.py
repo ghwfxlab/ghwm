@@ -163,7 +163,7 @@ def _is_rate_limited() -> bool:
         "User-Agent": "ghwm",
     }
     try:
-        request = Request(url, headers=headers)  # noqa: S310
+        request = Request(url, headers=headers)
         with urlopen(request, timeout=5) as response:  # noqa: S310
             data = json.loads(response.read())
             return bool(data.get("resources", {}).get("core", {}).get("remaining", 0) == 0)
@@ -459,7 +459,7 @@ class TestPrivateRepositoryIsolationLive:
         # Arrange: Query test telemetry stats endpoint for baseline count of private repository
         private_source = "ghwfxlab/ghwm-test-private"
         stats_url = f"https://ghwm-deployment-tst.ghwfxlab.workers.dev/stats?source={private_source}"
-        stats_req = Request(stats_url, headers={"User-Agent": "ghwm"})  # noqa: S310
+        stats_req = Request(stats_url, headers={"User-Agent": "ghwm"})
         with urlopen(stats_req, timeout=5) as response:  # noqa: S310
             stats_before = json.loads(response.read().decode())
         baseline_count = stats_before.get("total_installations", 0)
@@ -476,7 +476,7 @@ class TestPrivateRepositoryIsolationLive:
         _emit_telemetry(private_source, manifest, install_result)
 
         # Assert: Query test telemetry stats endpoint again; count must not increase and must remain 0
-        stats_req_after = Request(stats_url, headers={"User-Agent": "ghwm"})  # noqa: S310
+        stats_req_after = Request(stats_url, headers={"User-Agent": "ghwm"})
         with urlopen(stats_req_after, timeout=5) as response_after:  # noqa: S310
             stats_after = json.loads(response_after.read().decode())
         final_count = stats_after.get("total_installations", 0)

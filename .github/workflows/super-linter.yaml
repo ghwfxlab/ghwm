@@ -1,6 +1,6 @@
-# Managed by ghwm (super-linter@1.0.2)
+# Managed by ghwm (super-linter@1.1.0)
 # Source: @ghwfxlab/super-linter:super-linter.yaml
-# Hash: sha256:793b99ae4f87ed55432f0413574e85025dcc80a8ccef885c52dec0ace046f519
+# Hash: sha256:dcedaf18a0f6254e22d738041fbffd82a3e25bca1e93229abc7a072482811484
 # Re-run `ghwm install` to refresh this file.
 
 # ---
@@ -66,12 +66,12 @@ jobs:
           ${{ env.PRE_SUPER_LINTER_CUSTOM_SCRIPT_PATH }}
       - name: Run Slim Super-Linter
         if: ${{ env.RUN_SUPER_LINTER_SLIM == 'true' }}
-        uses: super-linter/super-linter/slim@9e863354e3ff62e0727d37183162c4a88873df41 # v8.6.0
+        uses: super-linter/super-linter/slim@2da136927bd4a73596db63044b504547c62cb854 # v9.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Run Super-Linter
         if: ${{ env.RUN_SUPER_LINTER_SLIM != 'true' }}
-        uses: super-linter/super-linter@9e863354e3ff62e0727d37183162c4a88873df41 # v8.6.0
+        uses: super-linter/super-linter@2da136927bd4a73596db63044b504547c62cb854 # v9.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Commit and push linting fixes

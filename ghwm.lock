@@ -18,10 +18,10 @@
       "files": [
         {
           "target": ".github/workflows/super-linter.yaml",
-          "source_hash": "sha256:793b99ae4f87ed55432f0413574e85025dcc80a8ccef885c52dec0ace046f519"
+          "source_hash": "sha256:dcedaf18a0f6254e22d738041fbffd82a3e25bca1e93229abc7a072482811484"
         }
       ],
-      "version": "1.0.2"
+      "version": "1.1.0"
     }
   ]
 }
