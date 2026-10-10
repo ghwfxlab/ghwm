@@ -12,6 +12,22 @@
 
 Workflows can be sourced from the official [ghwfxlab/ghwm-registry](https://github.com/ghwfxlab/ghwm-registry) or custom registry repositories, which can be created using the [ghwfxlab/ghwm-registry-template](https://github.com/ghwfxlab/ghwm-registry-template) repository template. Workflow authors can annotate packages with presentation metadata using [commented YAML frontmatter](docs/reference/frontmatter.md).
 
+## Why ghwm?
+
+Teams copy the same GitHub Actions workflows from repository to repository. Over time the copies drift, nobody knows which version or edit is running where, and security fixes never reach every repository.
+
+`ghwm` treats workflows as versioned packages. You list them in `ghwm.yml`, `ghwm install` writes them to `.github/workflows/`, and `ghwm.lock` records exactly what was installed. Updates keep your local `on:` triggers by default, and files that ghwm does not manage are skipped unless you pass `--force`.
+
+- **Compared with reusable workflows:** a reusable workflow is called remotely, so the logic lives outside your repository and you can't tune the file. `ghwm` installs a real file you can read, review and adjust.
+- **Compared with starter workflows:** a starter workflow is a one-time copy with no update path. `ghwm` tracks versions and hashes, so `ghwm update` brings in new releases.
+
+### Built-in security
+
+Run `ghwm audit` to scan every managed workflow with [zizmor](https://docs.zizmor.sh) and get a **Security Score** from 0 to 100. It exits with `1` on High or Medium findings, so it works as a CI gate. See [Auditing Workflows](#auditing-workflows-security-scoring).
+
+> [!NOTE]
+> **Telemetry is on by default.** `ghwm install` and `ghwm update` send anonymous events, and only for workflows from **public** registries. Opt out with `--no-telemetry`, `DO_NOT_TRACK=1` or `GHWM_NO_TELEMETRY=1`. See [Telemetry & Privacy](#telemetry--privacy) for exactly what is sent.
+
 ## Install
 
 The recommended way to install `ghwm` is using [uv](https://docs.astral.sh/uv/) (a fast Python package manager):
