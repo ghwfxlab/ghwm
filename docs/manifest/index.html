@@ -1,0 +1,298 @@
+<!DOCTYPE html><html class="dark" lang="en"><head><meta charset="utf-8"><link rel="icon" type="image/svg+xml" href="/ghwm/favicon.svg"><link rel="icon" href="/ghwm/favicon.ico"><meta name="viewport" content="width=device-width"><meta name="generator" content="Astro v7.2.8"><title>Manifest reference - GHWM Docs</title><meta name="description" content="Reference for ghwm.yml and ghwm.lock: every key and field the ghwm CLI reads and writes."><meta name="theme-color" content="#0d1117"><link rel="canonical" href="https://ghwfxlab.github.io/ghwm/docs/manifest/"><!-- Open Graph / Twitter --><meta property="og:type" content="website"><meta property="og:site_name" content="GHWM Marketplace"><meta property="og:title" content="Manifest reference - GHWM Docs"><meta property="og:description" content="Reference for ghwm.yml and ghwm.lock: every key and field the ghwm CLI reads and writes."><meta property="og:url" content="https://ghwfxlab.github.io/ghwm/docs/manifest/"><meta property="og:image" content="https://ghwfxlab.github.io/ghwm/og.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Manifest reference - GHWM Docs"><meta name="twitter:description" content="Reference for ghwm.yml and ghwm.lock: every key and field the ghwm CLI reads and writes."><meta name="twitter:image" content="https://ghwfxlab.github.io/ghwm/og.png"><!-- Design System Fonts (Inter & JetBrains Mono) --><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Fira+Sans:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Source+Code+Pro:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><!-- Material Symbols Outlined for UI Icons --><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"><link rel="stylesheet" href="/ghwm/_astro/Layout.C4BYgEKC.css"><style>.docs-prose h2{border-bottom:1px solid var(--color-outline-variant);margin-top:2.5rem;margin-bottom:.75rem;padding-bottom:.5rem;font-size:1.5rem;font-weight:600}.docs-prose h3{margin-top:1.5rem;margin-bottom:.5rem;font-size:1.125rem;font-weight:600}.docs-prose p,.docs-prose li{color:var(--color-on-surface-variant);line-height:1.7}.docs-prose p{margin:.75rem 0}.docs-prose ul,.docs-prose ol{margin:.75rem 0;padding-left:1.5rem}.docs-prose ul{list-style:outside}.docs-prose ol{list-style:decimal}.docs-prose a{color:var(--color-primary)}.docs-prose a:hover{text-decoration:underline}.docs-prose :not(pre)>code{font-family:var(--font-mono);background-color:var(--color-surface-container-low);border:1px solid var(--color-outline-variant);border-radius:4px;padding:.1em .35em;font-size:.875em}.docs-prose table{border-collapse:collapse;max-width:100%;margin:1rem 0;font-size:.875rem;display:block;overflow-x:auto}.docs-prose th,.docs-prose td{text-align:left;border:1px solid var(--color-outline-variant);vertical-align:top;padding:.5rem .75rem}.docs-prose th{background-color:var(--color-surface-container-low)}.docs-prose hr{display:none}.docs-prose blockquote{border-left:3px solid var(--color-outline-variant);margin:1rem 0;padding-left:1rem}.docs-prose .docs-callout{border-left:3px solid var(--color-primary-container);background-color:var(--color-surface-container-low);border-radius:4px;margin:1rem 0;padding:.25rem 1rem}.docs-prose .docs-callout[data-kind=warning],.docs-prose .docs-callout[data-kind=caution]{border-left-color:var(--color-tertiary)}.docs-prose .docs-callout-title{color:var(--color-on-surface);margin-bottom:0;font-weight:600}
+</style></head><body class="font-body-lg text-body-lg min-h-screen flex flex-col bg-background text-on-background antialiased"><!-- Shared Top Menu Bar Component --><header class="bg-surface w-full top-0 sticky border-b border-outline-variant z-50"><div class="flex justify-between items-center px-lg py-md max-w-7xl mx-auto w-full"><!-- Brand Logo --><div class="flex items-center gap-lg"><a href="/ghwm/" class="font-headline-md text-headline-md font-bold text-primary flex items-center gap-sm hover:opacity-90 transition-opacity"><span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">terminal</span><span>GHWM</span></a><!-- Desktop Navigation --><nav class="hidden font-body-lg md:flex gap-md items-center"><a class="font-body-sm text-body-sm transition-colors px-sm py-xs rounded duration-100 active:scale-95 text-on-surface-variant hover:text-primary hover:bg-surface-container" href="/ghwm/">Explore</a><a class="font-body-sm text-body-sm transition-colors px-sm py-xs rounded duration-100 active:scale-95 text-on-surface-variant hover:text-primary hover:bg-surface-container" href="/ghwm/registry">Registry</a><a class="font-body-sm text-body-sm transition-colors px-sm py-xs rounded duration-100 active:scale-95 text-on-surface-variant hover:text-primary hover:bg-surface-container" href="/ghwm/official">Official</a><a class="font-body-sm text-body-sm transition-colors px-sm py-xs rounded duration-100 active:scale-95 text-primary border-b-2 border-primary rounded-none pb-1 font-semibold" href="/ghwm/docs/">Docs</a></nav></div><!-- Search Bar & Controls --><div class="flex items-center gap-md"><form action="/ghwm/registry" method="GET" class="hidden md:flex items-center bg-surface-container-low rounded-default border border-outline-variant px-sm py-xs input-focus"><span class="material-symbols-outlined text-outline text-[18px] mr-2">search</span><input id="menu-search-input" name="q" type="text" class="menu-search-input bg-transparent border-none outline-none text-body-sm font-body-sm text-on-surface w-48 focus:ring-0 p-0 placeholder-outline" placeholder="Search workflows..." autocomplete="off"></form><!-- Mobile Menu Toggle Button (For high-fidelity responsiveness) --><button id="mobile-menu-toggle" class="md:hidden flex items-center justify-center p-sm rounded-default text-on-surface-variant hover:text-primary hover:bg-surface-container transition-colors active:scale-95" aria-label="Toggle Navigation Menu"><span class="material-symbols-outlined text-[24px]">menu</span></button></div></div><!-- Mobile Drawer Menu (Hidden by default, toggled via script below) --><div id="mobile-menu" class="hidden md:hidden w-full border-t border-outline-variant bg-surface px-lg py-md flex flex-col gap-sm"><a class="block py-xs px-sm rounded text-body-sm font-body-sm text-on-surface-variant" href="/ghwm/">Explore</a><a class="block py-xs px-sm rounded text-body-sm font-body-sm text-on-surface-variant" href="/ghwm/registry">Registry</a><a class="block py-xs px-sm rounded text-body-sm font-body-sm text-on-surface-variant" href="/ghwm/official">Official</a><a class="block py-xs px-sm rounded text-body-sm font-body-sm text-primary bg-surface-container font-semibold" href="/ghwm/docs/">Docs</a><!-- Mobile Search --><form action="/ghwm/registry" method="GET" class="flex items-center bg-surface-container-low rounded-default border border-outline-variant px-sm py-xs input-focus mt-xs"><span class="material-symbols-outlined text-outline text-[18px] mr-2">search</span><input id="mobile-search-input" name="q" type="text" class="menu-search-input bg-transparent border-none outline-none text-body-sm font-body-sm text-on-surface w-full focus:ring-0 p-0 placeholder-outline" placeholder="Search workflows..." autocomplete="off"></form></div></header><script type="module">try{let e=new URLSearchParams(window.location.search).get(`q`);e&&document.querySelectorAll(`.menu-search-input`).forEach(t=>{t.value=e})}catch{}var e=document.getElementById(`mobile-menu-toggle`),t=document.getElementById(`mobile-menu`);e&&t&&e.addEventListener(`click`,()=>{t.classList.contains(`hidden`)?(t.classList.remove(`hidden`),e.querySelector(`span`).textContent=`close`):(t.classList.add(`hidden`),e.querySelector(`span`).textContent=`menu`)});</script><!-- Content Slot --><main class="flex-grow w-full max-w-7xl mx-auto px-margin md:px-lg py-xl flex flex-col md:flex-row gap-xl"><nav aria-label="Documentation" class="md:w-56 shrink-0"><ul class="flex md:flex-col gap-xs overflow-x-auto md:sticky md:top-24"><li><a href="/ghwm/docs/" class="block whitespace-nowrap font-body-sm text-body-sm px-sm py-xs rounded transition-colors text-on-surface-variant hover:text-primary hover:bg-surface-container">Overview</a></li><li><a href="/ghwm/docs/quickstart/" class="block whitespace-nowrap font-body-sm text-body-sm px-sm py-xs rounded transition-colors text-on-surface-variant hover:text-primary hover:bg-surface-container">Quickstart</a></li><li><a href="/ghwm/docs/manifest/" aria-current="page" class="block whitespace-nowrap font-body-sm text-body-sm px-sm py-xs rounded transition-colors text-primary bg-surface-container font-semibold">Manifest reference</a></li><li><a href="/ghwm/docs/frontmatter/" class="block whitespace-nowrap font-body-sm text-body-sm px-sm py-xs rounded transition-colors text-on-surface-variant hover:text-primary hover:bg-surface-container">Frontmatter reference</a></li><li><a href="/ghwm/docs/writing-a-package/" class="block whitespace-nowrap font-body-sm text-body-sm px-sm py-xs rounded transition-colors text-on-surface-variant hover:text-primary hover:bg-surface-container">Writing a package</a></li></ul></nav><article class="docs-prose min-w-0 flex-1 max-w-3xl"><h1 class="font-display-lg text-display-lg leading-tight mb-md">Manifest reference</h1><p>This reference describes the configuration schema for <code>ghwm.yml</code> and the lockfile format for <code>ghwm.lock</code>.</p>
+<hr>
+<h2 id="ghwmyml"><code>ghwm.yml</code></h2>
+<p>The <code>ghwm.yml</code> file is located in the root of the consumer repository. It defines which managed workflows to install, where to fetch them from, and how to manage updates.</p>
+<h3 id="top-level-keys">Top-level Keys</h3>
+<table>
+<thead>
+<tr>
+<th align="left">Key</th>
+<th align="left">Type</th>
+<th align="left">Required</th>
+<th align="left">Default</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><code>source</code></td>
+<td align="left">string</td>
+<td align="left">No</td>
+<td align="left"><code>owner/ghwm-registry</code></td>
+<td align="left">The default registry repository in <code>owner/repository</code> format.</td>
+</tr>
+<tr>
+<td align="left"><code>workflows</code></td>
+<td align="left">list</td>
+<td align="left">Yes</td>
+<td align="left">—</td>
+<td align="left">The list of workflows to install.</td>
+</tr>
+</tbody></table>
+<h4 id="example">Example</h4>
+<div class="terminal-bg border border-outline-variant rounded-default overflow-hidden my-md"><pre class="font-code-md text-code-md text-on-surface p-md overflow-x-auto m-0"><code>source: ghwfxlab/ghwm-registry
+
+workflows:
+  - name: linter
+    version: &quot;1.0.0&quot;
+  - name: auto-assign-pr
+    version: &quot;2.0.0&quot;
+    source: other-org/custom-registry
+    update-triggers: true
+    update-envs: true
+    update-config-files: true</code></pre></div>
+<hr>
+<h2 id="workflow-entry-syntax">Workflow Entry Syntax</h2>
+<p>Entries under the <code>workflows</code> list can be specified in two formats:</p>
+<h3 id="1-mapping-syntax-recommended">1. Mapping Syntax (Recommended)</h3>
+<p>Full YAML object allowing granular per-workflow configuration:</p>
+<div class="terminal-bg border border-outline-variant rounded-default overflow-hidden my-md"><pre class="font-code-md text-code-md text-on-surface p-md overflow-x-auto m-0"><code>workflows:
+  - name: linter
+    version: &quot;1.2.0&quot;
+    target: code-quality.yml
+    update-triggers: false
+    update-envs: false
+    update-config-files: false</code></pre></div>
+<h3 id="2-compact-string-syntax">2. Compact String Syntax</h3>
+<p>A single string in <code>name</code> or <code>name@version</code> form:</p>
+<div class="terminal-bg border border-outline-variant rounded-default overflow-hidden my-md"><pre class="font-code-md text-code-md text-on-surface p-md overflow-x-auto m-0"><code>workflows:
+  - linter@1.2.0
+  - release</code></pre></div>
+<aside class="docs-callout" data-kind="note"><p class="docs-callout-title">Note</p><p>For remote registry downloads, an explicit version is required. If omitted in string syntax (<code>release</code>), <code>ghwm install</code> will reject the entry unless running with <code>--local</code>.</p>
+</aside>
+<hr>
+<h2 id="workflow-entry-fields">Workflow Entry Fields</h2>
+<p>When using the mapping syntax, the following fields are supported:</p>
+<table>
+<thead>
+<tr>
+<th align="left">Field</th>
+<th align="left">Type</th>
+<th align="left">Required</th>
+<th align="left">Default</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><code>name</code></td>
+<td align="left">string</td>
+<td align="left">Yes</td>
+<td align="left">—</td>
+<td align="left">Identifier of the workflow package in the registry.</td>
+</tr>
+<tr>
+<td align="left"><code>version</code></td>
+<td align="left">string</td>
+<td align="left">Conditional</td>
+<td align="left"><code>null</code></td>
+<td align="left">Target package version (SemVer). Required for remote installs.</td>
+</tr>
+<tr>
+<td align="left"><code>source</code></td>
+<td align="left">string</td>
+<td align="left">No</td>
+<td align="left">Global <code>source</code></td>
+<td align="left">Repository in <code>owner/repository</code> format. Overrides the global source for this specific workflow.</td>
+</tr>
+<tr>
+<td align="left"><code>target</code></td>
+<td align="left">string</td>
+<td align="left">No</td>
+<td align="left">Packaged filename</td>
+<td align="left">Custom target path under <code>.github/workflows/</code>.</td>
+</tr>
+<tr>
+<td align="left"><code>update-triggers</code></td>
+<td align="left">boolean</td>
+<td align="left">No</td>
+<td align="left"><code>false</code></td>
+<td align="left">When <code>true</code>, overwrites the existing workflow <code>on:</code> trigger section on update.</td>
+</tr>
+<tr>
+<td align="left"><code>update-envs</code></td>
+<td align="left">boolean</td>
+<td align="left">No</td>
+<td align="left"><code>false</code></td>
+<td align="left">When <code>true</code>, overwrites the existing workflow <code>env:</code> variables section on update.</td>
+</tr>
+<tr>
+<td align="left"><code>update-config-files</code></td>
+<td align="left">boolean</td>
+<td align="left">No</td>
+<td align="left"><code>false</code></td>
+<td align="left">When <code>true</code>, overwrites packaged non-workflow configuration files on update.</td>
+</tr>
+</tbody></table>
+<h3 id="field-details">Field Details</h3>
+<h4 id="name"><code>name</code></h4>
+<p>The package identifier within the registry.</p>
+<ul>
+<li>Must be a non-empty string.</li>
+<li>Each workflow name in <code>workflows</code> must be unique. Duplicate workflow names cause a manifest parse error.</li>
+<li>Also supports inline versions (e.g. <code>name: linter@1.0.0</code>).</li>
+<li>Workflow packages can define presentation metadata (title, description, tags, icon) via commented frontmatter in the upstream workflow file (see <a href="/ghwm/docs/frontmatter/">Workflow Frontmatter Specification</a>).</li>
+</ul>
+<h4 id="version"><code>version</code></h4>
+<p>The exact package version string to install.</p>
+<ul>
+<li>Required for remote installs from GitHub Packages.</li>
+<li>Remote resolution maps to <code>@&lt;source-owner&gt;/&lt;name&gt;@&lt;version&gt;</code>.</li>
+</ul>
+<h4 id="source"><code>source</code></h4>
+<p>Overrides the top-level <code>source</code> registry for this individual workflow.</p>
+<ul>
+<li>Must be in <code>owner/repository</code> format.</li>
+<li>The owner segment is used as the npm organization scope for the package.</li>
+</ul>
+<h4 id="target"><code>target</code></h4>
+<p>Overrides the destination filename for the installed workflow.</p>
+<ul>
+<li>By default, the workflow file retains its filename from the package and is written to <code>.github/workflows/&lt;filename&gt;</code>.</li>
+<li>Setting <code>target: custom-name.yml</code> places the workflow file at <code>.github/workflows/custom-name.yml</code>.</li>
+</ul>
+<h4 id="update-triggers"><code>update-triggers</code></h4>
+<p>Controls whether custom modifications to workflow triggers are preserved during updates.</p>
+<ul>
+<li><code>false</code> (default): Preserves the existing <code>on:</code> block from the local file when updating.</li>
+<li><code>true</code>: Replaces the <code>on:</code> block with the trigger configuration defined in the upstream package.</li>
+<li>Can also be forced globally on the CLI using <code>--update-triggers</code>.</li>
+</ul>
+<h4 id="update-envs"><code>update-envs</code></h4>
+<p>Controls whether custom environment variables are preserved during updates.</p>
+<ul>
+<li><code>false</code> (default): Preserves the existing <code>env:</code> block from the local file when updating.</li>
+<li><code>true</code>: Replaces the <code>env:</code> block with the upstream package&#39;s <code>env:</code> block.</li>
+<li>Can also be forced globally on the CLI using <code>--update-envs</code>.</li>
+</ul>
+<h4 id="update-config-files"><code>update-config-files</code></h4>
+<p>Controls the overwrite behavior of companion configuration files bundled with the workflow.</p>
+<ul>
+<li><code>false</code> (default): Existing configuration files on disk are never overwritten during updates.</li>
+<li><code>true</code>: Overwrites existing configuration files with the packaged versions.</li>
+</ul>
+<hr>
+<h2 id="file-update-behavior-matrix">File Update Behavior Matrix</h2>
+<table>
+<thead>
+<tr>
+<th align="left">File Type</th>
+<th align="left">First Install</th>
+<th align="left">Update (<code>update-*: false</code>)</th>
+<th align="left">Update (<code>update-*: true</code>)</th>
+<th align="left">Prune</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>Workflow File</strong> (<code>.github/workflows/*</code>)</td>
+<td align="left">Created with managed header</td>
+<td align="left">Updated in place; preserves local <code>on:</code> and <code>env:</code></td>
+<td align="left">Updated in place; overwrites <code>on:</code> and <code>env:</code></td>
+<td align="left">Removed if deleted from manifest</td>
+</tr>
+<tr>
+<td align="left"><strong>Config File</strong> (e.g. <code>.eslintrc.json</code>)</td>
+<td align="left">Created only if file does not exist</td>
+<td align="left">Untouched</td>
+<td align="left">Overwritten with packaged version</td>
+<td align="left">Never removed</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="managed-header-format">Managed Header Format</h2>
+<p>Every workflow file installed by <code>ghwm</code> prepends a four-line managed header:</p>
+<div class="terminal-bg border border-outline-variant rounded-default overflow-hidden my-md"><pre class="font-code-md text-code-md text-on-surface p-md overflow-x-auto m-0"><code># Managed by ghwm (&lt;name&gt;@&lt;version&gt;)
+# Source: @&lt;org&gt;/&lt;name&gt;:&lt;source-file&gt;
+# Hash: sha256:&lt;hex&gt;
+# Re-run `ghwm install` to refresh this file.</code></pre></div>
+<ul>
+<li><strong>Header Lines</strong>:<ol>
+<li>Tool identifier and pinned version.</li>
+<li>Provenance link indicating npm package scope and source file path.</li>
+<li><code>sha256</code> checksum computed from the normalized workflow body content.</li>
+<li>Refresh instruction.</li>
+</ol>
+</li>
+<li><strong>Unmanaged Protection</strong>: Files in <code>.github/workflows/</code> lacking this header are treated as user files and will never be overwritten or pruned without <code>--force</code>.</li>
+</ul>
+<hr>
+<h2 id="ghwmlock"><code>ghwm.lock</code></h2>
+<p>The lockfile records resolved package versions, file destinations, and content hashes. It guarantees deterministic installations across environments.</p>
+<p>Commit <code>ghwm.lock</code> alongside <code>ghwm.yml</code> in source control.</p>
+<h3 id="lockfile-schema-version-1">Lockfile Schema (Version 1)</h3>
+<div class="terminal-bg border border-outline-variant rounded-default overflow-hidden my-md"><pre class="font-code-md text-code-md text-on-surface p-md overflow-x-auto m-0"><code>{
+  &quot;lockfileVersion&quot;: 1,
+  &quot;packages&quot;: [
+    {
+      &quot;name&quot;: &quot;auto-assign-pr&quot;,
+      &quot;version&quot;: &quot;2.0.0&quot;,
+      &quot;source&quot;: &quot;@owner/auto-assign-pr&quot;,
+      &quot;files&quot;: [
+        {
+          &quot;target&quot;: &quot;.github/workflows/auto-assign-pr.yaml&quot;,
+          &quot;source_hash&quot;: &quot;sha256:5a0e5ccd00cd8e850e1068707e042339e182190eb89f8a300f58c18f53876059&quot;
+        },
+        {
+          &quot;target&quot;: &quot;.github/auto_assign.yaml&quot;,
+          &quot;source_hash&quot;: &quot;sha256:caa9a086baaf9e0f7cd71f64edfa83da6821c05e826b083221f3d02e3d6a1905&quot;,
+          &quot;overwrite&quot;: false
+        }
+      ]
+    }
+  ]
+}</code></pre></div>
+<h3 id="package-entry-fields">Package Entry Fields</h3>
+<table>
+<thead>
+<tr>
+<th align="left">Field</th>
+<th align="left">Type</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><code>name</code></td>
+<td align="left">string</td>
+<td align="left">Workflow identifier matching the manifest entry.</td>
+</tr>
+<tr>
+<td align="left"><code>version</code></td>
+<td align="left">string</td>
+<td align="left">Pinned package version.</td>
+</tr>
+<tr>
+<td align="left"><code>source</code></td>
+<td align="left">string</td>
+<td align="left">Scoped npm package identifier (<code>@&lt;owner&gt;/&lt;name&gt;</code>).</td>
+</tr>
+<tr>
+<td align="left"><code>files</code></td>
+<td align="left">array</td>
+<td align="left">List of files installed and tracked for this package.</td>
+</tr>
+</tbody></table>
+<h3 id="file-entry-fields">File Entry Fields</h3>
+<table>
+<thead>
+<tr>
+<th align="left">Field</th>
+<th align="left">Type</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><code>target</code></td>
+<td align="left">string</td>
+<td align="left">Relative file path in the consumer repository.</td>
+</tr>
+<tr>
+<td align="left"><code>source_hash</code></td>
+<td align="left">string</td>
+<td align="left"><code>sha256</code> checksum of the normalized content written to disk.</td>
+</tr>
+<tr>
+<td align="left"><code>overwrite</code></td>
+<td align="left">boolean</td>
+<td align="left">Set to <code>false</code> when a config file must be preserved on update.</td>
+</tr>
+</tbody></table>
+<p class="font-code-sm text-code-sm text-outline mt-xl pt-md border-t border-outline-variant">Synced from ghwfxlab/ghwm v1.10.0. <a href="https://github.com/ghwfxlab/ghwm/blob/v1.10.0/docs/reference/manifest.md" target="_blank" rel="noopener noreferrer">View source on GitHub</a></p></article></main><!-- Shared Footer Component --><footer class="bg-surface border-t border-outline-variant mt-2xl w-full"><div class="max-w-7xl mx-auto px-lg py-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-md"><!-- Left Logo and Green Copyright --><div class="flex flex-col"><div class="font-code-sm text-code-sm text-secondary mt-1">&copy; 2026 GHWM Registry. Built for the open source community.</div></div><!-- Right Navigation Links --><div class="flex flex-wrap gap-md md:gap-lg font-code-sm text-code-sm text-on-surface-variant"><a href="/ghwm/docs/" class="hover:text-primary transition-colors">Documentation</a><a href="https://github.com/ghwfxlab/ghwm#telemetry--privacy" class="hover:text-primary transition-colors" target="_blank" rel="noopener noreferrer">Privacy</a></div></div></footer></body></html>
