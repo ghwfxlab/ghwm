@@ -18,10 +18,21 @@
       "files": [
         {
           "target": ".github/workflows/super-linter.yaml",
-          "source_hash": "sha256:dcedaf18a0f6254e22d738041fbffd82a3e25bca1e93229abc7a072482811484"
+          "source_hash": "sha256:414f3c4901483698cc4fd49c6e5b44537cffdbb9bc40976bb5f4b7b16cff02a4"
         }
       ],
-      "version": "1.1.0"
+      "version": "2.0.1"
+    },
+    {
+      "name": "super-linter-lean",
+      "source": "@ghwfxlab/super-linter-lean",
+      "files": [
+        {
+          "target": ".github/workflows/super-linter-lean.yaml",
+          "source_hash": "sha256:aed76ffd4fdbec22523a2928101212296bb0c2f54f735ae733da87234bc26ec5"
+        }
+      ],
+      "version": "1.0.0"
     }
   ]
 }

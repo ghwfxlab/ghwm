@@ -2,6 +2,8 @@
 source: ghwfxlab/ghwm-registry
 workflows:
   - name: super-linter
-    version: "1.1.0"
+    version: "2.0.1"
+  - name: super-linter-lean
+    version: "1.0.0"
   - name: auto-assign-pr
     version: "1.0.2"

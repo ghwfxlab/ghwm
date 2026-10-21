@@ -1,0 +1,166 @@
+# Managed by ghwm (super-linter-lean@1.0.0)
+# Source: @ghwfxlab/super-linter-lean:super-linter-lean.yaml
+# Hash: sha256:aed76ffd4fdbec22523a2928101212296bb0c2f54f735ae733da87234bc26ec5
+# Re-run `ghwm install` to refresh this file.
+
+# ---
+# title: Super-Linter lean image
+# description: Builds and scans a custom Super-Linter image containing only the enabled linters.
+# tags:
+#   - lint
+#   - actions
+# icon: fact_check
+# owner: ghwfxlab
+# ---
+---
+name: Super-Linter lean image
+
+# Builds a Super-Linter image that contains only the linters enabled in
+# .github/super-linter.env, scans it, pushes it to GHCR and records its tag in
+# the SUPER_LINTER_CUSTOM_IMAGE repository variable. The super-linter workflow
+# runs that image when its SUPER_LINTER_CUSTOM_IMAGE env points at the variable.
+
+on: # yamllint disable-line rule:truthy
+  push:
+    branches:
+      - main
+    paths:
+      - .github/super-linter.env
+      - .github/workflows/super-linter.yaml
+      - .github/workflows/super-linter-lean.yaml
+  workflow_dispatch:
+
+permissions: {}
+
+env:
+  SUPER_LINTER_CONFIG_PATH: .github/super-linter.env
+
+concurrency:
+  group: super-linter-lean
+  cancel-in-progress: false
+
+jobs:
+  # The runner comes from the SUPER_LINTER_RUNS_ON repository (or organisation) variable, as JSON, like the
+  # super-linter workflow: unset runs on GitHub-hosted ubuntu-24.04, "my-runner" or ["self-hosted", "linux"]
+  # runs on your own runners. It is a variable, not an env value, because runs-on cannot read the workflow env.
+  build:
+    name: Build lean image
+    runs-on: ${{ fromJSON(vars.SUPER_LINTER_RUNS_ON || '"ubuntu-24.04"') }}
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      # The token has the permissions the App was granted on the repository (Variables: read and write).
+      # create-github-app-token has no input to narrow it to variables.
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          client-id: ${{ secrets.GH_APP_ID }} # zizmor: ignore[secrets-outside-env]
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }} # zizmor: ignore[secrets-outside-env]
+
+      - name: Checkout Code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Log in to GHCR
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Keep the smoke test files where the Docker daemon sees them
+        # The smoke test mounts a temporary directory into the linter containers. On a self-hosted runner
+        # the Docker daemon does not always see /tmp, so every linter would show as not-linted.
+        run: echo "TMPDIR=${RUNNER_TEMP}" >> "${GITHUB_ENV}"
+
+      - name: Read the Super-Linter version
+        id: version
+        env:
+          CONFIGURED_VERSION: ${{ vars.SUPER_LINTER_VERSION }}
+        run: |
+          # SUPER_LINTER_VERSION wins. Without it, the release is the version comment of the pinned upstream
+          # step of the super-linter workflow, which Dependabot keeps current.
+          version="${CONFIGURED_VERSION}"
+          if [ -z "${version}" ] && [ -f .github/workflows/super-linter.yaml ]; then
+            version="$(
+              sed -n 's|^ *uses: super-linter/super-linter/slim@[0-9a-f]* *# *\(v[0-9][^ ]*\).*|\1|p' \
+                .github/workflows/super-linter.yaml | head -n 1
+            )"
+          fi
+          if [ -z "${version}" ]; then
+            echo "::error::Set the SUPER_LINTER_VERSION variable (for example v9.0.0)" \
+              "or keep the super-linter/super-linter/slim step in super-linter.yaml"
+            exit 1
+          fi
+          echo "version=${version}" >> "${GITHUB_OUTPUT}"
+
+      - name: Build the image and smoke-test it
+        id: lean
+        uses: ghwfxlab/superlint-lean@776dcee1f0009f1432bd369504530662f24f23f8 # v0.0.14
+        with:
+          upstream-tag: ${{ steps.version.outputs.version }}
+          env-files: ${{ env.SUPER_LINTER_CONFIG_PATH }}
+
+      - name: Scan the image
+        id: trivy-scan
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: ${{ steps.lean.outputs.image }}
+          format: "table"
+          ignore-unfixed: true
+          exit-code: "0"
+          vuln-type: "os,library"
+          severity: "CRITICAL,HIGH"
+          version: v0.75.0
+          output: trivy-result.txt
+
+      - name: Report Trivy scan result
+        env:
+          TRIVY_OUTCOME: ${{ steps.trivy-scan.outcome }}
+        run: |
+          if [ "${TRIVY_OUTCOME}" = "failure" ]; then
+            echo "Trivy scan step failed. This is a real error." >&2
+            exit 1
+          fi
+
+          if [ -f trivy-result.txt ] && [ -s trivy-result.txt ]; then
+            echo "Vulnerabilities found:"
+            cat trivy-result.txt
+          else
+            echo "No vulnerabilities found! ✅"
+          fi
+
+      - name: Clean up Trivy result file
+        if: always()
+        run: |
+          if [ -f trivy-result.txt ]; then
+            rm -f trivy-result.txt
+          fi
+
+      - name: Push the image
+        id: push
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          REPOSITORY: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+          LOCAL_IMAGE: ${{ steps.lean.outputs.image }}
+        run: |
+          image="ghcr.io/${REPOSITORY,,}/super-linter-lean"
+          for tag in latest "${VERSION}" "${VERSION}-${SHA::7}"; do
+            docker tag "${LOCAL_IMAGE}" "${image}:${tag}"
+            docker push --quiet "${image}:${tag}"
+          done
+          echo "image=${image}:${VERSION}-${SHA::7}" >> "${GITHUB_OUTPUT}"
+
+      - name: Record the image in SUPER_LINTER_CUSTOM_IMAGE
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          GH_REPO: ${{ github.repository }}
+          IMAGE: ${{ steps.push.outputs.image }}
+        run: |
+          gh variable set SUPER_LINTER_CUSTOM_IMAGE --body "${IMAGE}"
+          echo "SUPER_LINTER_CUSTOM_IMAGE is now \`${IMAGE}\`" >> "${GITHUB_STEP_SUMMARY}"
