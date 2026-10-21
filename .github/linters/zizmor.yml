@@ -1,0 +1,6 @@
+rules:
+  github-app:
+    ignore:
+      # Managed by ghwm. The token only writes the SUPER_LINTER_CUSTOM_IMAGE variable, but
+      # create-github-app-token has no permission input for repository variables.
+      - super-linter-lean.yaml

@@ -1,6 +1,6 @@
-# Managed by ghwm (super-linter@1.1.0)
+# Managed by ghwm (super-linter@2.0.1)
 # Source: @ghwfxlab/super-linter:super-linter.yaml
-# Hash: sha256:dcedaf18a0f6254e22d738041fbffd82a3e25bca1e93229abc7a072482811484
+# Hash: sha256:414f3c4901483698cc4fd49c6e5b44537cffdbb9bc40976bb5f4b7b16cff02a4
 # Re-run `ghwm install` to refresh this file.
 
 # ---
@@ -33,11 +33,134 @@ env:
   SUPER_LINTER_FIX_CONFIG_PATH: .github/super-linter-fix.env
   RUN_SUPER_LINTER_SLIM: true
   RUN_SUPER_LINTER_FIXES: false
+  SUPER_LINTER_CUSTOM_IMAGE: ${{ vars.SUPER_LINTER_CUSTOM_IMAGE }}
+  RUN_SUPER_LINTER_CUSTOM_DRIFT_CHECK: false
 
 jobs:
+  # Every job reads its runner from the SUPER_LINTER_RUNS_ON repository (or organisation) variable, as JSON:
+  # unset runs on GitHub-hosted ubuntu-24.04, "my-runner" or ["self-hosted", "linux"] runs on your own runners.
+  # It is a variable, not an env value, because runs-on cannot read the workflow env.
+  setup:
+    runs-on: ${{ fromJSON(vars.SUPER_LINTER_RUNS_ON || '"ubuntu-24.04"') }}
+    outputs:
+      run_slim: ${{ env.RUN_SUPER_LINTER_SLIM }}
+      run_custom: ${{ env.SUPER_LINTER_CUSTOM_IMAGE }}
+    steps:
+      - run: echo "Exposing env vars to jobs"
+
   super-linter:
     name: Run Super-Linter
-    runs-on: ubuntu-24.04
+    needs: setup
+    if: needs.setup.outputs.run_slim != 'true' && needs.setup.outputs.run_custom == ''
+    runs-on: ${{ fromJSON(vars.SUPER_LINTER_RUNS_ON || '"ubuntu-24.04"') }}
+    permissions:
+      contents: write
+      issues: write
+      statuses: write
+      pull-requests: write
+      packages: read
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Load Super-Linter configuration
+        run: |
+          echo "Loading Super-Linter configuration from ${{ env.SUPER_LINTER_CONFIG_PATH }}"
+          grep -v '^#' ${{ env.SUPER_LINTER_CONFIG_PATH }} >> "$GITHUB_ENV"
+
+      - name: Load Super-Linter Fix configuration
+        if: env.RUN_SUPER_LINTER_FIXES == 'true'
+        run: |
+          echo "Loading Super-Linter Fix configuration from ${{ env.SUPER_LINTER_FIX_CONFIG_PATH }}"
+          grep -v '^#' ${{ env.SUPER_LINTER_FIX_CONFIG_PATH }} >> "$GITHUB_ENV"
+
+      - name: Run custom scripts before linting
+        if: env.PRE_SUPER_LINTER_CUSTOM_SCRIPT_PATH != ''
+        run: |
+          echo "Running custom script from ${{ env.PRE_SUPER_LINTER_CUSTOM_SCRIPT_PATH }}..."
+          ${{ env.PRE_SUPER_LINTER_CUSTOM_SCRIPT_PATH }}
+
+      - name: Run Super-Linter
+        uses: super-linter/super-linter@2da136927bd4a73596db63044b504547c62cb854 # v9.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Commit and push linting fixes
+        # Run only on:
+        # - Pull requests
+        # - Not on the default branch
+        if: >
+          github.event_name == 'pull_request' &&
+          github.ref_name != github.event.repository.default_branch &&
+          env.RUN_SUPER_LINTER_FIXES == 'true'
+        uses: stefanzweifel/git-auto-commit-action@4a55954c782fc1ea30b9056cd3e7a2b40ca8887d # v7.2.0
+        with:
+          branch: ${{ github.event.pull_request.head.ref || github.head_ref || github.ref }}
+          commit_message: "chore[BOT]: fix linter issues"
+          commit_user_email: github-actions[bot]@users.noreply.github.com
+
+  super-linter-slim:
+    name: Run Super-Linter Slim
+    needs: setup
+    if: needs.setup.outputs.run_slim == 'true' && needs.setup.outputs.run_custom == ''
+    runs-on: ${{ fromJSON(vars.SUPER_LINTER_RUNS_ON || '"ubuntu-24.04"') }}
+    permissions:
+      contents: write
+      issues: write
+      statuses: write
+      pull-requests: write
+      packages: read
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Load Super-Linter configuration
+        run: |
+          echo "Loading Super-Linter configuration from ${{ env.SUPER_LINTER_CONFIG_PATH }}"
+          grep -v '^#' ${{ env.SUPER_LINTER_CONFIG_PATH }} >> "$GITHUB_ENV"
+
+      - name: Load Super-Linter Fix configuration
+        if: env.RUN_SUPER_LINTER_FIXES == 'true'
+        run: |
+          echo "Loading Super-Linter Fix configuration from ${{ env.SUPER_LINTER_FIX_CONFIG_PATH }}"
+          grep -v '^#' ${{ env.SUPER_LINTER_FIX_CONFIG_PATH }} >> "$GITHUB_ENV"
+
+      - name: Run custom scripts before linting
+        if: env.PRE_SUPER_LINTER_CUSTOM_SCRIPT_PATH != ''
+        run: |
+          echo "Running custom script from ${{ env.PRE_SUPER_LINTER_CUSTOM_SCRIPT_PATH }}..."
+          ${{ env.PRE_SUPER_LINTER_CUSTOM_SCRIPT_PATH }}
+
+      - name: Run Slim Super-Linter
+        uses: super-linter/super-linter/slim@2da136927bd4a73596db63044b504547c62cb854 # v9.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Commit and push linting fixes
+        # Run only on:
+        # - Pull requests
+        # - Not on the default branch
+        if: >
+          github.event_name == 'pull_request' &&
+          github.ref_name != github.event.repository.default_branch &&
+          env.RUN_SUPER_LINTER_FIXES == 'true'
+        uses: stefanzweifel/git-auto-commit-action@4a55954c782fc1ea30b9056cd3e7a2b40ca8887d # v7.2.0
+        with:
+          branch: ${{ github.event.pull_request.head.ref || github.head_ref || github.ref }}
+          commit_message: "chore[BOT]: fix linter issues"
+          commit_user_email: github-actions[bot]@users.noreply.github.com
+
+  super-linter-custom:
+    name: Run Super-Linter Custom Image
+    needs: setup
+    if: needs.setup.outputs.run_custom != ''
+    runs-on: ${{ fromJSON(vars.SUPER_LINTER_RUNS_ON || '"ubuntu-24.04"') }}
     permissions:
       contents: write
       issues: write
@@ -50,30 +173,110 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
+
       - name: Load Super-Linter configuration
         run: |
           echo "Loading Super-Linter configuration from ${{ env.SUPER_LINTER_CONFIG_PATH }}"
           grep -v '^#' ${{ env.SUPER_LINTER_CONFIG_PATH }} >> "$GITHUB_ENV"
+
       - name: Load Super-Linter Fix configuration
         if: ${{ env.RUN_SUPER_LINTER_FIXES == 'true' }}
         run: |
           echo "Loading Super-Linter Fix configuration from ${{ env.SUPER_LINTER_FIX_CONFIG_PATH }}"
           grep -v '^#' ${{ env.SUPER_LINTER_FIX_CONFIG_PATH }} >> "$GITHUB_ENV"
+
       - name: Run custom scripts before linting
         if: ${{ env.PRE_SUPER_LINTER_CUSTOM_SCRIPT_PATH != '' }}
         run: |
           echo "Running custom script from ${{ env.PRE_SUPER_LINTER_CUSTOM_SCRIPT_PATH }}..."
           ${{ env.PRE_SUPER_LINTER_CUSTOM_SCRIPT_PATH }}
-      - name: Run Slim Super-Linter
-        if: ${{ env.RUN_SUPER_LINTER_SLIM == 'true' }}
-        uses: super-linter/super-linter/slim@2da136927bd4a73596db63044b504547c62cb854 # v9.0.0
+
+      - name: Install uv for the drift check
+        if: >
+          env.SUPER_LINTER_CUSTOM_IMAGE != '' && env.RUN_SUPER_LINTER_CUSTOM_DRIFT_CHECK == 'true' &&
+          github.event_name == 'pull_request'
+        uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+
+      - name: Check the changed files against the lean image
+        if: >
+          env.SUPER_LINTER_CUSTOM_IMAGE != '' && env.RUN_SUPER_LINTER_CUSTOM_DRIFT_CHECK == 'true' &&
+          github.event_name == 'pull_request'
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Run Super-Linter
-        if: ${{ env.RUN_SUPER_LINTER_SLIM != 'true' }}
-        uses: super-linter/super-linter@2da136927bd4a73596db63044b504547c62cb854 # v9.0.0
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          # The lean image only has the linters the env file enables; fail when a changed file needs another one.
+          report="${RUNNER_TEMP}/drift.md"
+          status=0
+          uvx --from "superlint-lean==0.0.9" superlint-lean drift \
+            --env "${SUPER_LINTER_CONFIG_PATH}" --root . --base "origin/${BASE_REF}" --report "${report}" || status=$?
+          cat "${report}" >> "$GITHUB_STEP_SUMMARY"
+          exit "${status}"
+
+      # A plain docker run, not a `uses: docker://` step: the runner pulls the image of every action step when the
+      # job starts, before any login, so an action step cannot use a private registry and the image cannot come from
+      # a file. The login uses a temporary Docker config so a stale token never stays on a self-hosted runner.
+      - name: Run the custom Super-Linter image
+        if: ${{ env.SUPER_LINTER_CUSTOM_IMAGE != '' }}
         env:
+          # The workflow token is only ever sent to ghcr.io; other registries need the secrets.
+          REGISTRY_USERNAME: ${{ secrets.SUPER_LINTER_REGISTRY_USERNAME || github.actor }}
+          REGISTRY_PASSWORD: ${{ secrets.SUPER_LINTER_REGISTRY_PASSWORD }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          DOCKER_CONFIG="$(mktemp -d)"
+          export DOCKER_CONFIG
+          trap 'rm -rf "${DOCKER_CONFIG}"' EXIT
+          host="${SUPER_LINTER_CUSTOM_IMAGE%%/*}"
+          case "${host}" in
+            *.* | *:* | localhost) ;;
+            *) host="" ;;
+          esac
+          if [ -z "${REGISTRY_PASSWORD}" ] && [ "${host}" = "ghcr.io" ]; then
+            REGISTRY_PASSWORD="${GITHUB_TOKEN}"
+          fi
+          if [ -n "${REGISTRY_PASSWORD}" ]; then
+            printf '%s' "${REGISTRY_PASSWORD}" |
+              docker login ${host:+"${host}"} --username "${REGISTRY_USERNAME}" --password-stdin
+          fi
+          echo "Super-Linter image: \`${SUPER_LINTER_CUSTOM_IMAGE}\`" >> "$GITHUB_STEP_SUMMARY"
+          # Mirror a container action: pass GITHUB_* through, mount the workspace and the file commands.
+          args=(--rm --workdir /github/workspace --env-file "${SUPER_LINTER_CONFIG_PATH}")
+          if [ "${RUN_SUPER_LINTER_FIXES}" = "true" ]; then
+            args+=(--env-file "${SUPER_LINTER_FIX_CONFIG_PATH}")
+          fi
+          while IFS='=' read -r name _; do
+            case "${name}" in
+              GITHUB_ENV | GITHUB_OUTPUT | GITHUB_PATH | GITHUB_STATE | GITHUB_STEP_SUMMARY) ;;
+              GITHUB_WORKSPACE | GITHUB_EVENT_PATH) ;;
+              GITHUB_* | RUNNER_* | DEFAULT_BRANCH) args+=(--env "${name}") ;;
+            esac
+          done < <(env)
+          args+=(
+            --env CI=true
+            --env GITHUB_ACTIONS=true
+            --env GITHUB_WORKSPACE=/github/workspace
+            --env GITHUB_EVENT_PATH="/github/workflow/$(basename "${GITHUB_EVENT_PATH}")"
+            --env GITHUB_ENV="/github/file_commands/$(basename "${GITHUB_ENV}")"
+            --env GITHUB_OUTPUT="/github/file_commands/$(basename "${GITHUB_OUTPUT}")"
+            --env GITHUB_PATH="/github/file_commands/$(basename "${GITHUB_PATH}")"
+            --env GITHUB_STATE="/github/file_commands/$(basename "${GITHUB_STATE}")"
+            --env GITHUB_STEP_SUMMARY="/github/file_commands/$(basename "${GITHUB_STEP_SUMMARY}")"
+            --volume "${GITHUB_WORKSPACE}:/github/workspace"
+            --volume "$(dirname "${GITHUB_EVENT_PATH}"):/github/workflow"
+            --volume "$(dirname "${GITHUB_OUTPUT}"):/github/file_commands"
+          )
+          docker run "${args[@]}" "${SUPER_LINTER_CUSTOM_IMAGE}"
+
+      # The container runs as root and leaves super-linter-output/ in the workspace. A runner that is not root cannot
+      # clean it up, so the next checkout would fail. Best effort: a missing chown only warns.
+      - name: Return the workspace files to the runner user
+        if: ${{ always() && env.SUPER_LINTER_CUSTOM_IMAGE != '' }}
+        run: |
+          docker run --rm --entrypoint chown --volume "${GITHUB_WORKSPACE}:/github/workspace" \
+            "${SUPER_LINTER_CUSTOM_IMAGE}" -R "$(id -u):$(id -g)" /github/workspace/super-linter-output ||
+            echo "::warning::Could not return the workspace files to the runner user"
+
       - name: Commit and push linting fixes
         # Run only on:
         # - Pull requests
