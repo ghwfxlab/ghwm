@@ -5,7 +5,7 @@
 [![codecov](https://codecov.io/gh/ghwfxlab/ghwm/graph/badge.svg)](https://codecov.io/gh/ghwfxlab/ghwm)
 [![Python](https://img.shields.io/badge/python-3.12-blue?logo=python&logoColor=white)](https://www.python.org/)
 
-| ![ghwm CLI](.github/static/readme_header.jpg) |
+| ![ghwm CLI](https://raw.githubusercontent.com/ghwfxlab/ghwm/main/.github/static/readme_header.jpg) |
 | :-------------------------------------------: |
 
 > Install managed GitHub workflow files from a central marketplace repository.
@@ -70,20 +70,19 @@ uv tool install git+https://github.com/ghwfxlab/ghwm.git
 ### 1. Create `ghwm.yml` in your repository root
 
 ```yaml
-source: owner/ghwm-registry
+source: ghwfxlab/ghwm-registry
 
 workflows:
-  - name: linter
-    version: "1.0.0"
+  - name: super-linter
+    version: "2.0.1"
   - name: auto-assign-pr
-    version: "1.0.0"
-    source: other-owner/other-registry # (Optional) Override the global registry source
+    version: "1.0.2"
     update-triggers: true
     update-envs: true
     update-config-files: true
 ```
 
-`version` is required for registry installs. By default, workflows are resolved from the global `source`. You can override this on a per-workflow basis using the `source` property. The CLI resolves each workflow to a GitHub Packages npm
+`version` is required for registry installs. By default, workflows are resolved from the global `source`. You can override this on a per-workflow basis by adding a `source: other-owner/other-registry` property to a workflow entry. The CLI resolves each workflow to a GitHub Packages npm
 package named `@<source owner>/<name>`.
 
 If you want to override the generated workflow filename, add `target: my-review.yml` to the
