@@ -1,0 +1,158 @@
+<!DOCTYPE html><html class="dark" lang="en"><head><meta charset="utf-8"><link rel="icon" type="image/svg+xml" href="/ghwm/favicon.svg"><link rel="icon" href="/ghwm/favicon.ico"><meta name="viewport" content="width=device-width"><meta name="generator" content="Astro v7.2.8"><title>Writing a package - GHWM Docs</title><meta name="description" content="How to add a workflow package to the GHWM registry: directory layout, manifests, readme, and publishing."><meta name="theme-color" content="#0d1117"><link rel="canonical" href="https://ghwfxlab.github.io/ghwm/docs/writing-a-package/"><!-- Open Graph / Twitter --><meta property="og:type" content="website"><meta property="og:site_name" content="GHWM Marketplace"><meta property="og:title" content="Writing a package - GHWM Docs"><meta property="og:description" content="How to add a workflow package to the GHWM registry: directory layout, manifests, readme, and publishing."><meta property="og:url" content="https://ghwfxlab.github.io/ghwm/docs/writing-a-package/"><meta property="og:image" content="https://ghwfxlab.github.io/ghwm/og.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Writing a package - GHWM Docs"><meta name="twitter:description" content="How to add a workflow package to the GHWM registry: directory layout, manifests, readme, and publishing."><meta name="twitter:image" content="https://ghwfxlab.github.io/ghwm/og.png"><!-- Design System Fonts (Inter & JetBrains Mono) --><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Fira+Sans:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Source+Code+Pro:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><!-- Material Symbols Outlined for UI Icons --><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"><link rel="stylesheet" href="/ghwm/_astro/Layout.Cfbn-MpW.css"><style>.docs-prose h2{border-bottom:1px solid var(--color-outline-variant);margin-top:2.5rem;margin-bottom:.75rem;padding-bottom:.5rem;font-size:1.5rem;font-weight:600}.docs-prose h3{margin-top:1.5rem;margin-bottom:.5rem;font-size:1.125rem;font-weight:600}.docs-prose p,.docs-prose li{color:var(--color-on-surface-variant);line-height:1.7}.docs-prose p{margin:.75rem 0}.docs-prose ul,.docs-prose ol{margin:.75rem 0;padding-left:1.5rem}.docs-prose ul{list-style:outside}.docs-prose ol{list-style:decimal}.docs-prose a{color:var(--color-primary)}.docs-prose a:hover{text-decoration:underline}.docs-prose :not(pre)>code{font-family:var(--font-mono);background-color:var(--color-surface-container-low);border:1px solid var(--color-outline-variant);border-radius:4px;padding:.1em .35em;font-size:.875em}.docs-prose table{border-collapse:collapse;max-width:100%;margin:1rem 0;font-size:.875rem;display:block;overflow-x:auto}.docs-prose th,.docs-prose td{text-align:left;border:1px solid var(--color-outline-variant);vertical-align:top;padding:.5rem .75rem}.docs-prose th{background-color:var(--color-surface-container-low)}.docs-prose hr{display:none}.docs-prose blockquote{border-left:3px solid var(--color-outline-variant);margin:1rem 0;padding-left:1rem}.docs-prose .docs-callout{border-left:3px solid var(--color-primary-container);background-color:var(--color-surface-container-low);border-radius:4px;margin:1rem 0;padding:.25rem 1rem}.docs-prose .docs-callout[data-kind=warning],.docs-prose .docs-callout[data-kind=caution]{border-left-color:var(--color-tertiary)}.docs-prose .docs-callout-title{color:var(--color-on-surface);margin-bottom:0;font-weight:600}
+</style></head><body class="font-body-lg text-body-lg min-h-screen flex flex-col bg-background text-on-background antialiased"><!-- Shared Top Menu Bar Component --><header class="bg-surface w-full top-0 sticky border-b border-outline-variant z-50"><div class="flex justify-between items-center px-lg py-md max-w-7xl mx-auto w-full"><!-- Brand Logo --><div class="flex items-center gap-lg"><a href="/ghwm/" class="font-headline-md text-headline-md font-bold text-primary flex items-center gap-sm hover:opacity-90 transition-opacity"><span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">terminal</span><span>GHWM</span></a><!-- Desktop Navigation --><nav class="hidden font-body-lg md:flex gap-md items-center"><a class="font-body-sm text-body-sm transition-colors px-sm py-xs rounded duration-100 active:scale-95 text-on-surface-variant hover:text-primary hover:bg-surface-container" href="/ghwm/">Explore</a><a class="font-body-sm text-body-sm transition-colors px-sm py-xs rounded duration-100 active:scale-95 text-on-surface-variant hover:text-primary hover:bg-surface-container" href="/ghwm/registry">Registry</a><a class="font-body-sm text-body-sm transition-colors px-sm py-xs rounded duration-100 active:scale-95 text-on-surface-variant hover:text-primary hover:bg-surface-container" href="/ghwm/official">Official</a><a class="font-body-sm text-body-sm transition-colors px-sm py-xs rounded duration-100 active:scale-95 text-primary border-b-2 border-primary rounded-none pb-1 font-semibold" href="/ghwm/docs/">Docs</a></nav></div><!-- Search Bar & Controls --><div class="flex items-center gap-md"><form action="/ghwm/registry" method="GET" class="hidden md:flex items-center bg-surface-container-low rounded-default border border-outline-variant px-sm py-xs input-focus"><span class="material-symbols-outlined text-outline text-[18px] mr-2">search</span><input id="menu-search-input" name="q" type="text" class="menu-search-input bg-transparent border-none outline-none text-body-sm font-body-sm text-on-surface w-48 focus:ring-0 p-0 placeholder-outline" placeholder="Search workflows..." autocomplete="off"></form><!-- Mobile Menu Toggle Button (For high-fidelity responsiveness) --><button id="mobile-menu-toggle" class="md:hidden flex items-center justify-center p-sm rounded-default text-on-surface-variant hover:text-primary hover:bg-surface-container transition-colors active:scale-95" aria-label="Toggle Navigation Menu"><span class="material-symbols-outlined text-[24px]">menu</span></button></div></div><!-- Mobile Drawer Menu (Hidden by default, toggled via script below) --><div id="mobile-menu" class="hidden md:hidden w-full border-t border-outline-variant bg-surface px-lg py-md flex flex-col gap-sm"><a class="block py-xs px-sm rounded text-body-sm font-body-sm text-on-surface-variant" href="/ghwm/">Explore</a><a class="block py-xs px-sm rounded text-body-sm font-body-sm text-on-surface-variant" href="/ghwm/registry">Registry</a><a class="block py-xs px-sm rounded text-body-sm font-body-sm text-on-surface-variant" href="/ghwm/official">Official</a><a class="block py-xs px-sm rounded text-body-sm font-body-sm text-primary bg-surface-container font-semibold" href="/ghwm/docs/">Docs</a><!-- Mobile Search --><form action="/ghwm/registry" method="GET" class="flex items-center bg-surface-container-low rounded-default border border-outline-variant px-sm py-xs input-focus mt-xs"><span class="material-symbols-outlined text-outline text-[18px] mr-2">search</span><input id="mobile-search-input" name="q" type="text" class="menu-search-input bg-transparent border-none outline-none text-body-sm font-body-sm text-on-surface w-full focus:ring-0 p-0 placeholder-outline" placeholder="Search workflows..." autocomplete="off"></form></div></header><script type="module">try{let e=new URLSearchParams(window.location.search).get(`q`);e&&document.querySelectorAll(`.menu-search-input`).forEach(t=>{t.value=e})}catch{}var e=document.getElementById(`mobile-menu-toggle`),t=document.getElementById(`mobile-menu`);e&&t&&e.addEventListener(`click`,()=>{t.classList.contains(`hidden`)?(t.classList.remove(`hidden`),e.querySelector(`span`).textContent=`close`):(t.classList.add(`hidden`),e.querySelector(`span`).textContent=`menu`)});</script><!-- Content Slot --><main class="flex-grow w-full max-w-7xl mx-auto px-margin md:px-lg py-xl flex flex-col md:flex-row gap-xl"><nav aria-label="Documentation" class="md:w-56 shrink-0"><ul class="flex md:flex-col gap-xs overflow-x-auto md:sticky md:top-24"><li><a href="/ghwm/docs/" class="block whitespace-nowrap font-body-sm text-body-sm px-sm py-xs rounded transition-colors text-on-surface-variant hover:text-primary hover:bg-surface-container">Overview</a></li><li><a href="/ghwm/docs/quickstart/" class="block whitespace-nowrap font-body-sm text-body-sm px-sm py-xs rounded transition-colors text-on-surface-variant hover:text-primary hover:bg-surface-container">Quickstart</a></li><li><a href="/ghwm/docs/manifest/" class="block whitespace-nowrap font-body-sm text-body-sm px-sm py-xs rounded transition-colors text-on-surface-variant hover:text-primary hover:bg-surface-container">Manifest reference</a></li><li><a href="/ghwm/docs/frontmatter/" class="block whitespace-nowrap font-body-sm text-body-sm px-sm py-xs rounded transition-colors text-on-surface-variant hover:text-primary hover:bg-surface-container">Frontmatter reference</a></li><li><a href="/ghwm/docs/writing-a-package/" aria-current="page" class="block whitespace-nowrap font-body-sm text-body-sm px-sm py-xs rounded transition-colors text-primary bg-surface-container font-semibold">Writing a package</a></li></ul></nav><article class="docs-prose min-w-0 flex-1 max-w-3xl"><h1 class="font-display-lg text-display-lg leading-tight mb-md">Writing a package</h1><h2 id="adding-a-new-workflow">Adding a new workflow</h2>
+<ol>
+<li><p><strong>Create the workflow directory.</strong></p>
+<div class="terminal-bg border border-outline-variant rounded-default overflow-hidden my-md"><pre class="font-code-md text-code-md text-on-surface p-md overflow-x-auto m-0"><code>mkdir workflows/&lt;name&gt;</code></pre></div>
+</li>
+<li><p><strong>Add the workflow YAML file</strong>, named <code>&lt;name&gt;.yml</code> (or <code>&lt;name&gt;.yaml</code>).</p>
+<p> Follow the naming convention used by <code>super-linter</code>: the filename must match the directory name.</p>
+</li>
+<li><p><strong>Add <code>workflow.yml</code></strong> inside the workflow directory.</p>
+<p>This file declares which packaged files the CLI installs and where they should be written in
+the consumer repository.</p>
+<div class="terminal-bg border border-outline-variant rounded-default overflow-hidden my-md"><pre class="font-code-md text-code-md text-on-surface p-md overflow-x-auto m-0"><code>name: &lt;name&gt;
+files:
+  - source: &lt;name&gt;.yml
+    target: .github/workflows/&lt;name&gt;.yml</code></pre></div>
+</li>
+<li><p><strong>Add <code>package.json</code></strong> inside the workflow directory.</p>
+<div class="terminal-bg border border-outline-variant rounded-default overflow-hidden my-md"><pre class="font-code-md text-code-md text-on-surface p-md overflow-x-auto m-0"><code>{
+  &quot;name&quot;: &quot;@ghwfxlab/ghwm-&lt;name&gt;&quot;,
+  &quot;version&quot;: &quot;1.0.0&quot;,
+  &quot;files&quot;: [&quot;&lt;name&gt;.yml&quot;, &quot;workflow.yml&quot;],
+  &quot;publishConfig&quot;: { &quot;registry&quot;: &quot;https://npm.pkg.github.com&quot; }
+}</code></pre></div>
+</li>
+<li><p><strong>Add a <code>README.md</code></strong> inside the workflow directory. It must cover at minimum:</p>
+<ul>
+<li>What the workflow does (one-paragraph summary)</li>
+<li>What gets installed in the consumer repository</li>
+<li>Consumer setup steps (secrets, variables, permissions)</li>
+<li>How to trigger the workflow</li>
+<li>How to update and remove the workflow</li>
+<li>Known limitations or caveats</li>
+</ul>
+</li>
+<li><p><strong>Register the workflow</strong> in both index files:</p>
+<ul>
+<li><code>workflows/README.md</code> — add a row to the Available Workflows table</li>
+<li><code>README.md</code> — add a row to the Available Workflows table</li>
+</ul>
+<p>The root <code>package.json</code> already includes <code>workspaces: [&quot;workflows/*&quot;]</code>, so new workflow
+directories are picked up automatically.</p>
+</li>
+<li><p><strong>Open a pull request</strong> and request review from a maintainer.</p>
+</li>
+</ol>
+<hr>
+<h2 id="updating-an-existing-workflow">Updating an existing workflow</h2>
+<ol>
+<li>Edit the workflow YAML, <code>workflow.yml</code>, <code>package.json</code>, and/or its <code>README.md</code> as needed.</li>
+<li>Bump <code>workflows/&lt;name&gt;/package.json</code> when the change should ship to consumers.</li>
+<li>If inputs, outputs, secrets, permissions, or packaged config files changed, update the readme
+accordingly.</li>
+<li>Remember that consumer repositories control update behaviour in <code>ghwm.yml</code>:<ul>
+<li><code>update-triggers: true|false</code> decides whether workflow updates replace the installed <code>on:</code>
+section or preserve the repository&#39;s current trigger configuration.</li>
+<li><code>update-config-files: true|false</code> decides whether workflow updates replace packaged config files
+or leave the existing checked-in copies untouched.</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h2 id="development-setup">Development setup</h2>
+<p><strong>Prerequisites</strong>: Git, Node.js ≥ 18 (for <code>textlint</code>), Python ≥ 3.9 (for <code>pre-commit</code>), Docker (for <code>super-linter</code>).</p>
+<div class="terminal-bg border border-outline-variant rounded-default overflow-hidden my-md"><pre class="font-code-md text-code-md text-on-surface p-md overflow-x-auto m-0"><code>make setup-precommit
+
+# Verify everything is wired up
+make precommit</code></pre></div>
+<hr>
+<h2 id="quality-checks">Quality checks</h2>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>make lang</code></td>
+<td>Lint prose (terminology, style) with textlint</td>
+</tr>
+<tr>
+<td><code>make lang-fix</code></td>
+<td>Autofix textlint violations</td>
+</tr>
+<tr>
+<td><code>make script-tests</code></td>
+<td>Run unit tests for repository helper scripts</td>
+</tr>
+<tr>
+<td><code>make precommit</code></td>
+<td>Run all pre-commit hooks on every file</td>
+</tr>
+<tr>
+<td><code>make super-linter</code></td>
+<td>Full lint pass (YAML, Markdown, Actions) via Docker</td>
+</tr>
+<tr>
+<td><code>make super-linter-fix</code></td>
+<td>Full lint pass with autofix via Docker</td>
+</tr>
+</tbody></table>
+<p>Run <code>make lang</code> and <code>make precommit</code> before pushing. CI runs the same checks automatically.
+The pre-commit hook also runs <code>make script-tests</code> automatically on every commit.</p>
+<hr>
+<h2 id="pull-request-guidelines">Pull request guidelines</h2>
+<ul>
+<li>Use a descriptive title following <a href="https://www.conventionalcommits.org/" target="_blank" rel="noopener noreferrer">Conventional Commits</a> (e.g. <code>feat(super-linter): add RUN_SUPER_LINTER_SLIM variable docs</code>).</li>
+<li>Fill in the pull request template.</li>
+<li>Keep each PR focused on a single workflow or concern.</li>
+<li>Ensure <code>make lang</code> passes with no errors.</li>
+<li>Do <strong>not</strong> push directly to <code>main</code>; all changes go through pull requests.</li>
+</ul>
+<hr>
+<h2 id="publishing-workflow-packages">Publishing workflow packages</h2>
+<p>Publishing is automatic on merge to <code>main</code>.</p>
+<p>The <a href="https://github.com/ghwfxlab/ghwm-registry/blob/main/.github/workflows/publish.yml" target="_blank" rel="noopener noreferrer">publish workflow</a> scans every workflow package under
+<code>workflows/</code>, compares the version in <code>package.json</code> to GitHub Packages, and publishes only the
+packages whose version is new.</p>
+<p>Version management uses two safeguards:</p>
+<ul>
+<li>The local pre-commit hook checks staged workflow package content against the latest published
+package version. If the staged package content changed and the local version is not ahead of the
+published version, it patches <code>package.json</code> to the next patch version, stages the file, prints
+the change, and stops the commit so you can review it and rerun <code>git commit</code>.</li>
+<li>Pull request CI repeats the same comparison for changed published package content and adds a pull
+request comment if any changed workflow package still needs a version bump.</li>
+</ul>
+<p>The automation only considers published package content: <code>package.json</code> plus the paths listed in
+the workflow package <code>files</code> array. Workflow-specific readme-only changes do not trigger a version
+bump because the readme is not shipped in the npm package.</p>
+<p>If you want a <strong>minor</strong> or <strong>major</strong> release, bump the workflow package version in
+<code>workflows/&lt;name&gt;/package.json</code> yourself before committing so the automation does not replace it
+with a patch bump.</p>
+<p>Use semantic versioning:</p>
+<ul>
+<li><strong>Patch</strong> — bugfixes, documentation corrections, no behaviour change</li>
+<li><strong>Minor</strong> — new optional inputs, additive features, new packaged config files</li>
+<li><strong>Major</strong> — breaking changes (renamed files, removed inputs, permission changes, changed default triggers)</li>
+</ul>
+<hr>
+<h2 id="dependency-maintenance-with-renovate">Dependency maintenance with Renovate</h2>
+<p>The repository runs an automated <a href="https://github.com/ghwfxlab/ghwm-registry/blob/main/.github/workflows/renovate.yml" target="_blank" rel="noopener noreferrer">Renovate workflow</a> daily at 03:00 UTC (and on manual trigger via <code>workflow_dispatch</code>).</p>
+<h3 id="what-renovate-manages">What Renovate manages</h3>
+<ul>
+<li>Pinned GitHub Actions digests in <code>workflows/**</code></li>
+<li>Dependencies in <code>.pre-commit-config.yaml</code></li>
+<li>Pinned Docker image digests in <code>Makefile</code> (such as Super-Linter)</li>
+</ul>
+<h3 id="automated-package-version-bumps">Automated package version bumps</h3>
+<p>When Renovate upgrades an action dependency inside a workflow file (under <code>workflows/&lt;name&gt;/</code>), a post-upgrade task automatically runs <a href="https://github.com/ghwfxlab/ghwm-registry/blob/main/scripts/bump_renovate_packages.sh" target="_blank" rel="noopener noreferrer"><code>scripts/bump_renovate_packages.sh</code></a> to bump the patch version in the corresponding workflow package&#39;s <code>package.json</code>. This ensures that downstream consumers receive the updated workflow dependencies when merged to <code>main</code>.</p>
+<h3 id="repository-requirements">Repository requirements</h3>
+<p>To operate Renovate in GitHub Actions:</p>
+<ul>
+<li><code>RENOVATE_TOKEN</code> repository secret configured with a personal access token (PAT) or GitHub App token that has <code>contents: write</code>, <code>pull-requests: write</code>, and <code>workflows: write</code> permissions.</li>
+<li>In <strong>Settings</strong> → <strong>Actions</strong> → <strong>General</strong> → <strong>Workflow permissions</strong>, the option <strong>&quot;Allow GitHub Actions to create and approve pull requests&quot;</strong> must be enabled.</li>
+</ul>
+<p class="font-code-sm text-code-sm text-outline mt-xl pt-md border-t border-outline-variant">Rendered from ghwfxlab/ghwm-registry. <a href="https://github.com/ghwfxlab/ghwm-registry/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener noreferrer">View source on GitHub</a></p></article></main><!-- Shared Footer Component --><footer class="bg-surface border-t border-outline-variant mt-2xl w-full"><div class="max-w-7xl mx-auto px-lg py-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-md"><!-- Left Logo and Green Copyright --><div class="flex flex-col"><div class="font-code-sm text-code-sm text-secondary mt-1">&copy; 2026 GHWM Registry. Built for the open source community.</div></div><!-- Right Navigation Links --><div class="flex flex-wrap gap-md md:gap-lg font-code-sm text-code-sm text-on-surface-variant"><a href="/ghwm/docs/" class="hover:text-primary transition-colors">Documentation</a><a href="https://github.com/ghwfxlab/ghwm#telemetry--privacy" class="hover:text-primary transition-colors" target="_blank" rel="noopener noreferrer">Privacy</a></div></div></footer></body></html>

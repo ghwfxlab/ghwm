@@ -1,0 +1,271 @@
+<!DOCTYPE html><html class="dark" lang="en"><head><meta charset="utf-8"><link rel="icon" type="image/svg+xml" href="/ghwm/favicon.svg"><link rel="icon" href="/ghwm/favicon.ico"><meta name="viewport" content="width=device-width"><meta name="generator" content="Astro v7.2.8"><title>Frontmatter reference - GHWM Docs</title><meta name="description" content="How to describe a workflow package with commented YAML frontmatter: title, description, tags, icon, and more."><meta name="theme-color" content="#0d1117"><link rel="canonical" href="https://ghwfxlab.github.io/ghwm/docs/frontmatter/"><!-- Open Graph / Twitter --><meta property="og:type" content="website"><meta property="og:site_name" content="GHWM Marketplace"><meta property="og:title" content="Frontmatter reference - GHWM Docs"><meta property="og:description" content="How to describe a workflow package with commented YAML frontmatter: title, description, tags, icon, and more."><meta property="og:url" content="https://ghwfxlab.github.io/ghwm/docs/frontmatter/"><meta property="og:image" content="https://ghwfxlab.github.io/ghwm/og.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Frontmatter reference - GHWM Docs"><meta name="twitter:description" content="How to describe a workflow package with commented YAML frontmatter: title, description, tags, icon, and more."><meta name="twitter:image" content="https://ghwfxlab.github.io/ghwm/og.png"><!-- Design System Fonts (Inter & JetBrains Mono) --><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Fira+Sans:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Source+Code+Pro:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><!-- Material Symbols Outlined for UI Icons --><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"><link rel="stylesheet" href="/ghwm/_astro/Layout.Cfbn-MpW.css"><style>.docs-prose h2{border-bottom:1px solid var(--color-outline-variant);margin-top:2.5rem;margin-bottom:.75rem;padding-bottom:.5rem;font-size:1.5rem;font-weight:600}.docs-prose h3{margin-top:1.5rem;margin-bottom:.5rem;font-size:1.125rem;font-weight:600}.docs-prose p,.docs-prose li{color:var(--color-on-surface-variant);line-height:1.7}.docs-prose p{margin:.75rem 0}.docs-prose ul,.docs-prose ol{margin:.75rem 0;padding-left:1.5rem}.docs-prose ul{list-style:outside}.docs-prose ol{list-style:decimal}.docs-prose a{color:var(--color-primary)}.docs-prose a:hover{text-decoration:underline}.docs-prose :not(pre)>code{font-family:var(--font-mono);background-color:var(--color-surface-container-low);border:1px solid var(--color-outline-variant);border-radius:4px;padding:.1em .35em;font-size:.875em}.docs-prose table{border-collapse:collapse;max-width:100%;margin:1rem 0;font-size:.875rem;display:block;overflow-x:auto}.docs-prose th,.docs-prose td{text-align:left;border:1px solid var(--color-outline-variant);vertical-align:top;padding:.5rem .75rem}.docs-prose th{background-color:var(--color-surface-container-low)}.docs-prose hr{display:none}.docs-prose blockquote{border-left:3px solid var(--color-outline-variant);margin:1rem 0;padding-left:1rem}.docs-prose .docs-callout{border-left:3px solid var(--color-primary-container);background-color:var(--color-surface-container-low);border-radius:4px;margin:1rem 0;padding:.25rem 1rem}.docs-prose .docs-callout[data-kind=warning],.docs-prose .docs-callout[data-kind=caution]{border-left-color:var(--color-tertiary)}.docs-prose .docs-callout-title{color:var(--color-on-surface);margin-bottom:0;font-weight:600}
+</style></head><body class="font-body-lg text-body-lg min-h-screen flex flex-col bg-background text-on-background antialiased"><!-- Shared Top Menu Bar Component --><header class="bg-surface w-full top-0 sticky border-b border-outline-variant z-50"><div class="flex justify-between items-center px-lg py-md max-w-7xl mx-auto w-full"><!-- Brand Logo --><div class="flex items-center gap-lg"><a href="/ghwm/" class="font-headline-md text-headline-md font-bold text-primary flex items-center gap-sm hover:opacity-90 transition-opacity"><span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">terminal</span><span>GHWM</span></a><!-- Desktop Navigation --><nav class="hidden font-body-lg md:flex gap-md items-center"><a class="font-body-sm text-body-sm transition-colors px-sm py-xs rounded duration-100 active:scale-95 text-on-surface-variant hover:text-primary hover:bg-surface-container" href="/ghwm/">Explore</a><a class="font-body-sm text-body-sm transition-colors px-sm py-xs rounded duration-100 active:scale-95 text-on-surface-variant hover:text-primary hover:bg-surface-container" href="/ghwm/registry">Registry</a><a class="font-body-sm text-body-sm transition-colors px-sm py-xs rounded duration-100 active:scale-95 text-on-surface-variant hover:text-primary hover:bg-surface-container" href="/ghwm/official">Official</a><a class="font-body-sm text-body-sm transition-colors px-sm py-xs rounded duration-100 active:scale-95 text-primary border-b-2 border-primary rounded-none pb-1 font-semibold" href="/ghwm/docs/">Docs</a></nav></div><!-- Search Bar & Controls --><div class="flex items-center gap-md"><form action="/ghwm/registry" method="GET" class="hidden md:flex items-center bg-surface-container-low rounded-default border border-outline-variant px-sm py-xs input-focus"><span class="material-symbols-outlined text-outline text-[18px] mr-2">search</span><input id="menu-search-input" name="q" type="text" class="menu-search-input bg-transparent border-none outline-none text-body-sm font-body-sm text-on-surface w-48 focus:ring-0 p-0 placeholder-outline" placeholder="Search workflows..." autocomplete="off"></form><!-- Mobile Menu Toggle Button (For high-fidelity responsiveness) --><button id="mobile-menu-toggle" class="md:hidden flex items-center justify-center p-sm rounded-default text-on-surface-variant hover:text-primary hover:bg-surface-container transition-colors active:scale-95" aria-label="Toggle Navigation Menu"><span class="material-symbols-outlined text-[24px]">menu</span></button></div></div><!-- Mobile Drawer Menu (Hidden by default, toggled via script below) --><div id="mobile-menu" class="hidden md:hidden w-full border-t border-outline-variant bg-surface px-lg py-md flex flex-col gap-sm"><a class="block py-xs px-sm rounded text-body-sm font-body-sm text-on-surface-variant" href="/ghwm/">Explore</a><a class="block py-xs px-sm rounded text-body-sm font-body-sm text-on-surface-variant" href="/ghwm/registry">Registry</a><a class="block py-xs px-sm rounded text-body-sm font-body-sm text-on-surface-variant" href="/ghwm/official">Official</a><a class="block py-xs px-sm rounded text-body-sm font-body-sm text-primary bg-surface-container font-semibold" href="/ghwm/docs/">Docs</a><!-- Mobile Search --><form action="/ghwm/registry" method="GET" class="flex items-center bg-surface-container-low rounded-default border border-outline-variant px-sm py-xs input-focus mt-xs"><span class="material-symbols-outlined text-outline text-[18px] mr-2">search</span><input id="mobile-search-input" name="q" type="text" class="menu-search-input bg-transparent border-none outline-none text-body-sm font-body-sm text-on-surface w-full focus:ring-0 p-0 placeholder-outline" placeholder="Search workflows..." autocomplete="off"></form></div></header><script type="module">try{let e=new URLSearchParams(window.location.search).get(`q`);e&&document.querySelectorAll(`.menu-search-input`).forEach(t=>{t.value=e})}catch{}var e=document.getElementById(`mobile-menu-toggle`),t=document.getElementById(`mobile-menu`);e&&t&&e.addEventListener(`click`,()=>{t.classList.contains(`hidden`)?(t.classList.remove(`hidden`),e.querySelector(`span`).textContent=`close`):(t.classList.add(`hidden`),e.querySelector(`span`).textContent=`menu`)});</script><!-- Content Slot --><main class="flex-grow w-full max-w-7xl mx-auto px-margin md:px-lg py-xl flex flex-col md:flex-row gap-xl"><nav aria-label="Documentation" class="md:w-56 shrink-0"><ul class="flex md:flex-col gap-xs overflow-x-auto md:sticky md:top-24"><li><a href="/ghwm/docs/" class="block whitespace-nowrap font-body-sm text-body-sm px-sm py-xs rounded transition-colors text-on-surface-variant hover:text-primary hover:bg-surface-container">Overview</a></li><li><a href="/ghwm/docs/quickstart/" class="block whitespace-nowrap font-body-sm text-body-sm px-sm py-xs rounded transition-colors text-on-surface-variant hover:text-primary hover:bg-surface-container">Quickstart</a></li><li><a href="/ghwm/docs/manifest/" class="block whitespace-nowrap font-body-sm text-body-sm px-sm py-xs rounded transition-colors text-on-surface-variant hover:text-primary hover:bg-surface-container">Manifest reference</a></li><li><a href="/ghwm/docs/frontmatter/" aria-current="page" class="block whitespace-nowrap font-body-sm text-body-sm px-sm py-xs rounded transition-colors text-primary bg-surface-container font-semibold">Frontmatter reference</a></li><li><a href="/ghwm/docs/writing-a-package/" class="block whitespace-nowrap font-body-sm text-body-sm px-sm py-xs rounded transition-colors text-on-surface-variant hover:text-primary hover:bg-surface-container">Writing a package</a></li></ul></nav><article class="docs-prose min-w-0 flex-1 max-w-3xl"><h1 class="font-display-lg text-display-lg leading-tight mb-md">Frontmatter reference</h1><p>This specification defines the syntax, schema, resolution precedence, and authoring guidelines for workflow presentation metadata embedded via commented YAML frontmatter blocks (<code># ---</code> ... <code># ---</code>).</p>
+<hr>
+<h2 id="overview">Overview</h2>
+<p>Workflows distributed through <code>ghwm</code> registries (such as <a href="https://github.com/ghwfxlab/ghwm-registry" target="_blank" rel="noopener noreferrer">ghwfxlab/ghwm-registry</a>) can define structured presentation metadata directly within their workflow YAML files.</p>
+<p>Embedding metadata inside commented frontmatter blocks provides three key benefits:</p>
+<ol>
+<li><strong>Zero Runtime Impact</strong>: Because the metadata block consists entirely of YAML comments (<code>#</code>), GitHub Actions runners ignore it during execution. It introduces zero execution overhead or behavior changes to the workflow.</li>
+<li><strong>Universal Compatibility</strong>: The format is 100% compatible with GitHub Actions workflow parsers, syntax validators, and strict linters (such as <code>yamllint</code> and <code>actionlint</code>).</li>
+<li><strong>Rich Registry Presentation</strong>: Registry web portals, marketplace catalogs, search indexers, and the <code>ghwm</code> CLI can extract rich presentation metadata—including human-friendly titles, descriptions, categorized tags, icons, ownership, and creation timestamps.</li>
+</ol>
+<hr>
+<h2 id="syntax-and-delimiters">Syntax and Delimiters</h2>
+<p>Commented frontmatter must be placed at the <strong>very top of the workflow file</strong>, immediately preceding the standard GitHub Actions YAML document start delimiter (<code>---</code>) or the workflow root keys (e.g., <code>name:</code>).</p>
+<h3 id="syntax-format">Syntax Format</h3>
+<div class="terminal-bg border border-outline-variant rounded-default overflow-hidden my-md"><pre class="font-code-md text-code-md text-on-surface p-md overflow-x-auto m-0"><code># ---
+# title: Super-Linter
+# description: Code linting workflow using Super-Linter and pre-commit hooks for code quality.
+# tags:
+#   - lint
+#   - actions
+#   - pre-commit
+# icon: fact_check
+# owner: ghwfxlab
+# ---
+---
+name: Lint Code Base
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4</code></pre></div>
+<h3 id="delimiter-rules">Delimiter Rules</h3>
+<ul>
+<li><strong>Opening Delimiter</strong>: <code># ---</code> must be the first non-empty line of the file.</li>
+<li><strong>Closing Delimiter</strong>: <code># ---</code> terminates the frontmatter block.</li>
+<li><strong>Line Prefixing</strong>: Every line within the frontmatter block must begin with <code>#</code> (optionally followed by a space).</li>
+<li><strong>YAML Content</strong>: The text following the <code>#</code> prefix (and optional space) forms standard YAML mapping syntax.</li>
+</ul>
+<aside class="docs-callout" data-kind="warning"><p class="docs-callout-title">Warning</p><p>While <code>ghwm</code> provides graceful fallback tolerance for top-of-file comments without explicit <code># ---</code> delimiters, this format is non-standard. Registry authors must always use explicit <code># ---</code> delimiters to ensure compatibility with registry publishing linters and external parsers.</p>
+</aside>
+<hr>
+<h2 id="metadata-schema">Metadata Schema</h2>
+<p>The following table defines the supported metadata fields, data types, length constraints, descriptions, and default fallback values:</p>
+<table>
+<thead>
+<tr>
+<th align="left">Field</th>
+<th align="left">Type</th>
+<th align="left">Required</th>
+<th align="left">Max Length</th>
+<th align="left">Description</th>
+<th align="left">Default / Fallback</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><code>title</code></td>
+<td align="left">string</td>
+<td align="left">No</td>
+<td align="left">128 chars</td>
+<td align="left">Human-readable workflow display title.</td>
+<td align="left">Fallback to manifest <code>title</code>, or <code>null</code> in CLI (prettified by registry UI).</td>
+</tr>
+<tr>
+<td align="left"><code>description</code></td>
+<td align="left">string</td>
+<td align="left">No</td>
+<td align="left">2048 chars</td>
+<td align="left">Concise summary of the workflow purpose and capabilities.</td>
+<td align="left">Fallback to manifest <code>description</code>, <code>package.json</code> <code>description</code>, or <code>&quot;N/A&quot;</code> in UI (<code>null</code> in CLI).</td>
+</tr>
+<tr>
+<td align="left"><code>tags</code></td>
+<td align="left">string[]</td>
+<td align="left">No</td>
+<td align="left">20 items (64 chars each)</td>
+<td align="left">Categories, keywords, or topics for search and filtering.</td>
+<td align="left">Fallback to manifest <code>tags</code>, empty list <code>[]</code> in CLI, or <code>[&#39;N/A&#39;]</code> in UI.</td>
+</tr>
+<tr>
+<td align="left"><code>icon</code></td>
+<td align="left">string</td>
+<td align="left">No</td>
+<td align="left">64 chars</td>
+<td align="left">Google Material Symbols icon identifier.</td>
+<td align="left">Fallback to manifest <code>icon</code> or default icon (e.g., <code>extension</code>).</td>
+</tr>
+<tr>
+<td align="left"><code>owner</code></td>
+<td align="left">string</td>
+<td align="left">No</td>
+<td align="left">128 chars</td>
+<td align="left">Workflow publisher, maintainer, or organization name.</td>
+<td align="left">Fallback to manifest <code>owner</code> or derived registry owner segment (<code>owner/repo</code>).</td>
+</tr>
+<tr>
+<td align="left"><code>version</code></td>
+<td align="left">string</td>
+<td align="left">No</td>
+<td align="left">64 chars</td>
+<td align="left">Semantic version of the workflow package.</td>
+<td align="left">Fallback to resolved CLI version, manifest <code>version</code>, or <code>package.json</code> <code>version</code>.</td>
+</tr>
+<tr>
+<td align="left"><code>created_at</code></td>
+<td align="left">string</td>
+<td align="left">No</td>
+<td align="left">64 chars</td>
+<td align="left">ISO 8601 creation or publication timestamp.</td>
+<td align="left">Fallback to manifest <code>created_at</code> / <code>createdAt</code>, Git history in registry pipelines, or <code>null</code>.</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="field-details-and-constraints">Field Details and Constraints</h2>
+<p>This section provides expanded specifications, validation constraints, and authoring guidance for each field declared in the <a href="#metadata-schema">Metadata Schema</a> summary table above.</p>
+<h3 id="title"><code>title</code></h3>
+<p>A concise, human-friendly display name for the workflow.</p>
+<ul>
+<li><strong>Type</strong>: <code>string</code></li>
+<li><strong>Max Length</strong>: 128 characters (longer values are truncated).</li>
+<li><strong>Example</strong>: <code>title: Super-Linter</code></li>
+<li><strong>Recommendation</strong>: Use title case and avoid redundant suffixes like &quot;Workflow&quot;.</li>
+</ul>
+<h3 id="description"><code>description</code></h3>
+<p>A descriptive overview of what the workflow performs, prerequisites, or key tools involved.</p>
+<ul>
+<li><p><strong>Type</strong>: <code>string</code></p>
+</li>
+<li><p><strong>Max Length</strong>: 2048 characters (longer values are truncated).</p>
+</li>
+<li><p><strong>Example</strong>:</p>
+<div class="terminal-bg border border-outline-variant rounded-default overflow-hidden my-md"><pre class="font-code-md text-code-md text-on-surface p-md overflow-x-auto m-0"><code># description: Automated security scanning workflow running zizmor static analysis on GitHub Actions workflows.</code></pre></div>
+</li>
+<li><p><strong>Line Length</strong>: For multiline descriptions, conform to standard YAML linter constraints (<code>&lt;= 120</code> characters per line) by wrapping lines or using YAML folded block scalars (<code>&gt;</code>).</p>
+</li>
+</ul>
+<h3 id="tags"><code>tags</code></h3>
+<p>A list of tags, categories, or keywords for discovery and classification.</p>
+<ul>
+<li><p><strong>Type</strong>: <code>string[]</code> (list of strings, comma-separated string, or JSON array string).</p>
+</li>
+<li><p><strong>Constraints</strong>: Maximum 20 unique tags; each tag is truncated to 64 characters. Duplicates are removed.</p>
+</li>
+<li><p><strong>Examples</strong>:</p>
+<div class="terminal-bg border border-outline-variant rounded-default overflow-hidden my-md"><pre class="font-code-md text-code-md text-on-surface p-md overflow-x-auto m-0"><code># tags:
+#   - security
+#   - audit
+#   - actions</code></pre></div>
+<p>Or compact list format:</p>
+<div class="terminal-bg border border-outline-variant rounded-default overflow-hidden my-md"><pre class="font-code-md text-code-md text-on-surface p-md overflow-x-auto m-0"><code># tags: [security, audit, actions]</code></pre></div>
+</li>
+</ul>
+<h3 id="icon"><code>icon</code></h3>
+<p>Visual identifier representing the workflow in UI registries and catalogs.</p>
+<ul>
+<li><strong>Type</strong>: <code>string</code></li>
+<li><strong>Max Length</strong>: 64 characters.</li>
+<li><strong>Format</strong>: <a href="https://fonts.google.com/icons" target="_blank" rel="noopener noreferrer">Google Material Symbols</a> identifier in snake_case.</li>
+<li><strong>Examples</strong>:<ul>
+<li><code>fact_check</code> — Linters, formatters, and code quality checkers</li>
+<li><code>security</code> — Vulnerability scanners and security auditors</li>
+<li><code>rocket_launch</code> — Deployment and release automation</li>
+<li><code>person_add</code> — Issue/PR assignment and triage</li>
+<li><code>bolt</code> — Fast test runners and CI builds</li>
+<li><code>terminal</code> — Command-line utilities and script runners</li>
+<li><code>extension</code> — General marketplace plugins and extensions</li>
+</ul>
+</li>
+</ul>
+<h3 id="owner"><code>owner</code></h3>
+<p>The organization or individual maintaining the workflow package.</p>
+<ul>
+<li><strong>Type</strong>: <code>string</code></li>
+<li><strong>Max Length</strong>: 128 characters.</li>
+<li><strong>Example</strong>: <code>owner: ghwfxlab</code></li>
+<li><strong>Default</strong>: If omitted, defaults to the owner portion of the workflow registry repository (<code>owner</code> from <code>owner/ghwm-registry</code>).</li>
+</ul>
+<h3 id="version"><code>version</code></h3>
+<p>The version of the workflow package.</p>
+<ul>
+<li><strong>Type</strong>: <code>string</code></li>
+<li><strong>Max Length</strong>: 64 characters.</li>
+<li><strong>Format</strong>: Semantic Versioning string (e.g., <code>1.0.0</code>, <code>2.1.4</code>).</li>
+<li><strong>Resolution</strong>: Typically supplied during publication or resolved dynamically by the package manager.</li>
+</ul>
+<h3 id="created_at--createdat"><code>created_at</code> / <code>createdAt</code></h3>
+<p>The creation or initial release timestamp.</p>
+<ul>
+<li><strong>Type</strong>: <code>string</code></li>
+<li><strong>Max Length</strong>: 64 characters.</li>
+<li><strong>Format</strong>: ISO 8601 UTC timestamp format (e.g., <code>2026-09-20T10:00:00Z</code>).</li>
+<li><strong>Aliases</strong>: Supported under either <code>created_at</code> (canonical snake_case in <code>ghwm</code>) or <code>createdAt</code> (camelCase alias for JavaScript/npm ecosystem compatibility).</li>
+</ul>
+<hr>
+<h2 id="resolution-precedence-hierarchy">Resolution Precedence Hierarchy</h2>
+<p>When <code>ghwm</code> extracts metadata for a workflow package during download or local read operations (e.g., for privacy-gated telemetry or local inspection), it enforces length sanitization bounds and applies a four-tier precedence hierarchy:</p>
+<p><em>A diagram is available in the <a href="https://github.com/ghwfxlab/ghwm/blob/v1.12.0/docs/reference/frontmatter.md" target="_blank" rel="noopener noreferrer">source document</a>.</em></p>
+<ol>
+<li><strong>Commented YAML Frontmatter</strong>: Frontmatter defined inside the package&#39;s primary workflow YAML file (or <code>package/workflow.yml</code>) takes highest precedence.</li>
+<li><strong>Top-Level Manifest Keys</strong>: Explicit top-level keys declared in <code>package/workflow.yml</code> (e.g., <code>title: ...</code>, <code>icon: ...</code>).</li>
+<li><strong><code>package.json</code> Fields</strong>: Companion <code>package.json</code> metadata fields (<code>description</code>, <code>version</code>) when present in the package tarball.</li>
+<li><strong>Sane Defaults</strong>: Automatic fallbacks derived from the resolved package source (e.g., repository owner) and version pin.</li>
+</ol>
+<hr>
+<h2 id="formatting-and-validation-guidelines">Formatting and Validation Guidelines</h2>
+<p>To ensure workflow files pass all automated checks in both upstream registries and consumer repositories, adhere to the following rules:</p>
+<ol>
+<li><strong>Commented Delimiters</strong>: Always start with <code># ---</code> on line 1 and close with <code># ---</code> before the workflow body.</li>
+<li><strong>Line Length Limit</strong>: Ensure all commented frontmatter lines do not exceed <strong>120 characters</strong> per line to comply with standard <code>yamllint</code> configurations (<code>.github/linters/.yaml-lint.yml</code>).</li>
+<li><strong>Valid YAML Syntax</strong>: The un-commented block must be valid YAML. Use strings, lists, or booleans with proper indentation (typically two spaces).</li>
+<li><strong>Zero Runtime Impact</strong>: Do not put un-commented frontmatter (e.g. raw <code>---</code>) at line 1, as GitHub Actions will attempt to parse the frontmatter keys as workflow properties and fail validation.</li>
+</ol>
+<hr>
+<h2 id="workflow-authoring-example">Workflow Authoring Example</h2>
+<p>Below is a complete, author-ready example of a workflow file ready for inclusion in a <code>ghwm</code> registry repository:</p>
+<div class="terminal-bg border border-outline-variant rounded-default overflow-hidden my-md"><pre class="font-code-md text-code-md text-on-surface p-md overflow-x-auto m-0"><code># ---
+# title: Security Audit
+# description: Static analysis security scanner for GitHub Actions workflows using zizmor.
+# tags:
+#   - security
+#   - audit
+#   - hardening
+# icon: security
+# owner: ghwfxlab
+# created_at: &quot;2026-09-20T12:00:00Z&quot;
+# ---
+---
+name: Security Audit
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  zizmor:
+    name: Run zizmor
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run zizmor security audit
+        uses: woodruffw/zizmor-action@v1</code></pre></div>
+<h3 id="registry-package-layout">Registry Package Layout</h3>
+<p>In a registry repository (such as <code>ghwfxlab/ghwm-registry</code>), workflow packages are structured under <code>workflows/&lt;name&gt;/</code>:</p>
+<div class="terminal-bg border border-outline-variant rounded-default overflow-hidden my-md"><pre class="font-code-md text-code-md text-on-surface p-md overflow-x-auto m-0"><code>workflows/security-audit/
+├── workflow.yml       # Package manifest declaring bundled files
+├── audit.yml          # The workflow file containing commented frontmatter
+└── package.json       # (Optional) npm metadata for GitHub Packages publishing</code></pre></div>
+<p>The package manifest (<code>workflows/security-audit/workflow.yml</code>) declares:</p>
+<div class="terminal-bg border border-outline-variant rounded-default overflow-hidden my-md"><pre class="font-code-md text-code-md text-on-surface p-md overflow-x-auto m-0"><code>name: security-audit
+files:
+  - src: audit.yml
+    dest: .github/workflows/security-audit.yml</code></pre></div>
+<hr>
+<h2 id="downstream-metadata-consumers">Downstream Metadata Consumers</h2>
+<p>Metadata defined in workflow frontmatter is utilized across the <code>ghwm</code> ecosystem:</p>
+<ul>
+<li><strong>Registry Web Portals &amp; Catalogs</strong>: Powers searchable catalogs, visual category tags, Material Symbols iconography, and package documentation pages.</li>
+<li><strong>Privacy-Gated Telemetry</strong>: When workflows are installed from confirmed <strong>public</strong> registries, <code>ghwm</code> includes the extracted metadata (<code>title</code>, <code>description</code>, <code>tags</code>, <code>icon</code>, <code>owner</code>, <code>version</code>, <code>source</code>, <code>created_at</code>) in anonymous installation events to track open-source workflow adoption. Telemetry is completely disabled for private and enterprise registries.</li>
+</ul>
+<p class="font-code-sm text-code-sm text-outline mt-xl pt-md border-t border-outline-variant">Synced from ghwfxlab/ghwm v1.12.0. <a href="https://github.com/ghwfxlab/ghwm/blob/v1.12.0/docs/reference/frontmatter.md" target="_blank" rel="noopener noreferrer">View source on GitHub</a></p></article></main><!-- Shared Footer Component --><footer class="bg-surface border-t border-outline-variant mt-2xl w-full"><div class="max-w-7xl mx-auto px-lg py-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-md"><!-- Left Logo and Green Copyright --><div class="flex flex-col"><div class="font-code-sm text-code-sm text-secondary mt-1">&copy; 2026 GHWM Registry. Built for the open source community.</div></div><!-- Right Navigation Links --><div class="flex flex-wrap gap-md md:gap-lg font-code-sm text-code-sm text-on-surface-variant"><a href="/ghwm/docs/" class="hover:text-primary transition-colors">Documentation</a><a href="https://github.com/ghwfxlab/ghwm#telemetry--privacy" class="hover:text-primary transition-colors" target="_blank" rel="noopener noreferrer">Privacy</a></div></div></footer></body></html>
