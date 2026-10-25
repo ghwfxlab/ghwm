@@ -142,7 +142,7 @@ The CLI uses this header to:
   or `--update-triggers` is used.
 - Preserve existing `env:` variables during updates unless `update-envs: true`
   or `--update-envs` is used.
-- Preserve each job's existing `runs-on` during updates, matched by job id, unless
+- Preserve each job's existing `runs-on` during updates, matched by job ID, unless
   `update-runs-on: true` or `--update-runs-on` is used. Jobs added in a newer package version
   take the packaged `runs-on`, and a notice is printed when a preserved job no longer exists
   in the package.

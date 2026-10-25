@@ -121,7 +121,7 @@ When changing code, preserve these unless the task explicitly changes them:
 - On workflow update, preserve the existing `on:` section by default.
 - `update-triggers: true` or `--update-triggers` replaces the existing `on:` section with the packaged one.
 - `update-envs: true` or `--update-envs` replaces the existing `env:` section with the packaged one.
-- On workflow update, preserve each job's existing `runs-on` (matched by job id) by default.
+- On workflow update, preserve each job's existing `runs-on` (matched by job ID) by default.
 - `update-runs-on: true` or `--update-runs-on` replaces each job's `runs-on` with the packaged one.
 - Jobs new in the package take the packaged `runs-on`; a notice is reported when a preserved job no longer exists upstream.
 - On first install, config files are created only when missing.

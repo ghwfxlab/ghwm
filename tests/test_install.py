@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import os
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, cast
@@ -125,7 +125,7 @@ UPDATE_OPTIONS = [
 
 
 def _install_with_local_edit(
-    tmp_path: Path, option: _UpdateOption, workflow_entry: dict[str, object]
+    tmp_path: Path, option: _UpdateOption, workflow_entry: Mapping[str, object]
 ) -> tuple[Path, Path, Manifest, Path]:
     """Install v1, edit the option's section locally, then publish v2 upstream."""
     marketplace = tmp_path / "marketplace"

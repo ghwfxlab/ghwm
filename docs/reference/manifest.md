@@ -144,7 +144,7 @@ Controls whether custom environment variables are preserved during updates.
 
 Controls whether a custom `runs-on` (for example a self-hosted or larger runner) is preserved during updates.
 
-- `false` (default): Keeps the local `runs-on` value of each job, matched by job id. Everything else in the workflow is still updated. This includes scalar, list, and `group`/`labels` forms.
+- `false` (default): Keeps the local `runs-on` value of each job, matched by job ID. Everything else in the workflow is still updated. This includes scalar, list, and `group`/`labels` forms.
 - `true`: Replaces every job's `runs-on` with the upstream package's value.
 - Jobs added in a newer package version take the upstream `runs-on`.
 - If a job with a local `runs-on` no longer exists in the package, `ghwm` prints a notice and the job is dropped with the rest of the upstream update.
