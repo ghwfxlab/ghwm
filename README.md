@@ -69,17 +69,36 @@ uv tool install git+https://github.com/ghwfxlab/ghwm.git
 
 ### 1. Create `ghwm.yml` in your repository root
 
+A minimal manifest needs a registry `source` and a `name` and `version` for each workflow:
+
 ```yaml
 source: ghwfxlab/ghwm-registry
 
 workflows:
-  - name: super-linter
-    version: "2.0.1"
-  - name: auto-assign-pr
-    version: "1.0.2"
-    update-triggers: true
-    update-envs: true
-    update-config-files: true
+  - name: super-linter  # Required.
+    version: "2.0.1"    # Required for remote installs.
+```
+
+#### Full example
+
+This example uses every supported key. Each comment states whether the key is required and the default
+that applies when you omit it.
+
+```yaml
+# Default registry in owner/repository form.
+# Optional. Default: owner/ghwm-registry
+source: ghwfxlab/ghwm-registry
+
+workflows:
+  - name: auto-assign-pr                # Required.
+    version: "1.0.2"                    # Required for remote installs. Default: none (only allowed with --local)
+    source: other-owner/other-registry  # Optional. Default: the global `source`
+    target: assign-pr.yml               # Optional. Default: the filename packaged in the workflow
+    # The update-* options only apply on update. false keeps the local value, true replaces it with the packaged one.
+    update-triggers: true               # Default: false. Replaces the local `on:` block
+    update-envs: true                   # Default: false. Replaces the local `env:` block
+    update-runs-on: true                # Default: false. Replaces each job's local `runs-on`
+    update-config-files: true           # Default: false. Overwrites packaged config files
 ```
 
 `version` is required for registry installs. By default, workflows are resolved from the global `source`. You can override this on a per-workflow basis by adding a `source: other-owner/other-registry` property to a workflow entry. The CLI resolves each workflow to a GitHub Packages npm
@@ -96,11 +115,13 @@ ghwm install --force    # overwrites even if files were modified locally
 ghwm install --no-prune # skip removal of stale workflows
 ghwm install --update-triggers # replace workflow triggers with the packaged version
 ghwm install --update-envs # replace workflow env variables with the packaged version
+ghwm install --update-runs-on # replace each job's runs-on with the packaged version
 ghwm upgrade            # automatically resolve, pin, and install latest versions
 ghwm update             # re-downloads all workflows (respects versions)
 ghwm update --prune     # also removes managed workflows no longer in ghwm.yml
 ghwm update --update-triggers # replace workflow triggers with the packaged version
 ghwm update --update-envs # replace workflow env variables with the packaged version
+ghwm update --update-runs-on # replace each job's runs-on with the packaged version
 ghwm list               # shows workflows declared in ghwm.yml
 ghwm audit              # audits managed workflows for security vulnerabilities
 ```
@@ -134,6 +155,10 @@ The CLI uses this header to:
   or `--update-triggers` is used.
 - Preserve existing `env:` variables during updates unless `update-envs: true`
   or `--update-envs` is used.
+- Preserve each job's existing `runs-on` during updates, matched by job ID, unless
+  `update-runs-on: true` or `--update-runs-on` is used. Jobs added in a newer package version
+  take the packaged `runs-on`, and a notice is printed when a preserved job no longer exists
+  in the package.
 - Prune stale workflow files that were removed from the manifest.
 
 Config files do not get a managed header and are never removed during prune.

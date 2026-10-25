@@ -28,6 +28,7 @@ workflows:
     source: other-org/custom-registry
     update-triggers: true
     update-envs: true
+    update-runs-on: true
     update-config-files: true
 ```
 
@@ -42,13 +43,23 @@ Entries under the `workflows` list can be specified in two formats:
 Full YAML object allowing granular per-workflow configuration:
 
 ```yaml
+# Default registry in owner/repository form.
+# Optional. Default: owner/ghwm-registry
+source: ghwfxlab/ghwm-registry
+
 workflows:
-  - name: linter
-    version: "1.2.0"
-    target: code-quality.yml
-    update-triggers: false
-    update-envs: false
-    update-config-files: false
+  # Compact string form: name@version. A version is required for remote installs.
+  - super-linter@2.0.1
+
+  # Mapping form with every option. Omitted options take the defaults shown.
+  - name: auto-assign-pr                # Required.
+    version: "1.0.2"                    # Required for remote installs. Default: none (only allowed with --local)
+    source: other-owner/other-registry  # Optional. Default: the global `source`
+    target: assign-pr.yml               # Optional. Default: the filename packaged in the workflow
+    update-triggers: false              # Default: false. true replaces the local `on:` with the packaged one on update
+    update-envs: false                  # Default: false. true replaces the local `env:` with the packaged one on update
+    update-runs-on: false               # Default: false. true replaces each job's local `runs-on` on update
+    update-config-files: false          # Default: false. true overwrites packaged config files on update
 ```
 
 ### 2. Compact String Syntax
@@ -78,6 +89,7 @@ When using the mapping syntax, the following fields are supported:
 | `target` | string | No | Packaged filename | Custom target path under `.github/workflows/`. |
 | `update-triggers` | boolean | No | `false` | When `true`, overwrites the existing workflow `on:` trigger section on update. |
 | `update-envs` | boolean | No | `false` | When `true`, overwrites the existing workflow `env:` variables section on update. |
+| `update-runs-on` | boolean | No | `false` | When `true`, overwrites each job's `runs-on` on update. When `false`, keeps the local `runs-on` of every job that still exists in the package. |
 | `update-config-files` | boolean | No | `false` | When `true`, overwrites packaged non-workflow configuration files on update. |
 
 ### Field Details
@@ -128,6 +140,17 @@ Controls whether custom environment variables are preserved during updates.
 - `true`: Replaces the `env:` block with the upstream package's `env:` block.
 - Can also be forced globally on the CLI using `--update-envs`.
 
+#### `update-runs-on`
+
+Controls whether a custom `runs-on` (for example a self-hosted or larger runner) is preserved during updates.
+
+- `false` (default): Keeps the local `runs-on` value of each job, matched by job ID. Everything else in the workflow is still updated. This includes scalar, list, and `group`/`labels` forms.
+- `true`: Replaces every job's `runs-on` with the upstream package's value.
+- Jobs added in a newer package version take the upstream `runs-on`.
+- If a job with a local `runs-on` no longer exists in the package, `ghwm` prints a notice and the job is dropped with the rest of the upstream update.
+- A preserved `runs-on` is part of the written content, so it is included in the `Hash:` header and the lockfile `source_hash`. It is not treated as a local modification.
+- Can also be forced globally on the CLI using `--update-runs-on`.
+
 #### `update-config-files`
 
 Controls the overwrite behavior of companion configuration files bundled with the workflow.
@@ -141,7 +164,7 @@ Controls the overwrite behavior of companion configuration files bundled with th
 
 | File Type | First Install | Update (`update-*: false`) | Update (`update-*: true`) | Prune |
 | :--- | :--- | :--- | :--- | :--- |
-| **Workflow File** (`.github/workflows/*`) | Created with managed header | Updated in place; preserves local `on:` and `env:` | Updated in place; overwrites `on:` and `env:` | Removed if deleted from manifest |
+| **Workflow File** (`.github/workflows/*`) | Created with managed header | Updated in place; preserves local `on:`, `env:` and `runs-on` | Updated in place; overwrites `on:`, `env:` and `runs-on` | Removed if deleted from manifest |
 | **Config File** (e.g. `.eslintrc.json`) | Created only if file does not exist | Untouched | Overwritten with packaged version | Never removed |
 
 ---

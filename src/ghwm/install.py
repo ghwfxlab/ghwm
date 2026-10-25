@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 from ghwm.download import WorkflowSource, download_workflows
@@ -26,6 +26,7 @@ class InstallResult:
     updated: list[str]
     pruned: list[str]
     skipped: list[tuple[str, str]]  # (name, reason)
+    notices: list[str] = field(default_factory=list)
 
 
 def install_workflows(
@@ -37,6 +38,7 @@ def install_workflows(
     local_path: Path | None = None,
     update_triggers: bool = False,
     update_envs: bool = False,
+    update_runs_on: bool = False,
     no_telemetry: bool = False,
 ) -> InstallResult:
     """Full install: download, write, and prune stale workflows."""
@@ -57,6 +59,7 @@ def install_workflows(
             force=force,
             update_triggers=update_triggers,
             update_envs=update_envs,
+            update_runs_on=update_runs_on,
         )
 
     if prune:
@@ -78,6 +81,7 @@ def update_workflows(
     local_path: Path | None = None,
     update_triggers: bool = False,
     update_envs: bool = False,
+    update_runs_on: bool = False,
     no_telemetry: bool = False,
 ) -> InstallResult:
     """Re-download and re-install all workflows, optionally pruning stale ones."""
@@ -89,6 +93,7 @@ def update_workflows(
         local_path=local_path,
         update_triggers=update_triggers,
         update_envs=update_envs,
+        update_runs_on=update_runs_on,
         no_telemetry=no_telemetry,
     )
 
@@ -156,11 +161,13 @@ def _install_one(
     force: bool,
     update_triggers: bool,
     update_envs: bool,
+    update_runs_on: bool,
 ) -> None:
     existing_lock = lockfile.find(entry.name)
     is_update = existing_lock is not None
     tracked_files: list[LockFileEntry] = []
     changed = False
+    notices: list[str] = []
 
     sorted_files = sorted(
         workflow_source.files,
@@ -182,6 +189,7 @@ def _install_one(
                     is_update=is_update,
                     update_triggers=update_triggers,
                     update_envs=update_envs,
+                    update_runs_on=update_runs_on,
                 )
             else:
                 file_result = sync_config_file(
@@ -193,12 +201,14 @@ def _install_one(
                 )
 
             changed = changed or file_result.changed
+            notices.extend(file_result.notices)
             if file_result.lock_file is not None:
                 tracked_files.append(file_result.lock_file)
     except WorkflowBlockedError as exc:
         result.skipped.append((entry.name, str(exc)))
         return
 
+    result.notices.extend(notices)
     lockfile.upsert(
         LockEntry(
             name=entry.name,

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 import yaml
@@ -47,6 +47,7 @@ _TOP_LEVEL_MAPPING_KEY = re.compile(
 class InstalledFileResult:
     changed: bool
     lock_file: LockFileEntry | None
+    notices: list[str] = field(default_factory=list)
 
 
 def _sha256(content: str) -> str:
@@ -154,6 +155,122 @@ def _preserve_existing_envs(existing_content: str, new_content: str) -> str:
     )
 
 
+def _first_child_indent(content: str, start: int, end: int) -> int | None:
+    for line in content[start:end].split("\n"):
+        stripped = line.strip()
+        if stripped and not stripped.startswith("#"):
+            return len(line) - len(line.lstrip(" "))
+    return None
+
+
+def _trim_trailing_blank_lines(content: str, start: int, end: int) -> int:
+    """Move ``end`` back over trailing blank and comment-only lines, which belong to the next key."""
+    while end > start:
+        line_start = content.rfind("\n", start, end - 1) + 1
+        line_start = max(line_start, start)
+        stripped = content[line_start:end].strip()
+        if stripped and not stripped.startswith("#"):
+            break
+        end = line_start
+    return end
+
+
+def _find_child_section(content: str, parent: tuple[int, int], key: str) -> tuple[int, int] | None:
+    """Locate ``key`` among the direct children of the mapping section ``parent``."""
+    parent_start, parent_end = parent
+    header_end = content.find("\n", parent_start, parent_end)
+    if header_end == -1:
+        return None
+    children_start = header_end + 1
+    indent = _first_child_indent(content, children_start, parent_end)
+    if not indent:
+        return None
+
+    child_key_pattern = re.compile(
+        rf"""^ {{{indent}}}(?P<key>[A-Za-z0-9_-]+|"[^"]+"|'[^']+')\s*:(?:[ \t]|$)""",
+        re.MULTILINE,
+    )
+    child_keys = list(child_key_pattern.finditer(content, children_start, parent_end))
+    for index, match in enumerate(child_keys):
+        if match.group("key") not in {key, f'"{key}"', f"'{key}'"}:
+            continue
+        end = child_keys[index + 1].start() if index + 1 < len(child_keys) else parent_end
+        return match.start(), _trim_trailing_blank_lines(content, match.start(), end)
+    return None
+
+
+def _locate_job_runs_on(content: str, job_id: str) -> tuple[int, int] | None:
+    jobs_section = _find_top_level_section(content, "jobs")
+    if jobs_section is None:
+        return None
+    job_section = _find_child_section(content, jobs_section, job_id)
+    if job_section is None:
+        return None
+    return _find_child_section(content, job_section, "runs-on")
+
+
+def _leading_spaces(content: str, line_start: int) -> int:
+    line_end = content.find("\n", line_start)
+    line = content[line_start:] if line_end == -1 else content[line_start:line_end]
+    return len(line) - len(line.lstrip(" "))
+
+
+def _shift_indent(text: str, delta: int) -> str:
+    if delta == 0:
+        return text
+    lines = text.split("\n")
+    if delta > 0:
+        return "\n".join(f"{' ' * delta}{line}" if line.strip() else line for line in lines)
+    remove = -delta
+    return "\n".join(line[min(remove, len(line) - len(line.lstrip(" "))) :] for line in lines)
+
+
+def _preserve_existing_runs_on(existing_content: str, new_content: str, *, name: str) -> tuple[str, list[str]]:
+    """Keep each job's existing ``runs-on`` text, matched by job id.
+
+    Returns the merged content plus notices for preserved jobs that no longer exist in the package.
+    """
+    existing_body = extract_body(existing_content)
+    existing_data = load_workflow_yaml(existing_body)
+    new_data = load_workflow_yaml(new_content)
+
+    if not isinstance(existing_data, dict) or not isinstance(new_data, dict):
+        raise ValueError("Workflow YAML must be a mapping to preserve runs-on configuration.")
+
+    existing_jobs = existing_data.get("jobs")
+    new_jobs = new_data.get("jobs")
+    if not isinstance(existing_jobs, dict) or not isinstance(new_jobs, dict):
+        return new_content, []
+
+    merged = new_content
+    notices: list[str] = []
+    for job_id, existing_job in existing_jobs.items():
+        if not isinstance(existing_job, dict) or "runs-on" not in existing_job:
+            continue
+        if job_id not in new_jobs:
+            notices.append(f"{name}: job '{job_id}' no longer exists upstream; its local runs-on was not kept")
+            continue
+        new_job = new_jobs[job_id]
+        if not isinstance(new_job, dict) or "runs-on" not in new_job:
+            continue
+        if new_job["runs-on"] == existing_job["runs-on"]:
+            continue
+
+        existing_span = _locate_job_runs_on(existing_body, str(job_id))
+        new_span = _locate_job_runs_on(merged, str(job_id))
+        if existing_span is None or new_span is None:
+            raise ValueError(f"Could not find the runs-on section of job '{job_id}' in the workflow YAML.")
+
+        preserved = existing_body[existing_span[0] : existing_span[1]]
+        indent_delta = _leading_spaces(merged, new_span[0]) - _leading_spaces(existing_body, existing_span[0])
+        preserved = _shift_indent(preserved, indent_delta)
+        if not preserved.endswith("\n"):
+            preserved = f"{preserved}\n"
+        merged = f"{merged[: new_span[0]]}{preserved}{merged[new_span[1] :]}"
+
+    return merged, notices
+
+
 def resolve_target(cwd: Path, entry: WorkflowEntry, installed_file: InstalledFile) -> str:
     if is_workflow_target(installed_file.target) and entry.target:
         raw_target = f".github/workflows/{entry.target}"
@@ -173,10 +290,12 @@ def sync_workflow_file(
     is_update: bool,
     update_triggers: bool,
     update_envs: bool,
+    update_runs_on: bool,
 ) -> InstalledFileResult:
     target = resolve_target(cwd, entry, installed_file)
     target_path = cwd / target
     existing_content = target_path.read_text(encoding="utf-8") if target_path.is_file() else None
+    notices: list[str] = []
 
     if existing_content is not None and not _is_managed(existing_content, entry.name) and not force:
         raise WorkflowBlockedError("unmanaged file exists")
@@ -187,6 +306,8 @@ def sync_workflow_file(
             workflow_body = _preserve_existing_triggers(existing_content, workflow_body)
         if not (entry.update_envs or update_envs):
             workflow_body = _preserve_existing_envs(existing_content, workflow_body)
+        if not (entry.update_runs_on or update_runs_on):
+            workflow_body, notices = _preserve_existing_runs_on(existing_content, workflow_body, name=entry.name)
 
     normalized_body = _normalize_workflow_body(workflow_body)
     source_hash = _sha256(normalized_body)
@@ -206,6 +327,7 @@ def sync_workflow_file(
     return InstalledFileResult(
         changed=changed,
         lock_file=LockFileEntry(target=target, source_hash=source_hash),
+        notices=notices,
     )
 
 

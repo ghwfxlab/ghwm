@@ -144,25 +144,52 @@ class TestBuildParser:
         # Assert
         assert parsed_args.local == "/tmp/marketplace"
 
-    def test_build_parser_should_enable_update_triggers_when_flag_is_used(self) -> None:
+    @pytest.mark.parametrize("command", ["install", "update", "upgrade"])
+    @pytest.mark.parametrize(
+        ("flag", "attribute"),
+        [
+            ("--update-triggers", "update_triggers"),
+            ("--update-envs", "update_envs"),
+            ("--update-runs-on", "update_runs_on"),
+        ],
+    )
+    def test_build_parser_should_enable_update_option_when_flag_is_used(
+        self, command: str, flag: str, attribute: str
+    ) -> None:
         # Arrange
         parser = build_parser()
 
         # Act
-        parsed_args = parser.parse_args(["update", "--update-triggers"])
+        parsed_args = parser.parse_args([command, flag])
 
         # Assert
-        assert parsed_args.update_triggers is True
+        assert getattr(parsed_args, attribute) is True
 
-    def test_build_parser_should_enable_update_envs_when_flag_is_used(self) -> None:
+    @pytest.mark.parametrize("attribute", ["update_triggers", "update_envs", "update_runs_on"])
+    def test_build_parser_should_disable_update_option_when_flag_is_absent(self, attribute: str) -> None:
         # Arrange
         parser = build_parser()
 
         # Act
-        parsed_args = parser.parse_args(["update", "--update-envs"])
+        parsed_args = parser.parse_args(["update"])
 
         # Assert
-        assert parsed_args.update_envs is True
+        assert getattr(parsed_args, attribute) is False
+
+    def test_print_result_should_print_notices_when_result_contains_notices(
+        self, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        # Arrange
+        install_result = InstallResult(
+            installed=[], updated=[LINTER], pruned=[], skipped=[], notices=["linter: job 'old' gone"]
+        )
+
+        # Act
+        print_result(install_result)
+        output = capsys.readouterr().out
+
+        # Assert
+        assert "! linter: job 'old' gone" in output
 
     def test_build_parser_should_enable_prune_when_update_prune_flag_is_used(self) -> None:
         # Arrange
@@ -944,154 +971,57 @@ class TestMainList:
 
 
 class TestNoTelemetryFlag:
-    def test_build_parser_should_set_no_telemetry_false_by_default_when_install_command_is_used(self) -> None:
+    @pytest.mark.parametrize("command", ["install", "update"])
+    def test_build_parser_should_set_no_telemetry_false_by_default_when_command_is_used(self, command: str) -> None:
         # Arrange
         parser = build_parser()
 
         # Act
-        parsed_args = parser.parse_args(["install"])
+        parsed_args = parser.parse_args([command])
 
         # Assert
         assert parsed_args.no_telemetry is False
 
-    def test_build_parser_should_set_no_telemetry_true_when_install_no_telemetry_flag_is_used(self) -> None:
+    @pytest.mark.parametrize("command", ["install", "update"])
+    def test_build_parser_should_set_no_telemetry_true_when_command_uses_no_telemetry_flag(self, command: str) -> None:
         # Arrange
         parser = build_parser()
 
         # Act
-        parsed_args = parser.parse_args(["install", "--no-telemetry"])
+        parsed_args = parser.parse_args([command, "--no-telemetry"])
 
         # Assert
         assert parsed_args.no_telemetry is True
 
-    def test_build_parser_should_set_no_telemetry_false_by_default_when_update_command_is_used(self) -> None:
-        # Arrange
-        parser = build_parser()
-
-        # Act
-        parsed_args = parser.parse_args(["update"])
-
-        # Assert
-        assert parsed_args.no_telemetry is False
-
-    def test_build_parser_should_set_no_telemetry_true_when_update_no_telemetry_flag_is_used(self) -> None:
-        # Arrange
-        parser = build_parser()
-
-        # Act
-        parsed_args = parser.parse_args(["update", "--no-telemetry"])
-
-        # Assert
-        assert parsed_args.no_telemetry is True
-
-    def test_main_should_pass_no_telemetry_true_to_install_when_flag_is_used(self, tmp_path: Path) -> None:
-        from unittest.mock import patch
-
+    @pytest.mark.parametrize("command", ["install", "update"])
+    @pytest.mark.parametrize(
+        ("opt_out_args", "opt_out_env"),
+        [
+            pytest.param(["--no-telemetry"], {}, id="flag"),
+            pytest.param([], {"DO_NOT_TRACK": "1"}, id="do-not-track-env"),
+            pytest.param([], {"GHWM_NO_TELEMETRY": "1"}, id="ghwm-no-telemetry-env"),
+        ],
+    )
+    def test_main_should_skip_public_repository_check_when_telemetry_opt_out_is_used(
+        self, tmp_path: Path, command: str, opt_out_args: list[str], opt_out_env: dict[str, str]
+    ) -> None:
         # Arrange
         marketplace = tmp_path / "marketplace"
         consumer = tmp_path / "consumer"
         consumer.mkdir()
         _setup_marketplace(marketplace, LINTER)
         _write_manifest(consumer, [LINTER])
-
-        # Act
-        with patch("ghwm.install.is_public_repository") as mock_check:
+        if command == "update":
             main(["install", "--no-telemetry", "--cwd", str(consumer), "--local", str(marketplace)])
 
-        # Assert: visibility check must not be called when --no-telemetry is set
-        mock_check.assert_not_called()
-
-    def test_main_should_skip_telemetry_when_do_not_track_env_var_is_set_for_install(self, tmp_path: Path) -> None:
-        import os
-        from unittest.mock import patch
-
-        # Arrange
-        marketplace = tmp_path / "marketplace"
-        consumer = tmp_path / "consumer"
-        consumer.mkdir()
-        _setup_marketplace(marketplace, LINTER)
-        _write_manifest(consumer, [LINTER])
-
         # Act
         with (
-            patch.dict(os.environ, {"DO_NOT_TRACK": "1"}),
+            patch.dict(os.environ, opt_out_env),
             patch("ghwm.install.is_public_repository") as mock_check,
         ):
-            main(["install", "--cwd", str(consumer), "--local", str(marketplace)])
+            main([command, *opt_out_args, "--cwd", str(consumer), "--local", str(marketplace)])
 
-        # Assert: visibility check must not be called when DO_NOT_TRACK=1
-        mock_check.assert_not_called()
-
-    def test_main_should_pass_no_telemetry_true_to_update_when_flag_is_used(self, tmp_path: Path) -> None:
-        # Arrange
-        marketplace = tmp_path / "marketplace"
-        consumer = tmp_path / "consumer"
-        consumer.mkdir()
-        _setup_marketplace(marketplace, LINTER)
-        _write_manifest(consumer, [LINTER])
-        main(["install", "--no-telemetry", "--cwd", str(consumer), "--local", str(marketplace)])
-
-        # Act
-        with patch("ghwm.install.is_public_repository") as mock_check:
-            main(["update", "--no-telemetry", "--cwd", str(consumer), "--local", str(marketplace)])
-
-        # Assert
-        mock_check.assert_not_called()
-
-    def test_main_should_skip_telemetry_when_do_not_track_env_var_is_set_for_update(self, tmp_path: Path) -> None:
-        # Arrange
-        marketplace = tmp_path / "marketplace"
-        consumer = tmp_path / "consumer"
-        consumer.mkdir()
-        _setup_marketplace(marketplace, LINTER)
-        _write_manifest(consumer, [LINTER])
-        main(["install", "--no-telemetry", "--cwd", str(consumer), "--local", str(marketplace)])
-
-        # Act
-        with (
-            patch.dict(os.environ, {"DO_NOT_TRACK": "1"}),
-            patch("ghwm.install.is_public_repository") as mock_check,
-        ):
-            main(["update", "--cwd", str(consumer), "--local", str(marketplace)])
-
-        # Assert: visibility check must not be called when DO_NOT_TRACK=1
-        mock_check.assert_not_called()
-
-    def test_main_should_skip_telemetry_when_ghwm_no_telemetry_env_var_is_set_for_install(self, tmp_path: Path) -> None:
-        # Arrange
-        marketplace = tmp_path / "marketplace"
-        consumer = tmp_path / "consumer"
-        consumer.mkdir()
-        _setup_marketplace(marketplace, LINTER)
-        _write_manifest(consumer, [LINTER])
-
-        # Act
-        with (
-            patch.dict(os.environ, {"GHWM_NO_TELEMETRY": "1"}),
-            patch("ghwm.install.is_public_repository") as mock_check,
-        ):
-            main(["install", "--cwd", str(consumer), "--local", str(marketplace)])
-
-        # Assert: visibility check must not be called when GHWM_NO_TELEMETRY=1
-        mock_check.assert_not_called()
-
-    def test_main_should_skip_telemetry_when_ghwm_no_telemetry_env_var_is_set_for_update(self, tmp_path: Path) -> None:
-        # Arrange
-        marketplace = tmp_path / "marketplace"
-        consumer = tmp_path / "consumer"
-        consumer.mkdir()
-        _setup_marketplace(marketplace, LINTER)
-        _write_manifest(consumer, [LINTER])
-        main(["install", "--no-telemetry", "--cwd", str(consumer), "--local", str(marketplace)])
-
-        # Act
-        with (
-            patch.dict(os.environ, {"GHWM_NO_TELEMETRY": "1"}),
-            patch("ghwm.install.is_public_repository") as mock_check,
-        ):
-            main(["update", "--cwd", str(consumer), "--local", str(marketplace)])
-
-        # Assert: visibility check must not be called when GHWM_NO_TELEMETRY=1
+        # Assert: the visibility check must not run when telemetry is opted out
         mock_check.assert_not_called()
 
 

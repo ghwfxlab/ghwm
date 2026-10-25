@@ -9,7 +9,8 @@ import shutil
 import subprocess
 import sys
 import uuid
-from collections.abc import Generator
+from collections.abc import Callable, Generator
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -181,6 +182,84 @@ def workspace(e2e_container: DockerContainer) -> Generator[ContainerWorkspace, N
     e2e_container.exec(["rm", "-rf", workdir])
 
 
+WORKFLOW_FILE = ".github/workflows/super-linter.yaml"
+
+
+@dataclass(frozen=True)
+class _E2EUpdateOption:
+    """An `update-*` option: how to customize the installed file and what to expect afterwards."""
+
+    manifest_key: str
+    file: str
+    customize: Callable[[ContainerWorkspace], None]
+    kept: str
+    gone: str
+    restored: str | None = None
+
+
+def _customize_triggers(workspace: ContainerWorkspace) -> None:
+    workspace.replace_in_file(WORKFLOW_FILE, "pull_request:", "workflow_dispatch: # custom user trigger")
+
+
+def _customize_envs(workspace: ContainerWorkspace) -> None:
+    workspace.replace_in_file(WORKFLOW_FILE, "env:\n", "env:\n  CUSTOM_E2E_ENV: custom_val\n")
+
+
+def _customize_runs_on(workspace: ContainerWorkspace) -> None:
+    runs_on_lines = [
+        line for line in workspace.read_file(WORKFLOW_FILE).splitlines() if line.strip().startswith("runs-on:")
+    ]
+    assert runs_on_lines, "packaged workflow has no single-line runs-on to customize"
+    indent = runs_on_lines[0].split("runs-on:")[0]
+    workspace.replace_in_file(WORKFLOW_FILE, runs_on_lines[0], f"{indent}runs-on: custom-e2e-runner")
+
+
+def _customize_config_file(workspace: ContainerWorkspace) -> None:
+    workspace.replace_in_file(".github/super-linter.env", "LOG_LEVEL=WARN", "LOG_LEVEL=DEBUG # custom user setting")
+
+
+E2E_UPDATE_OPTIONS = [
+    pytest.param(
+        _E2EUpdateOption(
+            "update-triggers",
+            WORKFLOW_FILE,
+            _customize_triggers,
+            kept="workflow_dispatch: # custom user trigger",
+            gone="workflow_dispatch:",
+            restored="pull_request:",
+        ),
+        id="triggers",
+    ),
+    pytest.param(
+        _E2EUpdateOption(
+            "update-envs", WORKFLOW_FILE, _customize_envs, kept="CUSTOM_E2E_ENV: custom_val", gone="CUSTOM_E2E_ENV"
+        ),
+        id="envs",
+    ),
+    pytest.param(
+        _E2EUpdateOption(
+            "update-runs-on",
+            WORKFLOW_FILE,
+            _customize_runs_on,
+            kept="runs-on: custom-e2e-runner",
+            gone="custom-e2e-runner",
+        ),
+        id="runs-on",
+    ),
+    pytest.param(
+        _E2EUpdateOption(
+            "update-config-files",
+            ".github/super-linter.env",
+            _customize_config_file,
+            kept="LOG_LEVEL=DEBUG # custom user setting",
+            gone="custom user setting",
+            restored="LOG_LEVEL=WARN",
+        ),
+        id="config-files",
+    ),
+]
+
+
 @pytest.mark.e2e
 class TestGhwmEndToEnd:
     def test_e2e_should_install_ghwm_in_clean_env_when_container_starts(
@@ -306,150 +385,36 @@ class TestGhwmEndToEnd:
         lock_data = workspace.read_lockfile()
         assert lock_data["packages"][0]["version"] == "1.0.2"
 
-    def test_e2e_should_preserve_triggers_when_update_triggers_false_and_overwrite_when_true(
+    @pytest.mark.parametrize("option", E2E_UPDATE_OPTIONS)
+    def test_e2e_should_preserve_local_edit_when_update_option_false_and_overwrite_when_true(
         self,
         workspace: ContainerWorkspace,
+        option: _E2EUpdateOption,
     ) -> None:
-        # Arrange: Install 1.0.2 and customize the on: section
+        # Arrange: Install 1.0.2 and customize the option's section
         workspace.write_manifest([{"name": "super-linter", "version": "1.0.2"}])
         workspace.run_ghwm("install")
-        workspace.replace_in_file(
-            ".github/workflows/super-linter.yaml",
-            "pull_request:",
-            "workflow_dispatch: # custom user trigger",
-        )
+        option.customize(workspace)
 
-        # Act 1: Update with update-triggers: false
-        workspace.write_manifest(
-            [
-                {
-                    "name": "super-linter",
-                    "version": "1.1.0",
-                    "update-triggers": False,
-                }
-            ]
-        )
+        # Act 1: Update with the option set to false
+        workspace.write_manifest([{"name": "super-linter", "version": "1.1.0", option.manifest_key: False}])
         exit_code1, _ = workspace.run_ghwm("update")
 
-        # Assert 1: Custom trigger is preserved
+        # Assert 1: Custom edit is preserved while the package version moves on
         assert exit_code1 == 0
-        content1 = workspace.read_file(".github/workflows/super-linter.yaml")
-        assert "workflow_dispatch: # custom user trigger" in content1
-        assert "super-linter@1.1.0" in content1
+        assert option.kept in workspace.read_file(option.file)
+        assert "super-linter@1.1.0" in workspace.read_file(WORKFLOW_FILE)
 
-        # Act 2: Update with update-triggers: true
-        workspace.write_manifest(
-            [
-                {
-                    "name": "super-linter",
-                    "version": "1.1.0",
-                    "update-triggers": True,
-                }
-            ]
-        )
+        # Act 2: Update with the option set to true
+        workspace.write_manifest([{"name": "super-linter", "version": "1.1.0", option.manifest_key: True}])
         exit_code2, _ = workspace.run_ghwm("update")
 
-        # Assert 2: Packaged triggers overwrite custom trigger
+        # Assert 2: Packaged content overwrites the custom edit
         assert exit_code2 == 0
-        content2 = workspace.read_file(".github/workflows/super-linter.yaml")
-        assert "workflow_dispatch:" not in content2
-        assert "pull_request:" in content2
-
-    def test_e2e_should_preserve_envs_when_update_envs_false_and_overwrite_when_true(
-        self,
-        workspace: ContainerWorkspace,
-    ) -> None:
-        # Arrange: Install super-linter 1.0.2 and customize its env: section
-        workspace.write_manifest([{"name": "super-linter", "version": "1.0.2"}])
-        workspace.run_ghwm("install")
-        workspace.replace_in_file(
-            ".github/workflows/super-linter.yaml",
-            "env:\n",
-            "env:\n  CUSTOM_E2E_ENV: custom_val\n",
-        )
-
-        # Act 1: Update with update-envs: false
-        workspace.write_manifest(
-            [
-                {
-                    "name": "super-linter",
-                    "version": "1.1.0",
-                    "update-envs": False,
-                }
-            ]
-        )
-        exit_code1, _ = workspace.run_ghwm("update")
-
-        # Assert 1: Custom env is preserved
-        assert exit_code1 == 0
-        content1 = workspace.read_file(".github/workflows/super-linter.yaml")
-        assert "CUSTOM_E2E_ENV: custom_val" in content1
-        assert "super-linter@1.1.0" in content1
-
-        # Act 2: Update with update-envs: true
-        workspace.write_manifest(
-            [
-                {
-                    "name": "super-linter",
-                    "version": "1.1.0",
-                    "update-envs": True,
-                }
-            ]
-        )
-        exit_code2, _ = workspace.run_ghwm("update")
-
-        # Assert 2: Packaged env overwrites custom env
-        assert exit_code2 == 0
-        content2 = workspace.read_file(".github/workflows/super-linter.yaml")
-        assert "CUSTOM_E2E_ENV" not in content2
-
-    def test_e2e_should_preserve_config_files_when_update_config_files_false_and_overwrite_when_true(
-        self,
-        workspace: ContainerWorkspace,
-    ) -> None:
-        # Arrange: Install 1.0.2 and customize .github/super-linter.env
-        workspace.write_manifest([{"name": "super-linter", "version": "1.0.2"}])
-        workspace.run_ghwm("install")
-        workspace.replace_in_file(
-            ".github/super-linter.env",
-            "LOG_LEVEL=WARN",
-            "LOG_LEVEL=DEBUG # custom user setting",
-        )
-
-        # Act 1: Update with update-config-files: false
-        workspace.write_manifest(
-            [
-                {
-                    "name": "super-linter",
-                    "version": "1.1.0",
-                    "update-config-files": False,
-                }
-            ]
-        )
-        exit_code1, _ = workspace.run_ghwm("update")
-
-        # Assert 1: Config customization is preserved
-        assert exit_code1 == 0
-        cfg1 = workspace.read_file(".github/super-linter.env")
-        assert "LOG_LEVEL=DEBUG # custom user setting" in cfg1
-
-        # Act 2: Update with update-config-files: true
-        workspace.write_manifest(
-            [
-                {
-                    "name": "super-linter",
-                    "version": "1.1.0",
-                    "update-config-files": True,
-                }
-            ]
-        )
-        exit_code2, _ = workspace.run_ghwm("update")
-
-        # Assert 2: Packaged config file overwrites user modification
-        assert exit_code2 == 0
-        cfg2 = workspace.read_file(".github/super-linter.env")
-        assert "custom user setting" not in cfg2
-        assert "LOG_LEVEL=WARN" in cfg2
+        content = workspace.read_file(option.file)
+        assert option.gone not in content
+        if option.restored is not None:
+            assert option.restored in content
 
     def test_e2e_should_prune_stale_workflow_and_preserve_config_when_removed_from_manifest(
         self,

@@ -93,14 +93,14 @@ When changing code, preserve these unless the task explicitly changes them:
 ### Manifest parsing
 
 - `ghwm.yml` must be a YAML mapping with a `workflows` list.
-- Workflow entries may be strings (`linter@1.2.3`) or objects (`{name, version, target, update-triggers, update-envs, update-config-files}`).
+- Workflow entries may be strings (`linter@1.2.3`) or objects (`{name, version, target, update-triggers, update-envs, update-runs-on, update-config-files}`).
 - Duplicate workflow names are rejected.
 - A `/` in the suffix after `@` means it is treated as part of the name, not as a version.
 - Remote installs must specify an explicit version in `ghwm.yml`.
 - Workflow objects may optionally include a `source` to override the global registry source.
 - `source` must be in `owner/repository` form, and the owner becomes the npm scope
   (`owner/ghwm-registry` -> `@owner/<name>`).
-- `update-triggers`, `update-envs`, and `update-config-files` are per-workflow booleans.
+- `update-triggers`, `update-envs`, `update-runs-on`, and `update-config-files` are per-workflow booleans (all default `false`).
 - There is no registry switch and no legacy archive-mode manifest behavior.
 
 ### Downloading
@@ -121,6 +121,9 @@ When changing code, preserve these unless the task explicitly changes them:
 - On workflow update, preserve the existing `on:` section by default.
 - `update-triggers: true` or `--update-triggers` replaces the existing `on:` section with the packaged one.
 - `update-envs: true` or `--update-envs` replaces the existing `env:` section with the packaged one.
+- On workflow update, preserve each job's existing `runs-on` (matched by job ID) by default.
+- `update-runs-on: true` or `--update-runs-on` replaces each job's `runs-on` with the packaged one.
+- Jobs new in the package take the packaged `runs-on`; a notice is reported when a preserved job no longer exists upstream.
 - On first install, config files are created only when missing.
 - On update, `update-config-files: false` leaves config files untouched.
 - On update, `update-config-files: true` overwrites packaged config files.

@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import hashlib
 import os
+from collections.abc import Callable, Mapping
+from dataclasses import dataclass
 from pathlib import Path
-from typing import cast
+from typing import Any, cast
 from unittest.mock import patch
 
 import pytest
@@ -28,6 +31,11 @@ from tests.shared import (
 
 def _marketplace_manifest(workflows: list[dict[str, object]]) -> Manifest:
     return parse_manifest({"source": MARKETPLACE_SOURCE, "workflows": workflows})
+
+
+def _sha256_of_body(installed_path: Path) -> str:
+    body = extract_body(installed_path.read_text(encoding="utf-8"))
+    return f"sha256:{hashlib.sha256(f'{body.rstrip()}\n'.encode()).hexdigest()}"
 
 
 def _workflow_path(consumer: Path, name: str) -> Path:
@@ -63,6 +71,87 @@ def _write_marketplace_package(
         )
 
     (workflow_dir / "workflow.yml").write_text("\n".join(manifest_lines) + "\n")
+
+
+@dataclass(frozen=True)
+class _UpdateOption:
+    """A workflow section that `update-*` controls: keep the local value or take the packaged one."""
+
+    manifest_key: str
+    cli_kwarg: str
+    v1_content: str
+    local_edit: tuple[str, str]
+    v2_content: str
+    section: Callable[[dict[str, Any]], object]
+    local_value: object
+    packaged_value: object
+
+
+TRIGGERS = _UpdateOption(
+    manifest_key="update-triggers",
+    cli_kwarg="update_triggers",
+    v1_content="name: v1\non:\n  push:\n    branches:\n      - main\n",
+    local_edit=("- main", "- release/*"),
+    v2_content="name: v2\non:\n  pull_request:\n",
+    section=lambda body: body["on"],
+    local_value={"push": {"branches": ["release/*"]}},
+    packaged_value={"pull_request": None},
+)
+ENVS = _UpdateOption(
+    manifest_key="update-envs",
+    cli_kwarg="update_envs",
+    v1_content="name: v1\nenv:\n  MY_VAR: old\n",
+    local_edit=("MY_VAR: old", "MY_VAR: consumer_changed"),
+    v2_content="name: v2\nenv:\n  MY_VAR: new\n",
+    section=lambda body: body["env"],
+    local_value={"MY_VAR": "consumer_changed"},
+    packaged_value={"MY_VAR": "new"},
+)
+RUNS_ON = _UpdateOption(
+    manifest_key="update-runs-on",
+    cli_kwarg="update_runs_on",
+    v1_content="name: v1\njobs:\n  build:\n    runs-on: ubuntu-latest\n",
+    local_edit=("ubuntu-latest", "self-hosted"),
+    v2_content="name: v2\njobs:\n  build:\n    runs-on: ubuntu-24.04\n",
+    section=lambda body: body["jobs"]["build"]["runs-on"],
+    local_value="self-hosted",
+    packaged_value="ubuntu-24.04",
+)
+UPDATE_OPTIONS = [
+    pytest.param(TRIGGERS, id="triggers"),
+    pytest.param(ENVS, id="envs"),
+    pytest.param(RUNS_ON, id="runs-on"),
+]
+
+
+def _install_with_local_edit(
+    tmp_path: Path, option: _UpdateOption, workflow_entry: Mapping[str, object]
+) -> tuple[Path, Path, Manifest, Path]:
+    """Install v1, edit the option's section locally, then publish v2 upstream."""
+    marketplace = tmp_path / "marketplace"
+    consumer = tmp_path / "consumer"
+    consumer.mkdir()
+    _write_marketplace_package(marketplace, LINTER, option.v1_content)
+    manifest = parse_manifest(
+        {"source": "owner/ghwm-registry", "workflows": [{"name": LINTER, "version": VERSION_1, **workflow_entry}]}
+    )
+    install_workflows(consumer, manifest, local_path=marketplace)
+
+    installed_path = _workflow_path(consumer, LINTER)
+    old, new = option.local_edit
+    installed_path.write_text(installed_path.read_text().replace(old, new), encoding="utf-8")
+    _write_marketplace_package(marketplace, LINTER, option.v2_content)
+    return marketplace, consumer, manifest, installed_path
+
+
+def _read_section(option: _UpdateOption, installed_path: Path) -> object:
+    body = cast(dict[str, Any], load_workflow_yaml(extract_body(installed_path.read_text())))
+    return option.section(body)
+
+
+def _installed_name(installed_path: Path) -> object:
+    body = cast(dict[str, object], load_workflow_yaml(extract_body(installed_path.read_text())))
+    return body["name"]
 
 
 class TestInstallWorkflows:
@@ -160,37 +249,6 @@ class TestInstallWorkflows:
             f".github/workflows/{AUTO_ASSIGN_PR}.yaml"
         ]
 
-    def test_update_workflows_should_preserve_existing_triggers_by_default_when_installed_workflow_has_custom_triggers(
-        self, tmp_path: Path
-    ) -> None:
-        marketplace = tmp_path / "marketplace"
-        consumer = tmp_path / "consumer"
-        consumer.mkdir()
-        _write_marketplace_package(
-            marketplace,
-            "linter",
-            "name: v1\non:\n  push:\n    branches:\n      - main\njobs:\n  review:\n    runs-on: ubuntu-latest\n",
-        )
-        manifest = _marketplace_manifest([{"name": LINTER, "version": VERSION_1}])
-        install_workflows(consumer, manifest, local_path=marketplace)
-
-        installed_path = _workflow_path(consumer, LINTER)
-        installed_path.write_text(
-            installed_path.read_text().replace("- main", "- release/*"),
-            encoding="utf-8",
-        )
-        _write_marketplace_package(
-            marketplace,
-            "linter",
-            "name: v2\non:\n  pull_request:\njobs:\n  review:\n    runs-on: ubuntu-latest\n",
-        )
-
-        update_workflows(consumer, manifest, local_path=marketplace)
-
-        body = cast(dict[str, object], load_workflow_yaml(extract_body(installed_path.read_text())))
-        assert body["name"] == "v2"
-        assert body["on"] == {"push": {"branches": ["release/*"]}}
-
     def test_install_workflows_should_prune_updated_workflow_after_trigger_merge_when_workflow_becomes_stale(
         self, tmp_path: Path
     ) -> None:
@@ -263,153 +321,114 @@ class TestInstallWorkflows:
         )
         assert body["on"] == "pull_request"
 
-    def test_update_workflows_should_replace_triggers_when_manifest_requests_it(self, tmp_path: Path) -> None:
-        marketplace = tmp_path / "marketplace"
-        consumer = tmp_path / "consumer"
-        consumer.mkdir()
-        _write_marketplace_package(
-            marketplace,
-            "linter",
-            "name: v1\non:\n  push:\n    branches:\n      - main\n",
-        )
-        manifest = parse_manifest(
-            {
-                "source": "owner/ghwm-registry",
-                "workflows": [{"name": LINTER, "version": VERSION_1, "update-triggers": True}],
-            }
-        )
-        install_workflows(consumer, manifest, local_path=marketplace)
+    @pytest.mark.parametrize("option", UPDATE_OPTIONS)
+    @pytest.mark.parametrize("explicit_false", [False, True], ids=["unset", "false"])
+    def test_update_workflows_should_preserve_local_section_when_update_option_is_false_or_unset(
+        self, tmp_path: Path, option: _UpdateOption, explicit_false: bool
+    ) -> None:
+        # Arrange
+        entry = {option.manifest_key: False} if explicit_false else {}
+        marketplace, consumer, manifest, installed_path = _install_with_local_edit(tmp_path, option, entry)
 
-        installed_path = consumer / ".github" / "workflows" / "linter.yaml"
-        installed_path.write_text(
-            installed_path.read_text().replace("- main", "- release/*"),
-            encoding="utf-8",
-        )
-        _write_marketplace_package(marketplace, LINTER, "name: v2\non:\n  pull_request:\n")
+        # Act
+        result = update_workflows(consumer, manifest, local_path=marketplace)
 
+        # Assert
+        assert _installed_name(installed_path) == "v2"
+        assert _read_section(option, installed_path) == option.local_value
+        assert result.updated == [LINTER]
+
+    @pytest.mark.parametrize("option", UPDATE_OPTIONS)
+    def test_update_workflows_should_replace_local_section_when_manifest_requests_override(
+        self, tmp_path: Path, option: _UpdateOption
+    ) -> None:
+        # Arrange
+        marketplace, consumer, manifest, installed_path = _install_with_local_edit(
+            tmp_path, option, {option.manifest_key: True}
+        )
+
+        # Act
         update_workflows(consumer, manifest, local_path=marketplace)
 
-        body = cast(dict[str, object], load_workflow_yaml(extract_body(installed_path.read_text())))
-        assert body["name"] == "v2"
-        assert body["on"] == {"pull_request": None}
+        # Assert
+        assert _installed_name(installed_path) == "v2"
+        assert _read_section(option, installed_path) == option.packaged_value
 
-    def test_update_workflows_should_replace_triggers_when_run_requests_global_override(self, tmp_path: Path) -> None:
+    @pytest.mark.parametrize("option", UPDATE_OPTIONS)
+    @pytest.mark.parametrize("explicit_false", [False, True], ids=["unset", "false"])
+    def test_update_workflows_should_replace_local_section_when_run_requests_global_override(
+        self, tmp_path: Path, option: _UpdateOption, explicit_false: bool
+    ) -> None:
+        # Arrange
+        entry = {option.manifest_key: False} if explicit_false else {}
+        marketplace, consumer, manifest, installed_path = _install_with_local_edit(tmp_path, option, entry)
+
+        # Act
+        update_workflows(consumer, manifest, local_path=marketplace, **{option.cli_kwarg: True})
+
+        # Assert
+        assert _read_section(option, installed_path) == option.packaged_value
+
+    def test_install_workflows_should_use_packaged_runs_on_when_workflow_is_installed_for_the_first_time(
+        self, tmp_path: Path
+    ) -> None:
+        # Arrange
         marketplace = tmp_path / "marketplace"
         consumer = tmp_path / "consumer"
         consumer.mkdir()
-        _write_marketplace_package(
-            marketplace,
-            "linter",
-            "name: v1\non:\n  push:\n    branches:\n      - main\n",
-        )
+        _write_marketplace_package(marketplace, LINTER, "name: v1\njobs:\n  build:\n    runs-on: ubuntu-24.04\n")
         manifest = parse_manifest(
-            {
-                "source": "owner/ghwm-registry",
-                "workflows": [{"name": LINTER, "version": VERSION_1}],
-            }
+            {"source": "owner/ghwm-registry", "workflows": [{"name": LINTER, "version": VERSION_1}]}
         )
+
+        # Act
         install_workflows(consumer, manifest, local_path=marketplace)
 
-        installed_path = consumer / ".github" / "workflows" / "linter.yaml"
-        installed_path.write_text(
-            installed_path.read_text().replace("- main", "- release/*"),
-            encoding="utf-8",
-        )
-        _write_marketplace_package(marketplace, LINTER, "name: v2\non:\n  pull_request:\n")
+        # Assert
+        assert _read_section(RUNS_ON, consumer / ".github" / "workflows" / "linter.yaml") == "ubuntu-24.04"
 
-        update_workflows(consumer, manifest, local_path=marketplace, update_triggers=True)
-
-        body = cast(dict[str, object], load_workflow_yaml(extract_body(installed_path.read_text())))
-        assert body["on"] == {"pull_request": None}
-
-    def test_update_workflows_should_preserve_existing_envs_when_updating_by_default(self, tmp_path: Path) -> None:
-        marketplace = tmp_path / "marketplace"
-        consumer = tmp_path / "consumer"
-        consumer.mkdir()
-        _write_marketplace_package(
-            marketplace,
-            "linter",
-            "name: v1\nenv:\n  MY_VAR: old\n",
-        )
-        manifest = parse_manifest(
-            {
-                "source": "owner/ghwm-registry",
-                "workflows": [{"name": LINTER, "version": VERSION_1}],
-            }
-        )
-        install_workflows(consumer, manifest, local_path=marketplace)
-
-        installed_path = consumer / ".github" / "workflows" / "linter.yaml"
-        installed_path.write_text(
-            installed_path.read_text().replace("MY_VAR: old", "MY_VAR: consumer_changed"),
-            encoding="utf-8",
-        )
-        _write_marketplace_package(marketplace, LINTER, "name: v2\nenv:\n  MY_VAR: new\n")
-
+    def test_update_workflows_should_report_up_to_date_and_keep_hash_consistent_when_runs_on_is_preserved(
+        self, tmp_path: Path
+    ) -> None:
+        # Arrange
+        marketplace, consumer, manifest, installed_path = _install_with_local_edit(tmp_path, RUNS_ON, {})
         update_workflows(consumer, manifest, local_path=marketplace)
 
-        body = cast(dict[str, object], load_workflow_yaml(extract_body(installed_path.read_text())))
-        assert body["name"] == "v2"
-        assert body["env"] == {"MY_VAR": "consumer_changed"}
+        # Act
+        second = update_workflows(consumer, manifest, local_path=marketplace)
 
-    def test_update_workflows_should_replace_envs_when_manifest_requests_override(self, tmp_path: Path) -> None:
-        marketplace = tmp_path / "marketplace"
-        consumer = tmp_path / "consumer"
-        consumer.mkdir()
-        _write_marketplace_package(
-            marketplace,
-            "linter",
-            "name: v1\nenv:\n  MY_VAR: old\n",
-        )
-        manifest = parse_manifest(
-            {
-                "source": "owner/ghwm-registry",
-                "workflows": [{"name": LINTER, "version": VERSION_1, "update-envs": True}],
-            }
-        )
-        install_workflows(consumer, manifest, local_path=marketplace)
+        # Assert
+        assert second.updated == []
+        assert second.skipped == [(LINTER, "already up to date")]
+        lock_file = read_lockfile(consumer).packages[0].files[0]
+        assert f"# Hash: {lock_file.source_hash}" in installed_path.read_text()
+        assert _sha256_of_body(installed_path) == lock_file.source_hash
 
-        installed_path = consumer / ".github" / "workflows" / "linter.yaml"
-        installed_path.write_text(
-            installed_path.read_text().replace("MY_VAR: old", "MY_VAR: consumer_changed"),
-            encoding="utf-8",
-        )
-        _write_marketplace_package(marketplace, LINTER, "name: v2\nenv:\n  MY_VAR: new\n")
-
+    def test_install_workflows_should_not_prune_as_modified_when_runs_on_was_preserved(self, tmp_path: Path) -> None:
+        # Arrange
+        marketplace, consumer, manifest, installed_path = _install_with_local_edit(tmp_path, RUNS_ON, {})
         update_workflows(consumer, manifest, local_path=marketplace)
+        empty_manifest = parse_manifest({"source": "owner/ghwm-registry", "workflows": []})
 
-        body = cast(dict[str, object], load_workflow_yaml(extract_body(installed_path.read_text())))
-        assert body["name"] == "v2"
-        assert body["env"] == {"MY_VAR": "new"}
+        # Act
+        result = install_workflows(consumer, empty_manifest, local_path=marketplace)
 
-    def test_update_workflows_should_replace_envs_when_run_requests_global_override(self, tmp_path: Path) -> None:
-        marketplace = tmp_path / "marketplace"
-        consumer = tmp_path / "consumer"
-        consumer.mkdir()
-        _write_marketplace_package(
-            marketplace,
-            "linter",
-            "name: v1\nenv:\n  MY_VAR: old\n",
-        )
-        manifest = parse_manifest(
-            {
-                "source": "owner/ghwm-registry",
-                "workflows": [{"name": LINTER, "version": VERSION_1}],
-            }
-        )
-        install_workflows(consumer, manifest, local_path=marketplace)
+        # Assert
+        assert result.pruned == [LINTER]
+        assert not installed_path.exists()
 
-        installed_path = consumer / ".github" / "workflows" / "linter.yaml"
-        installed_path.write_text(
-            installed_path.read_text().replace("MY_VAR: old", "MY_VAR: consumer_changed"),
-            encoding="utf-8",
-        )
-        _write_marketplace_package(marketplace, LINTER, "name: v2\nenv:\n  MY_VAR: new\n")
+    def test_update_workflows_should_report_notice_when_preserved_job_no_longer_exists_upstream(
+        self, tmp_path: Path
+    ) -> None:
+        # Arrange
+        marketplace, consumer, manifest, _ = _install_with_local_edit(tmp_path, RUNS_ON, {})
+        _write_marketplace_package(marketplace, LINTER, "name: v2\njobs:\n  renamed:\n    runs-on: ubuntu-24.04\n")
 
-        update_workflows(consumer, manifest, local_path=marketplace, update_envs=True)
+        # Act
+        result = update_workflows(consumer, manifest, local_path=marketplace)
 
-        body = cast(dict[str, object], load_workflow_yaml(extract_body(installed_path.read_text())))
-        assert body["env"] == {"MY_VAR": "new"}
+        # Assert
+        assert result.notices == [f"{LINTER}: job 'build' no longer exists upstream; its local runs-on was not kept"]
 
     def test_update_workflows_should_leave_config_file_untouched_when_update_config_files_is_false(
         self, tmp_path: Path
