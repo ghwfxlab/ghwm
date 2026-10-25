@@ -41,6 +41,7 @@ class TestParseManifest:
                         "version": VERSION_1,
                         "update-triggers": True,
                         "update-envs": True,
+                        "update-runs-on": True,
                         "update-config-files": True,
                     }
                 ],
@@ -52,6 +53,7 @@ class TestParseManifest:
         assert entry.version == VERSION_1
         assert entry.update_triggers is True
         assert entry.update_envs is True
+        assert entry.update_runs_on is True
         assert entry.update_config_files is True
 
     def test_parse_manifest_should_set_target_when_entry_includes_target_override(self) -> None:
@@ -95,23 +97,18 @@ class TestParseManifest:
 
         assert "Duplicate" in str(exc_info.value)
 
-    def test_parse_manifest_should_raise_value_error_when_update_triggers_is_not_boolean(self) -> None:
+    @pytest.mark.parametrize("option", ["update-triggers", "update-envs", "update-runs-on", "update-config-files"])
+    def test_parse_manifest_should_raise_value_error_when_update_option_is_not_boolean(self, option: str) -> None:
         with pytest.raises(ValueError) as exc_info:
-            parse_manifest({"workflows": [{"name": LINTER, "version": VERSION_1, "update-triggers": "yes"}]})
+            parse_manifest({"workflows": [{"name": LINTER, "version": VERSION_1, option: "yes"}]})
 
-        assert "update-triggers" in str(exc_info.value)
+        assert option in str(exc_info.value)
 
-    def test_parse_manifest_should_raise_value_error_when_update_envs_is_not_boolean(self) -> None:
-        with pytest.raises(ValueError) as exc_info:
-            parse_manifest({"workflows": [{"name": LINTER, "version": VERSION_1, "update-envs": "yes"}]})
+    @pytest.mark.parametrize("attribute", ["update_triggers", "update_envs", "update_runs_on", "update_config_files"])
+    def test_parse_manifest_should_default_update_option_to_false_when_option_is_omitted(self, attribute: str) -> None:
+        manifest = parse_manifest({"workflows": [{"name": LINTER, "version": VERSION_1}]})
 
-        assert "update-envs" in str(exc_info.value)
-
-    def test_parse_manifest_should_raise_value_error_when_update_config_files_is_not_boolean(self) -> None:
-        with pytest.raises(ValueError) as exc_info:
-            parse_manifest({"workflows": [{"name": LINTER, "version": VERSION_1, "update-config-files": "yes"}]})
-
-        assert "update-config-files" in str(exc_info.value)
+        assert getattr(manifest.workflows[0], attribute) is False
 
 
 class TestWorkflowEntry:

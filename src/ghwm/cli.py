@@ -20,6 +20,7 @@ FORCE_HELP = "Overwrite unmanaged or modified files."
 LOCAL_HELP = "Path to local registry checkout."
 UPDATE_TRIGGERS_HELP = "Replace workflow triggers with the packaged version during updates."
 UPDATE_ENVS_HELP = "Replace workflow env variables with the packaged version during updates."
+UPDATE_RUNS_ON_HELP = "Replace each job's runs-on with the packaged version during updates."
 NO_TELEMETRY_HELP = "Disable telemetry for this run. Also honoured via DO_NOT_TRACK=1 or GHWM_NO_TELEMETRY=1."
 
 
@@ -43,6 +44,11 @@ def add_install_cmd_to_parser(subcommands: argparse._SubParsersAction[argparse.A
         "--update-envs",
         action="store_true",
         help=UPDATE_ENVS_HELP,
+    )
+    install_cmd.add_argument(
+        "--update-runs-on",
+        action="store_true",
+        help=UPDATE_RUNS_ON_HELP,
     )
     install_cmd.add_argument(
         "--no-telemetry",
@@ -74,6 +80,11 @@ def add_update_cmd_to_parser(subcommands: argparse._SubParsersAction[argparse.Ar
         help=UPDATE_ENVS_HELP,
     )
     update_cmd.add_argument(
+        "--update-runs-on",
+        action="store_true",
+        help=UPDATE_RUNS_ON_HELP,
+    )
+    update_cmd.add_argument(
         "--no-telemetry",
         action="store_true",
         help=NO_TELEMETRY_HELP,
@@ -102,6 +113,11 @@ def add_upgrade_cmd_to_parser(subcommands: argparse._SubParsersAction[argparse.A
         "--update-envs",
         action="store_true",
         help=UPDATE_ENVS_HELP,
+    )
+    upgrade_cmd.add_argument(
+        "--update-runs-on",
+        action="store_true",
+        help=UPDATE_RUNS_ON_HELP,
     )
     upgrade_cmd.add_argument(
         "--no-telemetry",
@@ -141,6 +157,7 @@ def build_parser() -> argparse.ArgumentParser:
         local=None,
         update_triggers=False,
         update_envs=False,
+        update_runs_on=False,
         no_telemetry=False,
     )
 
@@ -164,6 +181,8 @@ def print_result(result: InstallResult) -> None:
         print(f"  ✗ Pruned {name}")
     for name, reason in result.skipped:
         print(f"  ⊘ Skipped {name} ({reason})")
+    for notice in result.notices:
+        print(f"  ! {notice}")
 
 
 def run_audit(cwd: Path) -> None:
@@ -263,6 +282,7 @@ def main(argv: list[str] | None = None) -> None:
                 local_path=local_path,
                 update_triggers=args.update_triggers,
                 update_envs=args.update_envs,
+                update_runs_on=args.update_runs_on,
                 no_telemetry=no_telemetry,
             )
         elif command in ("update", "upgrade"):
@@ -276,6 +296,7 @@ def main(argv: list[str] | None = None) -> None:
                 local_path=local_path,
                 update_triggers=args.update_triggers,
                 update_envs=args.update_envs,
+                update_runs_on=args.update_runs_on,
                 no_telemetry=no_telemetry,
             )
         else:  # pragma: no cover

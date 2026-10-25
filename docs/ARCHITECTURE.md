@@ -111,6 +111,7 @@ carries:
 - **target** (optional) — custom filename for the installed workflow file.
 - **update-triggers** (optional) — replace the existing `on:` block on update when `true`.
 - **update-envs** (optional) — replace the existing `env:` block on update when `true`.
+- **update-runs-on** (optional) — replace each job's `runs-on` on update when `true`; otherwise the local value is kept per job id.
 - **update-config-files** (optional) — overwrite packaged config files on update when `true`.
 
 The manifest also declares a **source** in `owner/repository` form. The owner
@@ -157,7 +158,7 @@ categories:
 **Workflow files** (targets under `.github/workflows/`):
 
 1. Decode the source content as UTF-8.
-2. On update, preserve the existing `on:` block unless `update-triggers` is enabled, and preserve `env:` block unless `update-envs` is enabled.
+2. On update, preserve the existing `on:` block unless `update-triggers` is enabled, preserve `env:` block unless `update-envs` is enabled, and preserve each job's `runs-on` (matched by job id) unless `update-runs-on` is enabled. Preserved jobs that no longer exist in the package are reported as notices on the install result.
 3. Normalize the body (strip trailing whitespace, ensure trailing newline).
 4. Compute `sha256` of the normalized body — this is the **source hash**.
 5. Prepend a four-line managed header (name@version, source path, hash, refresh hint).

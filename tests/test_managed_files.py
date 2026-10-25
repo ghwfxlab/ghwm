@@ -3,6 +3,7 @@ import pytest
 from ghwm.managed_files import (
     _find_top_level_section,
     _preserve_existing_envs,
+    _preserve_existing_runs_on,
     _preserve_existing_triggers,
     extract_body,
 )
@@ -194,3 +195,148 @@ def test_extract_body_should_strip_header_and_preserve_workflow_body_when_header
 
     # Assert
     assert result == "name: my-workflow\n"
+
+
+def _jobs_workflow(*job_lines: str, header: str = "name: wf") -> str:
+    return _workflow(header, "jobs:", *job_lines)
+
+
+_SCRIPT_STEPS = ("    steps:", "      - run: |", "          runs-on: no")
+
+
+@pytest.mark.parametrize(
+    ("existing_jobs", "new_jobs", "expected_jobs"),
+    [
+        pytest.param(
+            ("  build:", "    runs-on: self-hosted"),
+            ("  build:", "    runs-on: ubuntu-latest", "    steps: []"),
+            ("  build:", "    runs-on: self-hosted", "    steps: []"),
+            id="scalar",
+        ),
+        pytest.param(
+            ("  build:", "    runs-on:", "      - self-hosted", "      - linux", "    steps: []"),
+            ("  build:", "    runs-on: ubuntu-latest", "    steps: []"),
+            ("  build:", "    runs-on:", "      - self-hosted", "      - linux", "    steps: []"),
+            id="list",
+        ),
+        pytest.param(
+            ("  build:", "    runs-on:", "      group: big", "      labels: [gpu]", "    steps: []"),
+            ("  build:", "    steps: []", "    runs-on: ubuntu-latest"),
+            ("  build:", "    steps: []", "    runs-on:", "      group: big", "      labels: [gpu]"),
+            id="group-and-labels-mapping",
+        ),
+        pytest.param(
+            ("  lint:", "    runs-on: ubuntu-latest", "  test:", "    runs-on: self-hosted"),
+            ("  lint:", "    runs-on: ubuntu-24.04", "  test:", "    runs-on: ubuntu-24.04"),
+            ("  lint:", "    runs-on: ubuntu-latest", "  test:", "    runs-on: self-hosted"),
+            id="several-jobs",
+        ),
+        pytest.param(
+            ("  build:", "    runs-on: self-hosted"),
+            ("  build:", "    runs-on: ubuntu-latest", "  extra:", "    runs-on: ubuntu-latest"),
+            ("  build:", "    runs-on: self-hosted", "  extra:", "    runs-on: ubuntu-latest"),
+            id="job-added-upstream-takes-packaged-value",
+        ),
+        pytest.param(
+            ("  build:", "    runs-on: self-hosted # our runner", "    steps: []"),
+            (
+                "  # packaged comment",
+                "  build:",
+                "    # runner note",
+                "    runs-on: ubuntu-latest",
+                "",
+                "    steps: []",
+            ),
+            (
+                "  # packaged comment",
+                "  build:",
+                "    # runner note",
+                "    runs-on: self-hosted # our runner",
+                "",
+                "    steps: []",
+            ),
+            id="comments",
+        ),
+        pytest.param(
+            ("    build:", "        runs-on:", "            - self-hosted", "            - linux"),
+            ("  build:", "    runs-on: ubuntu-latest"),
+            ("  build:", "    runs-on:", "        - self-hosted", "        - linux"),
+            id="existing-file-uses-other-indent",
+        ),
+        pytest.param(
+            ("  build:", "    runs-on: self-hosted", *_SCRIPT_STEPS),
+            ("  build:", "    runs-on: ubuntu-latest", *_SCRIPT_STEPS),
+            ("  build:", "    runs-on: self-hosted", *_SCRIPT_STEPS),
+            id="runs-on-text-inside-step-script-is-ignored",
+        ),
+    ],
+)
+def test_preserve_existing_runs_on_should_keep_existing_value_when_values_differ(
+    existing_jobs: tuple[str, ...], new_jobs: tuple[str, ...], expected_jobs: tuple[str, ...]
+) -> None:
+    existing = _jobs_workflow(*existing_jobs)
+    new = _jobs_workflow(*new_jobs, header="name: v2")
+
+    result, notices = _preserve_existing_runs_on(existing, new, name="wf")
+
+    assert result == _jobs_workflow(*expected_jobs, header="name: v2")
+    assert notices == []
+
+
+@pytest.mark.parametrize(
+    ("existing", "new"),
+    [
+        pytest.param(
+            _jobs_workflow("  build:", "    runs-on: ubuntu-latest"),
+            _jobs_workflow("  build:", "    runs-on: ubuntu-latest", "    steps: []", header="name: v2"),
+            id="values-are-equal",
+        ),
+        pytest.param(
+            "name: v1\njobs:\n  a:\n    runs-on: x\n",
+            "name: v2\n",
+            id="packaged-workflow-has-no-jobs",
+        ),
+        pytest.param(
+            _jobs_workflow("  call:", "    runs-on: self-hosted"),
+            _jobs_workflow("  call:", "    uses: org/repo/.github/workflows/x.yml@v1", header="name: v2"),
+            id="packaged-job-has-no-runs-on",
+        ),
+    ],
+)
+def test_preserve_existing_runs_on_should_return_new_content_when_there_is_nothing_to_preserve(
+    existing: str, new: str
+) -> None:
+    result, notices = _preserve_existing_runs_on(existing, new, name="wf")
+
+    assert result == new
+    assert notices == []
+
+
+def test_preserve_existing_runs_on_should_report_notice_when_preserved_job_no_longer_exists_upstream() -> None:
+    existing = _jobs_workflow("  old:", "    runs-on: self-hosted", "  build:", "    runs-on: ubuntu-latest")
+    new = _jobs_workflow("  build:", "    runs-on: ubuntu-latest", header="name: v2")
+
+    result, notices = _preserve_existing_runs_on(existing, new, name="wf")
+
+    assert result == new
+    assert notices == ["wf: job 'old' no longer exists upstream; its local runs-on was not kept"]
+
+
+@pytest.mark.parametrize(
+    ("existing", "new"),
+    [
+        pytest.param("- list item", "name: v2\n", id="existing-is-not-a-mapping"),
+        pytest.param("name: v1\n", "- list item", id="packaged-is-not-a-mapping"),
+    ],
+)
+def test_preserve_existing_runs_on_should_raise_value_error_when_yaml_is_not_mapping(existing: str, new: str) -> None:
+    with pytest.raises(ValueError, match=r"Workflow YAML must be a mapping to preserve runs-on configuration\."):
+        _preserve_existing_runs_on(existing, new, name="wf")
+
+
+def test_preserve_existing_runs_on_should_raise_value_error_when_job_is_written_in_flow_style() -> None:
+    existing = "name: v1\njobs: {build: {runs-on: self-hosted}}\n"
+    new = _jobs_workflow("  build:", "    runs-on: ubuntu-latest", header="name: v2")
+
+    with pytest.raises(ValueError, match=r"Could not find the runs-on section of job 'build'"):
+        _preserve_existing_runs_on(existing, new, name="wf")
