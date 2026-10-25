@@ -69,16 +69,29 @@ uv tool install git+https://github.com/ghwfxlab/ghwm.git
 
 ### 1. Create `ghwm.yml` in your repository root
 
+A minimal manifest needs a registry `source` and a `name` and `version` for each workflow:
+
+```yaml
+source: ghwfxlab/ghwm-registry
+
+workflows:
+  - name: super-linter  # Required.
+    version: "2.0.1"    # Required for remote installs.
+```
+
+#### Full example
+
+This example uses every supported key. Each comment states whether the key is required and the default
+that applies when you omit it.
+
 ```yaml
 # Default registry in owner/repository form.
 # Optional. Default: owner/ghwm-registry
 source: ghwfxlab/ghwm-registry
 
 workflows:
-  - name: super-linter                  # Required.
-    version: "2.0.1"                    # Required for remote installs. Default: none (only allowed with --local)
-  - name: auto-assign-pr
-    version: "1.0.2"
+  - name: auto-assign-pr                # Required.
+    version: "1.0.2"                    # Required for remote installs. Default: none (only allowed with --local)
     source: other-owner/other-registry  # Optional. Default: the global `source`
     target: assign-pr.yml               # Optional. Default: the filename packaged in the workflow
     # The update-* options only apply on update. false keeps the local value, true replaces it with the packaged one.
