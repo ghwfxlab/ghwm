@@ -1,7 +1,9 @@
 import pytest
 
 from ghwm.managed_files import (
+    _find_child_section,
     _find_top_level_section,
+    _locate_job_runs_on,
     _preserve_existing_envs,
     _preserve_existing_runs_on,
     _preserve_existing_triggers,
@@ -264,6 +266,12 @@ _SCRIPT_STEPS = ("    steps:", "      - run: |", "          runs-on: no")
             id="existing-file-uses-other-indent",
         ),
         pytest.param(
+            ("  build:", "    runs-on: self-hosted"),
+            ("    build:", "        runs-on: ubuntu-latest"),
+            ("    build:", "        runs-on: self-hosted"),
+            id="existing-file-uses-smaller-indent",
+        ),
+        pytest.param(
             ("  build:", "    runs-on: self-hosted", *_SCRIPT_STEPS),
             ("  build:", "    runs-on: ubuntu-latest", *_SCRIPT_STEPS),
             ("  build:", "    runs-on: self-hosted", *_SCRIPT_STEPS),
@@ -300,6 +308,11 @@ def test_preserve_existing_runs_on_should_keep_existing_value_when_values_differ
             _jobs_workflow("  call:", "    runs-on: self-hosted"),
             _jobs_workflow("  call:", "    uses: org/repo/.github/workflows/x.yml@v1", header="name: v2"),
             id="packaged-job-has-no-runs-on",
+        ),
+        pytest.param(
+            _jobs_workflow("  call:", "    uses: org/repo/.github/workflows/x.yml@v1"),
+            _jobs_workflow("  call:", "    runs-on: ubuntu-latest", header="name: v2"),
+            id="existing-job-has-no-runs-on",
         ),
     ],
 )
@@ -340,3 +353,36 @@ def test_preserve_existing_runs_on_should_raise_value_error_when_job_is_written_
 
     with pytest.raises(ValueError, match=r"Could not find the runs-on section of job 'build'"):
         _preserve_existing_runs_on(existing, new, name="wf")
+
+
+def test_preserve_existing_runs_on_should_end_value_with_newline_when_existing_file_has_no_trailing_newline() -> None:
+    existing = "name: wf\njobs:\n  build:\n    runs-on: self-hosted"
+    new = _jobs_workflow("  build:", "    runs-on: ubuntu-latest", "    steps: []", header="name: v2")
+
+    result, _ = _preserve_existing_runs_on(existing, new, name="wf")
+
+    assert result == _jobs_workflow("  build:", "    runs-on: self-hosted", "    steps: []", header="name: v2")
+
+
+@pytest.mark.parametrize(
+    ("content", "key"),
+    [
+        pytest.param("jobs:", "build", id="parent-has-no-newline"),
+        pytest.param("jobs: {build: {runs-on: x}}\n", "build", id="parent-has-no-indented-children"),
+        pytest.param("jobs:\n  lint:\n    runs-on: x\n", "build", id="key-is-not-a-child"),
+    ],
+)
+def test_find_child_section_should_return_none_when_key_cannot_be_located(content: str, key: str) -> None:
+    assert _find_child_section(content, (0, len(content)), key) is None
+
+
+@pytest.mark.parametrize(
+    ("content", "job_id"),
+    [
+        pytest.param("name: wf\n", "build", id="no-jobs-section"),
+        pytest.param(_jobs_workflow("  lint:", "    runs-on: x"), "build", id="job-is-missing"),
+        pytest.param(_jobs_workflow("  build:", "    steps: []"), "build", id="job-has-no-runs-on"),
+    ],
+)
+def test_locate_job_runs_on_should_return_none_when_runs_on_cannot_be_located(content: str, job_id: str) -> None:
+    assert _locate_job_runs_on(content, job_id) is None
