@@ -1,0 +1,1 @@
+import{t as e}from"./liveApi.DxL18jSI.js";e(`https://ghwm-deployment-prd.ghwfxlab.workers.dev`).then(e=>{e&&window.dispatchEvent(new CustomEvent(`ghwm:live-registry`,{detail:e}))});
